@@ -1,0 +1,123 @@
+
+.container {
+  position: relative;
+  background-color: #fff5f7;
+  min-height: 100vh;
+  padding-bottom: 120rpx;
+}
+.header {
+  padding-top: 40rpx;
+  padding-bottom: 20rpx;
+  background-color: #fff5f7;
+  display: flex;
+  justify-content: center;
+}
+.header-title {
+  font-size: 36rpx;
+  color: #333;
+  font-weight: bold;
+}
+.profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 30rpx;
+}
+.avatar {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 75rpx;
+  border: 4rpx solid #fff;
+}
+.names {
+  font-size: 32rpx;
+  color: #FF78A6;
+  margin-top: 20rpx;
+}
+.timeline {
+  margin: 40rpx 30rpx;
+}
+.timeline-item {
+  display: flex;
+  margin-bottom: 40rpx;
+}
+.dot {
+  width: 20rpx;
+  height: 20rpx;
+  background-color: #FF78A6;
+  border-radius: 10rpx;
+  margin-right: 20rpx;
+  margin-top: 5rpx;
+}
+.item-content {
+  background-color: #fff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  flex: 1;
+}
+.item-title {
+  font-size: 30rpx;
+  color: #333;
+  font-weight: bold;
+}
+.item-date {
+  font-size: 24rpx;
+  color: #8f8f94;
+  margin-top: 10rpx;
+}
+.tags {
+  display: flex;
+  margin-top: 20rpx;
+}
+.tag {
+  font-size: 24rpx;
+  color: #666;
+  background-color: #f8f8f8;
+  padding: 10rpx 20rpx;
+  border-radius: 20rpx;
+  margin-right: 20rpx;
+}
+.fab {
+  position: fixed;
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  background-color: #FF78A6;
+  color: #fff;
+  font-size: 50rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  bottom: 200rpx;
+  right: 40rpx;
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.2);
+}
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 120rpx;
+  background-color: #fff;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1rpx solid #e5e5e5;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.nav-icon {
+  width: 36rpx;
+  height: 36rpx;
+  font-size: 36rpx;
+  color: #8f8f94;
+  object-fit: contain;
+}
+.nav-text {
+  font-size: 24rpx;
+  color: #8f8f94;
+  margin-top: 10rpx;
+}

@@ -1,0 +1,20 @@
+{
+  "name": "love_time",
+  "private": true,
+  "version": "1.0.0",
+  "description": "uni-app (Vue3 + Vite) project",
+  "scripts": {
+    "dev:h5": "npx uni dev -p h5",
+    "build:h5": "npx uni build -p h5",
+    "dev:mp-weixin": "npx uni dev -p mp-weixin",
+    "build:mp-weixin": "npx uni build -p mp-weixin"
+  },
+  "dependencies": {
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "vite": "^5.2.0",
+    "@dcloudio/vite-plugin-uni": "latest",
+    "sass": "^1.77.0"
+  }
+}

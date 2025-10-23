@@ -1,0 +1,18 @@
+
+.container {
+  position: relative;
+  min-height: 100vh;
+  padding-top: 100rpx;
+  background-color: #fff5f7;
+}
+.nav-placeholder {
+  height: 100rpx;
+}
+.content {
+  padding: 20rpx;
+}
+.title {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: bold;
+}

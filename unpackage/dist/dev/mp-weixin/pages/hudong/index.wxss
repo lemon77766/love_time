@@ -1,70 +1,4 @@
-<template>
-  <view class="hudong-container">
 
-
-    <!-- Menu Icons -->
-    <view class="menu-list">
-      <view class="menu-item" v-for="(m, i) in menuItems" :key="i">
-        <image class="menu-icon" :src="m.icon" />
-        <text class="menu-text">{{ m.text }}</text>
-      </view>
-    </view>
-    <!-- Card Section -->
-    <view class="card-list">
-      <view class="card" v-for="(c, i) in cards" :key="i">
-        <view class="card-info">
-          <text class="card-title">{{ c.title }}</text>
-          <text class="card-desc">{{ c.desc }}</text>
-          <view class="card-btn" @click="onCardClick(c)">{{ c.btnText }} ▶</view>
-        </view>
-        <image class="card-img" :src="c.img" />
-      </view>
-    </view>
-    <!-- 共用底部导航 -->
-
-  </view>
-</template>
-
-<script>
-export default {
-  data() {
-    return {
-      menuItems: [
-        { icon: '/static/love.png', text: '甜蜜问答' },
-        { icon: '/static/hudong.png', text: '恋爱一百件小事' },
-        { icon: '/static/remerber.png', text: '心形墙' },
-        { icon: '/static/we.png', text: '未来情书' }
-      ],
-      cards: [
-        {
-          title: '纪念日记录',
-          desc: '辅助信息示例文本技术，好处和科学的方法',
-          btnText: '立即观看',
-          img: '/static/logo.png'
-        },
-        {
-          title: '纪念日查看',
-          desc: '科学有效的专业人士的增强效果',
-          btnText: '未来情书',
-          img: '/static/hudong.png'
-        }
-      ],
-      navItems: [
-        { icon: '/static/logo.png' },
-        { icon: '/static/music.png' },
-        { icon: '/static/avatar.png' }
-      ]
-    };
-  },
-  methods: {
-    onCardClick(card) {
-      uni.showToast({ title: card.btnText, icon: 'none' });
-    }
-  }
-};
-</script>
-
-<style>
 .hudong-container {
   padding: 20rpx;
   background-color: #fff5f7;
@@ -191,4 +125,3 @@ export default {
   width: 60rpx;
   height: 60rpx;
 }
-</style>
