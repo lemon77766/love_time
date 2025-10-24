@@ -1,0 +1,189 @@
+
+.login-page.data-v-d08ef7d4 {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 背景图片 */
+.bg-image.data-v-d08ef7d4 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* 背景蒙版（让文字更清晰） */
+.bg-overlay.data-v-d08ef7d4 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.15);
+  z-index: 1;
+}
+
+/* 内容层 */
+.content-wrapper.data-v-d08ef7d4 {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  padding: 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 移除旧的背景装饰 */
+.bg-decoration.data-v-d08ef7d4 {
+  display: none;
+}
+.heart.data-v-d08ef7d4 {
+  display: none;
+}
+
+/* Logo 区域 */
+.logo-section.data-v-d08ef7d4 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 80rpx;
+}
+.logo.data-v-d08ef7d4 {
+  width: 180rpx;
+  height: 180rpx;
+  margin-bottom: 30rpx;
+  animation: pulse-d08ef7d4 2s ease-in-out infinite;
+}
+@keyframes pulse-d08ef7d4 {
+0%, 100% {
+    transform: scale(1);
+}
+50% {
+    transform: scale(1.05);
+}
+}
+.app-name.data-v-d08ef7d4 {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #2bad81;
+  margin-bottom: 16rpx;
+}
+.app-slogan.data-v-d08ef7d4 {
+  font-size: 26rpx;
+  color: #4e3c3c;
+}
+
+/* 登录区域（无卡片背景） */
+.login-area.data-v-d08ef7d4 {
+  width: 70%;
+  max-width: 500rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 移除旧的登录卡片样式 */
+.login-card.data-v-d08ef7d4 {
+  display: none;
+}
+
+/* 移除欢迎文字样式 */
+.welcome-text.data-v-d08ef7d4 {
+  display: none;
+}
+.subtitle.data-v-d08ef7d4 {
+  display: none;
+}
+
+/* 用户信息预览 */
+.user-preview.data-v-d08ef7d4 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+.avatar.data-v-d08ef7d4 {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  border: 4rpx solid #e5e5e5;
+  margin-bottom: 20rpx;
+}
+.nickname.data-v-d08ef7d4 {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 600;
+}
+
+/* 登录按钮 */
+.login-btn.data-v-d08ef7d4, .enter-btn.data-v-d08ef7d4 {
+  width: 100%;
+  background: #2bad81;
+  border-radius: 48rpx;
+  padding: 28rpx 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  box-shadow: 0 8rpx 20rpx rgba(43, 173, 129, 0.25);
+  margin-bottom: 30rpx;
+  border: none;
+  color: #ffffff;
+}
+.login-btn.data-v-d08ef7d4::after, .enter-btn.data-v-d08ef7d4::after {
+  border: none;
+}
+.login-btn.data-v-d08ef7d4:active, .enter-btn.data-v-d08ef7d4:active {
+  opacity: 0.85;
+}
+.enter-btn.data-v-d08ef7d4 {
+  background: #2bad81;
+  box-shadow: 0 8rpx 20rpx rgba(43, 173, 129, 0.25);
+}
+.btn-icon.data-v-d08ef7d4 {
+  font-size: 32rpx;
+}
+.btn-text.data-v-d08ef7d4 {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* 提示信息 */
+.tips.data-v-d08ef7d4 {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8rpx;
+  padding: 16rpx 32rpx;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 20rpx;
+  -webkit-backdrop-filter: blur(8px);
+          backdrop-filter: blur(8px);
+}
+.tip-text.data-v-d08ef7d4 {
+  font-size: 22rpx;
+  color: #666;
+}
+.link-text.data-v-d08ef7d4 {
+  font-size: 22rpx;
+  color: #2bad81;
+}
+
+/* 底部 */
+.footer.data-v-d08ef7d4 {
+  position: relative;
+  margin-top: 40rpx;
+  text-align: center;
+}
+.footer-text.data-v-d08ef7d4 {
+  font-size: 24rpx;
+  color: #666;
+  text-shadow: 0 2rpx 4rpx rgba(255, 255, 255, 0.8);
+}

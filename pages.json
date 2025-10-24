@@ -1,21 +1,19 @@
 {
   "pages": [
     {
-      "path": "pages/index/index",
+      "path": "pages/login/index",
       "style": {
-        "navigationBarTitleText": "恋爱时光轴"
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
       }
     },
     {
-      "path": "pages/hudong/index",
-      "style": {
-        "navigationBarTitleText": "情侣互动"
-      }
+      "path": "pages/index/index"
     },
     {
       "path": "pages/jiyi/index",
       "style": {
-        "navigationBarTitleText": "共同记忆"
+        "navigationBarTitleText": "记忆"
       }
     },
     {
@@ -23,23 +21,53 @@
       "style": {
         "navigationBarTitleText": "我们"
       }
+    },
+    {
+      "path": "pages/qna/index",
+      "style": {
+        "navigationBarTitleText": "甜蜜问答"
+      }
+    },
+    {
+      "path": "pages/qna/history",
+      "style": {
+        "navigationBarTitleText": "甜蜜小问答"
+      }
+    },
+    {
+      "path": "pages/hundred/index",
+      "style": {
+        "navigationBarTitleText": "一百件小事"
+      }
+    },
+    {
+      "path": "pages/heartwall/index",
+      "style": {
+        "navigationBarTitleText": "爱心照片墙"
+      }
+    },
+    {
+      "path": "pages/heartwall/create",
+      "style": {
+        "navigationBarTitleText": "恋人空间-心形墙",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "tabBar": {
-    "color": "#8f8f94",
-    "selectedColor": "#FF78A6",
-    "backgroundColor": "#fff5f7",
+    "color": "#000000",
+    "selectedColor": "#2bad81",
+    "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
-      { "pagePath": "pages/index/index", "text": "恋爱时光轴", "iconPath": "/static/love.png", "selectedIconPath": "/static/love.png" },
-      { "pagePath": "pages/hudong/index", "text": "情侣互动", "iconPath": "/static/hudong.png", "selectedIconPath": "/static/hudong.png" },
-      { "pagePath": "pages/jiyi/index", "text": "共同记忆", "iconPath": "/static/remerber.png", "selectedIconPath": "/static/remerber.png" },
+      { "pagePath": "pages/index/index", "text": "主页", "iconPath": "/static/love.png", "selectedIconPath": "/static/love.png" },
+      { "pagePath": "pages/jiyi/index", "text": "记忆", "iconPath": "/static/remerber.png", "selectedIconPath": "/static/remerber.png" },
       { "pagePath": "pages/we/index", "text": "我们", "iconPath": "/static/we.png", "selectedIconPath": "/static/we.png" }
     ]
   },
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarBackgroundColor": "#fff5f7",
+    "navigationBarBackgroundColor": "#f0f0f0",
     "backgroundColor": "#fff5f7"
   },
   "uniIdRouter": {}

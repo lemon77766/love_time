@@ -1,36 +1,35 @@
 {
   "pages": [
+    "pages/login/index",
     "pages/index/index",
-    "pages/hudong/index",
     "pages/jiyi/index",
-    "pages/we/index"
+    "pages/we/index",
+    "pages/qna/index",
+    "pages/qna/history",
+    "pages/hundred/index",
+    "pages/heartwall/index",
+    "pages/heartwall/create"
   ],
   "window": {
     "navigationBarTextStyle": "black",
-    "navigationBarBackgroundColor": "#fff5f7",
+    "navigationBarBackgroundColor": "#f0f0f0",
     "backgroundColor": "#fff5f7"
   },
   "tabBar": {
-    "color": "#8f8f94",
-    "selectedColor": "#FF78A6",
-    "backgroundColor": "#fff5f7",
+    "color": "#000000",
+    "selectedColor": "#2bad81",
+    "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "恋爱时光轴",
+        "text": "主页",
         "iconPath": "/static/love.png",
         "selectedIconPath": "/static/love.png"
       },
       {
-        "pagePath": "pages/hudong/index",
-        "text": "情侣互动",
-        "iconPath": "/static/hudong.png",
-        "selectedIconPath": "/static/hudong.png"
-      },
-      {
         "pagePath": "pages/jiyi/index",
-        "text": "共同记忆",
+        "text": "记忆",
         "iconPath": "/static/remerber.png",
         "selectedIconPath": "/static/remerber.png"
       },

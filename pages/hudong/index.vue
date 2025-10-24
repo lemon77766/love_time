@@ -1,14 +1,16 @@
 <template>
   <view class="hudong-container">
-
-
-    <!-- Menu Icons -->
-    <view class="menu-list">
-      <view class="menu-item" v-for="(m, i) in menuItems" :key="i">
-        <image class="menu-icon" :src="m.icon" />
-        <text class="menu-text">{{ m.text }}</text>
+    <!-- Time Display -->
+    <view class="time-section">
+      <view class="time-content">
+        <view class="time-text">
+          <text class="current-date">{{ currentDate }}</text>
+          <text class="current-time">{{ currentTime }}</text>
+        </view>
+        <image class="time-image" src="/static/hudong/smile.webp" />
       </view>
     </view>
+
     <!-- Card Section -->
     <view class="card-list">
       <view class="card" v-for="(c, i) in cards" :key="i">
@@ -20,6 +22,14 @@
         <image class="card-img" :src="c.img" />
       </view>
     </view>
+
+    <!-- Menu Icons -->
+    <view class="menu-list">
+      <view class="menu-item" v-for="(m, i) in menuItems" :key="i">
+        <image class="menu-icon" :src="m.icon" />
+        <text class="menu-text">{{ m.text }}</text>
+      </view>
+    </view>
     <!-- 共用底部导航 -->
 
   </view>
@@ -29,26 +39,23 @@
 export default {
   data() {
     return {
+      currentDate: '',
+      currentTime: '',
+		cards: [
+		  {
+		    title: '纪念日记录',
+		    desc: '记录我们的每一次特别时刻',
+		    btnText: '立即记录',
+		    img: '/static/hudong/jinian1.png'
+		  }
+		],
       menuItems: [
-        { icon: '/static/love.png', text: '甜蜜问答' },
-        { icon: '/static/hudong.png', text: '恋爱一百件小事' },
-        { icon: '/static/remerber.png', text: '心形墙' },
-        { icon: '/static/we.png', text: '未来情书' }
+        { icon: '/static/hudong/question.png', text: '甜蜜问答' },
+        { icon: '/static/hudong/100.png', text: '恋爱一百件小事' },
+        { icon: '/static/hudong/xinqiang.png', text: '心形墙' },
+        { icon: '/static/hudong/letter.png', text: '未来情书' }
       ],
-      cards: [
-        {
-          title: '纪念日记录',
-          desc: '辅助信息示例文本技术，好处和科学的方法',
-          btnText: '立即观看',
-          img: '/static/logo.png'
-        },
-        {
-          title: '纪念日查看',
-          desc: '科学有效的专业人士的增强效果',
-          btnText: '未来情书',
-          img: '/static/hudong.png'
-        }
-      ],
+
       navItems: [
         { icon: '/static/logo.png' },
         { icon: '/static/music.png' },
@@ -56,7 +63,29 @@ export default {
       ]
     };
   },
+  mounted() {
+    this.updateTime();
+    this.timer = setInterval(this.updateTime, 1000);
+  },
+  beforeDestroy() {
+    if (this.timer) {
+      clearInterval(this.timer);
+    }
+  },
   methods: {
+    updateTime() {
+      const now = new Date();
+      this.currentDate = now.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      this.currentTime = now.toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    },
     onCardClick(card) {
       uni.showToast({ title: card.btnText, icon: 'none' });
     }
@@ -67,9 +96,41 @@ export default {
 <style>
 .hudong-container {
   padding: 20rpx;
-  background-color: #fff5f7;
+  background-color: #f5f5f7;
   min-height: 100vh;
   position: relative;
+}
+.time-section {
+  background-color: #fff;
+  margin: 20rpx;
+  padding: 30rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+}
+.time-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.time-image {
+  width: 80rpx;
+  height: 80rpx;
+  margin-left: 20rpx;
+}
+.time-text {
+  text-align: left;
+}
+.current-date {
+  display: block;
+  font-size: 32rpx;
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 10rpx;
+}
+.current-time {
+  display: block;
+  font-size: 28rpx;
+  color: #2bad81;
 }
 .hudong-header {
   display: none;
@@ -110,9 +171,10 @@ export default {
   margin-top: 10rpx;
 }
 .menu-list {
-  display: flex;
-  justify-content: space-around;
-  padding: 20rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+  padding: 30rpx;
   background-color: #fff;
   margin: 20rpx;
   border-radius: 20rpx;
@@ -122,12 +184,15 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 20rpx;
+  border-radius: 15rpx;
+  background-color: #f8f9fa;
 }
 .menu-icon {
   width: 80rpx;
   height: 80rpx;
   border-radius: 20rpx;
-  background-color: #FF78A6;
+  background-color: #ffffff;
   padding: 20rpx;
 }
 .menu-text {
@@ -144,12 +209,13 @@ export default {
 }
 .card {
   background-color: #f7fafb;
-  border-radius: 20rpx;
+  border-radius: 25rpx;
   display: flex;
   align-items: center;
-  margin-bottom: 30rpx;
-  padding: 20rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.03);
+  margin-bottom: 40rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 15rpx rgba(0,0,0,0.08);
+  min-height: 200rpx;
 }
 .card-info {
   flex: 1;
@@ -167,7 +233,7 @@ export default {
 .card-btn {
   font-size: 24rpx;
   color: #fff;
-  background-color: #FF78A6;
+  background-color: #ffffff;
   padding: 10rpx 30rpx;
   border-radius: 20rpx;
   display: inline-block;
@@ -176,19 +242,5 @@ export default {
   width: 120rpx;
   height: 120rpx;
   margin-left: 20rpx;
-}
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background-color: #ffffff;
-  display: flex;
-  justify-content: space-around;
-  padding: 20rpx 0;
-}
-.nav-item .nav-icon {
-  width: 60rpx;
-  height: 60rpx;
 }
 </style>

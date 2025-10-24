@@ -1,0 +1,106 @@
+
+.create-page { min-height: 100vh; background: #ffe4eb; display: flex; flex-direction: column; overflow: hidden;
+}
+
+/* 自定义导航栏 */
+.custom-nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding-top: env(safe-area-inset-top);
+  background: #f8f8f8;
+  border-bottom: 0.5px solid #d8d8d8;
+}
+.nav-left {
+  position: absolute;
+  left: 16px;
+  top: calc(env(safe-area-inset-top) + 50%);
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.back-icon {
+  font-size: 34px;
+  color: #000000;
+  font-weight: 400;
+  line-height: 1;
+}
+.nav-title {
+  font-size: 17px;
+  color: #000000;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.nav-right {
+  position: absolute;
+  right: 16px;
+  top: calc(env(safe-area-inset-top) + 50%);
+  transform: translateY(-50%);
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.menu-icon {
+  font-size: 24px;
+  color: #000000;
+  line-height: 1;
+  font-weight: 600;
+}
+.scan-icon {
+  font-size: 24px;
+  color: #000000;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #000000;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.center { display: flex; align-items: flex-start; justify-content: center; padding: 80rpx 0 0 0;
+}
+.heart-grid { width: 640rpx; margin: 0 auto; display: grid; grid-template-columns: repeat(9, 1fr); grid-gap: 10rpx;
+}
+.cell { position: relative; width: 1fr; padding-bottom: 100%; background: rgba(255,255,255,0.7); border-radius: 12rpx; overflow: hidden;
+}
+.cell.hole { background: transparent;
+}
+.cell image { position: absolute; inset: 0; width: 100%; height: 100%;
+}
+.cell.filled { background: #ffffff;
+}
+.photo-count { 
+  margin-top: 32rpx; 
+  padding: 0 60rpx; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center;
+}
+.count-text { 
+  font-size: 26rpx; 
+  color: #666; 
+  font-weight: 500;
+}
+.clear-btn { 
+  font-size: 24rpx; 
+  color: #ff507f; 
+  padding: 8rpx 20rpx; 
+  background: rgba(255, 80, 127, 0.1); 
+  border-radius: 20rpx;
+}
+.actions { margin-top: 24rpx; padding-bottom: 24rpx; display: flex; flex-direction: column; align-items: center; gap: 16rpx;
+}
+.btn { width: 70%; border-radius: 999rpx; padding: 18rpx 0; font-size: 26rpx; box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.12);
+}
+.btn.yellow { background: linear-gradient(90deg, #ffd36b, #ffb300); color: #333;
+}
+.btn.green { background: linear-gradient(90deg, #2bad81, #1a9966); color: #ffffff;
+}
+.btn.pink { background: linear-gradient(90deg, #ff8fb3, #ff507f); color: #ffffff;
+}
