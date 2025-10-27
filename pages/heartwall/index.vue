@@ -103,5 +103,5 @@ export default {
 .delete-btn { font-size: 24rpx; color: #ff4d4f; background: rgba(255,77,79,0.1); padding: 8rpx 16rpx; border-radius: 20rpx; }
 .content-tip { margin: 32rpx 24rpx; color: #7a7a7a; font-size: 26rpx; text-align: center; }
 .bottom { position: fixed; left: 0; right: 0; bottom: 24rpx; display: flex; justify-content: center; }
-.start-btn { width: 80%; border-radius: 999rpx; padding: 18rpx 0; background: #2bad81; color: #ffffff; font-size: 28rpx; box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.12); }
+.start-btn { width: 80%; border-radius: 999rpx; padding: 18rpx 0; background: #ff8fb3; color: #ffffff; font-size: 28rpx; box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.12); }
 </style>

@@ -4,15 +4,8 @@ const common_assets = require("../../common/assets.js");
 const _sfc_main = {
   data() {
     return {
-      stages: [
-        { title: "初遇", date: "2022-03-12", summary: "第一次见面，怦然心动", description: "图书馆偶遇，笑容很温暖。", side: "left", top: 6 },
-        { title: "表白", date: "2022-05-20", summary: "确定关系的那一天", description: "晚风微醺，你说我们在一起吧。", side: "right", top: 18 },
-        { title: "第一次旅行", date: "2022-08-15", summary: "海边日落很美", description: "一起踏浪、看日出，拍了很多照片。", side: "left", top: 32 },
-        { title: "第一次共度新年", date: "2023-01-01", summary: "倒数的那一刻拥抱", description: "在家做了很多好吃的，烟花很绚烂。", side: "right", top: 46 },
-        { title: "见家长", date: "2023-03-18", summary: "紧张又期待", description: "叔叔阿姨都很亲切，准备了礼物。", side: "left", top: 60 },
-        { title: "同居", date: "2023-09-01", summary: "开启新的生活", description: "一起装修小家，买了绿植。", side: "right", top: 74 },
-        { title: "订婚", date: "2024-02-14", summary: "玫瑰与承诺", description: "在一起更坚定了彼此。", side: "left", top: 88 }
-      ],
+      stages: [],
+      // 清空默认阶段，由用户自己添加
       isRiverActive: false,
       hoveredIdx: -1,
       showDetail: false,
@@ -21,13 +14,10 @@ const _sfc_main = {
       form: {
         title: "",
         date: "",
-        summary: "",
         description: "",
-        sideIndex: 0,
         top: null,
         left: null
       },
-      sideOptions: ["左侧", "右侧"],
       selectPosMode: false,
       tempPos: null
     };
@@ -73,8 +63,6 @@ const _sfc_main = {
       this.hoveredIdx = v ? idx : -1;
     },
     openStage(stage) {
-      if (!this.isRiverActive)
-        return;
       this.currentStage = stage;
       this.showDetail = true;
     },
@@ -91,13 +79,12 @@ const _sfc_main = {
         common_vendor.index.showToast({ title: "请填写标题和日期", icon: "none" });
         return;
       }
-      const side = this.form.sideIndex === 0 ? "left" : "right";
+      const side = this.form.left != null && this.form.left > 50 ? "right" : "left";
       const top = this.form.top != null ? this.form.top : this.computeNextTop();
       const left = this.form.left != null ? this.form.left : 50;
       this.stages.push({
         title: this.form.title,
         date: this.form.date,
-        summary: this.form.summary,
         description: this.form.description,
         side,
         top,
@@ -116,81 +103,68 @@ const _sfc_main = {
       return Math.min(94, last.top + 12);
     },
     resetForm() {
-      this.form = { title: "", date: "", summary: "", description: "", sideIndex: 0 };
+      this.form = { title: "", date: "", description: "", top: null, left: null };
     }
   }
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
     a: common_assets._imports_0$3,
-    b: !$data.isRiverActive
-  }, !$data.isRiverActive ? {} : {}, {
-    c: $data.showAdd && $data.selectPosMode
+    b: $data.showAdd && $data.selectPosMode
   }, $data.showAdd && $data.selectPosMode ? {} : {}, {
-    d: $data.tempPos
+    c: $data.tempPos
   }, $data.tempPos ? {
-    e: $data.tempPos.top + "%",
-    f: $data.tempPos.left + "%"
+    d: $data.tempPos.top + "%",
+    e: $data.tempPos.left + "%"
   } : {}, {
-    g: common_vendor.f($data.stages, (stage, idx, i0) => {
-      return common_vendor.e({
-        a: $data.isRiverActive && $data.hoveredIdx === idx
-      }, $data.isRiverActive && $data.hoveredIdx === idx ? {
-        b: common_vendor.t(stage.title),
-        c: common_vendor.t(stage.date),
-        d: common_vendor.t(stage.summary),
-        e: common_vendor.n(stage.side)
-      } : {}, {
-        f: idx,
-        g: common_vendor.n(stage.side),
-        h: stage.top + "%",
-        i: (stage.left || 50) + "%",
-        j: common_vendor.o(($event) => $options.setStageHover(idx, true), idx),
-        k: common_vendor.o(($event) => $options.setStageHover(idx, false), idx),
-        l: common_vendor.o(($event) => $options.openStage(stage), idx)
-      });
+    f: common_vendor.f($data.stages, (stage, idx, i0) => {
+      return {
+        a: idx,
+        b: common_vendor.n(stage.side),
+        c: stage.top + "%",
+        d: (stage.left || 50) + "%",
+        e: common_vendor.o(($event) => $options.openStage(stage), idx)
+      };
     }),
-    h: common_vendor.o(($event) => $data.showAdd = true),
-    i: $data.isRiverActive ? 1 : "",
-    j: common_vendor.o(($event) => $options.setHover(true)),
-    k: common_vendor.o(($event) => $options.setHover(false)),
+    g: common_vendor.o(($event) => $data.showAdd = true),
+    h: $data.isRiverActive ? 1 : "",
+    i: common_vendor.o(($event) => $options.setHover(true)),
+    j: common_vendor.o(($event) => $options.setHover(false)),
+    k: common_vendor.o((...args) => $options.onRiverClick && $options.onRiverClick(...args)),
     l: common_vendor.o((...args) => $options.onRiverClick && $options.onRiverClick(...args)),
-    m: common_vendor.o((...args) => $options.onRiverClick && $options.onRiverClick(...args)),
-    n: $data.showDetail
-  }, $data.showDetail ? {
+    m: $data.showDetail
+  }, $data.showDetail ? common_vendor.e({
+    n: common_assets._imports_1$1,
     o: common_vendor.t($data.currentStage.title),
     p: common_vendor.t($data.currentStage.date),
-    q: common_vendor.t($data.currentStage.description || $data.currentStage.summary),
-    r: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args)),
-    s: common_vendor.o(() => {
-    }),
-    t: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args))
+    q: $data.currentStage.description
+  }, $data.currentStage.description ? {
+    r: common_vendor.t($data.currentStage.description)
   } : {}, {
-    v: $data.showAdd
+    s: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args)),
+    t: common_vendor.o(() => {
+    }),
+    v: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args))
+  }) : {}, {
+    w: $data.showAdd
   }, $data.showAdd ? common_vendor.e({
-    w: $data.form.title,
-    x: common_vendor.o(($event) => $data.form.title = $event.detail.value),
-    y: $data.form.date,
-    z: common_vendor.o(($event) => $data.form.date = $event.detail.value),
-    A: $data.form.summary,
-    B: common_vendor.o(($event) => $data.form.summary = $event.detail.value),
-    C: $data.form.description,
-    D: common_vendor.o(($event) => $data.form.description = $event.detail.value),
-    E: common_vendor.t($data.sideOptions[$data.form.sideIndex]),
-    F: $data.sideOptions,
-    G: $data.form.sideIndex,
-    H: common_vendor.o((...args) => $options.onSideChange && $options.onSideChange(...args)),
-    I: common_vendor.o((...args) => $options.onStartSelectPosition && $options.onStartSelectPosition(...args)),
-    J: $data.form.top !== null
+    x: $data.form.title,
+    y: common_vendor.o(($event) => $data.form.title = $event.detail.value),
+    z: $data.form.date,
+    A: common_vendor.o(($event) => $data.form.date = $event.detail.value),
+    B: $data.form.description,
+    C: common_vendor.o(($event) => $data.form.description = $event.detail.value),
+    D: common_vendor.o((...args) => $options.onStartSelectPosition && $options.onStartSelectPosition(...args)),
+    E: $data.form.top !== null
   }, $data.form.top !== null ? {
-    K: common_vendor.t(($data.form.top || 0).toFixed(1)),
-    L: common_vendor.t(($data.form.left || 0).toFixed(1))
+    F: common_vendor.t(($data.form.top || 0).toFixed(1)),
+    G: common_vendor.t(($data.form.left || 0).toFixed(1))
   } : {}, {
-    M: common_vendor.o((...args) => $options.cancelAdd && $options.cancelAdd(...args)),
-    N: common_vendor.o((...args) => $options.saveAdd && $options.saveAdd(...args)),
-    O: common_vendor.o(() => {
+    H: common_vendor.o((...args) => $options.cancelAdd && $options.cancelAdd(...args)),
+    I: common_vendor.o((...args) => $options.saveAdd && $options.saveAdd(...args)),
+    J: common_vendor.o(() => {
     }),
-    P: common_vendor.o((...args) => $options.cancelAdd && $options.cancelAdd(...args))
+    K: common_vendor.o((...args) => $options.cancelAdd && $options.cancelAdd(...args))
   }) : {});
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

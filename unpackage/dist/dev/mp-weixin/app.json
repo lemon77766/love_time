@@ -8,7 +8,8 @@
     "pages/qna/history",
     "pages/hundred/index",
     "pages/heartwall/index",
-    "pages/heartwall/create"
+    "pages/heartwall/create",
+    "pages/xinxiang/index"
   ],
   "window": {
     "navigationBarTextStyle": "black",

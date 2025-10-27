@@ -11,6 +11,7 @@ if (!Math) {
   "./pages/hundred/index.js";
   "./pages/heartwall/index.js";
   "./pages/heartwall/create.js";
+  "./pages/xinxiang/index.js";
 }
 const pages = [
   {

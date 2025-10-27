@@ -56,6 +56,8 @@ const _sfc_main = {
         common_vendor.index.navigateTo({ url: "/pages/hundred/index" });
       } else if (item.text === "心形墙") {
         common_vendor.index.navigateTo({ url: "/pages/heartwall/index" });
+      } else if (item.text === "未来情书") {
+        common_vendor.index.navigateTo({ url: "/pages/xinxiang/index" });
       } else {
         common_vendor.index.showToast({ title: item.text + "（待开发）", icon: "none" });
       }
@@ -85,15 +87,13 @@ const _sfc_main = {
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return {
-    a: common_assets._imports_0$1,
-    b: common_vendor.o((...args) => $options.handleLogout && $options.handleLogout(...args)),
-    c: common_vendor.t($data.currentDay),
-    d: common_vendor.t($data.currentYearMonth),
-    e: common_vendor.t($data.currentWeek),
-    f: common_assets._imports_1$1,
-    g: common_assets._imports_0$2,
-    h: common_assets._imports_3,
-    i: common_vendor.f($data.gridItems, (item, index, i0) => {
+    a: common_vendor.t($data.currentDay),
+    b: common_vendor.t($data.currentYearMonth),
+    c: common_vendor.t($data.currentWeek),
+    d: common_assets._imports_0$1,
+    e: common_assets._imports_0$2,
+    f: common_assets._imports_2,
+    g: common_vendor.f($data.gridItems, (item, index, i0) => {
       return {
         a: item.icon,
         b: common_vendor.t(item.text),

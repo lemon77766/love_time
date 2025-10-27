@@ -4,9 +4,6 @@
     <view class="header">
       <text class="title">甜蜜问答</text>
       <text class="subtitle">用问题和答案更了解彼此</text>
-      <view class="header-actions">
-        <button class="btn-custom" @click="showCustomModal = true">+ 自定义问题</button>
-      </view>
     </view>
 
     <!-- 问题卡片 -->
@@ -28,6 +25,12 @@
     <view v-if="partnerAnswer" class="partner-card">
       <text class="p-label">TA 的答案</text>
       <text class="p-text">{{ partnerAnswer }}</text>
+    </view>
+
+    <!-- 悬浮自定义问题按钮 -->
+    <view class="floating custom-floating" @click="showCustomModal = true">
+      <text class="float-icon">✚</text>
+      <text class="float-text">自定义问题</text>
     </view>
 
     <!-- 悬浮历史按钮 -->
@@ -101,22 +104,24 @@
 <script>
 export default {
   onLoad(options) {
+    this.loadHistory();
+    this.loadCustomQuestions();
+    // 加载完历史后，找到第一个未回答的问题
     const qid = Number(options && options.qid);
     if (qid) {
-      const idx = this.questions.findIndex(q => q.id === qid);
+      const idx = this.unansweredQuestions.findIndex(q => q.id === qid);
       if (idx >= 0) this.qIndex = idx;
+    } else {
+      // 默认显示第一个未回答的问题
+      this.qIndex = 0;
     }
     // 如果携带 time，回显当天答案
     const time = options && options.time ? decodeURIComponent(options.time) : '';
-    try {
-      const data = uni.getStorageSync('qna_history');
-      const list = Array.isArray(data) ? data : [];
-      const rec = list.find(r => r.questionId === (qid || this.currentQuestion.id) && (!time || r.time === time));
-      if (rec) {
-        this.myAnswer = rec.myAnswer || '';
-        this.partnerAnswer = rec.partnerAnswer || '';
-      }
-    } catch (e) {}
+    const rec = this.history.find(r => r.questionId === (qid || this.currentQuestion.id) && (!time || r.time === time));
+    if (rec) {
+      this.myAnswer = rec.myAnswer || '';
+      this.partnerAnswer = rec.partnerAnswer || '';
+    }
   },
   data() {
     return {
@@ -141,8 +146,17 @@ export default {
     questions() {
       return [...this.defaultQuestions, ...this.customQuestions];
     },
+    // 计算未回答的问题列表
+    unansweredQuestions() {
+      const answeredIds = this.history.map(h => h.questionId);
+      return this.questions.filter(q => !answeredIds.includes(q.id));
+    },
     currentQuestion() {
-      return this.questions[this.qIndex] || { id: 0, text: '问题已全部完成' };
+      // 从未回答的问题中获取当前问题
+      if (this.unansweredQuestions.length === 0) {
+        return { id: 0, text: '所有问题已回答完毕！🎉' };
+      }
+      return this.unansweredQuestions[this.qIndex] || this.unansweredQuestions[0];
     }
   },
   mounted() {
@@ -153,6 +167,16 @@ export default {
     submitAnswer() {
       if (!this.myAnswer) {
         uni.showToast({ title: '请填写你的答案', icon: 'none' });
+        return;
+      }
+      if (this.currentQuestion.id === 0) {
+        uni.showToast({ title: '所有问题已回答完毕', icon: 'none' });
+        return;
+      }
+      // 检查是否已经回答过这个问题
+      const alreadyAnswered = this.history.some(h => h.questionId === this.currentQuestion.id);
+      if (alreadyAnswered) {
+        uni.showToast({ title: '该问题已经回答过了', icon: 'none' });
         return;
       }
       // 模拟获取对方答案（真实项目可改为请求服务端）
@@ -168,15 +192,24 @@ export default {
       };
       this.history.unshift(record);
       this.saveHistory();
-      uni.showToast({ title: '已提交', icon: 'none' });
+      uni.showToast({ title: '已提交', icon: 'success' });
+      
+      // 提交后自动跳到下一题
+      setTimeout(() => {
+        this.nextQuestion();
+      }, 1500);
     },
     nextQuestion() {
       this.partnerAnswer = '';
       this.myAnswer = '';
-      if (this.qIndex < this.questions.length - 1) {
+      // 重新计算未回答问题列表，显示下一个
+      if (this.qIndex < this.unansweredQuestions.length - 1) {
         this.qIndex += 1;
       } else {
-        uni.showToast({ title: '已到最后一题', icon: 'none' });
+        this.qIndex = 0; // 回到第一个未回答的
+      }
+      if (this.unansweredQuestions.length === 0) {
+        uni.showToast({ title: '所有问题已回答完毕！', icon: 'success' });
       }
     },
     openHistory() {
@@ -274,7 +307,7 @@ export default {
 
 .answer-card { margin: 0 24rpx; background: #ffffff; border-radius: 24rpx; padding: 24rpx; box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.06); }
 .a-label { font-size: 24rpx; color: #9aa0a6; }
-.a-input { margin-top: 12rpx; min-height: 160rpx; border: 1rpx solid #e6e6e6; border-radius: 16rpx; padding: 16rpx; font-size: 26rpx; }
+.a-input { margin-top: 12rpx; min-height: 100rpx; border: 1rpx solid #e6e6e6; border-radius: 16rpx; padding: 16rpx; font-size: 26rpx; }
 .actions { margin-top: 16rpx; display: flex; gap: 12rpx; }
 .btn { padding: 16rpx 26rpx; border-radius: 14rpx; font-size: 26rpx; }
 .btn.primary { background: #2bad81; color: #ffffff; }
@@ -285,6 +318,7 @@ export default {
 .p-text { margin-top: 8rpx; font-size: 28rpx; color: #2b2b2b; }
 
 .floating { position: fixed; right: 24rpx; bottom: 120rpx; background: #2bad81; color: #ffffff; border-radius: 999rpx; padding: 16rpx 20rpx; display: flex; align-items: center; gap: 10rpx; box-shadow: 0 10rpx 24rpx rgba(43,173,129,0.35); z-index: 99; }
+.custom-floating { bottom: 200rpx; } /* 自定义问题按钮在历史按钮上面 */
 .float-icon { font-size: 26rpx; }
 .float-text { font-size: 24rpx; }
 
@@ -307,7 +341,7 @@ export default {
 .question-list { flex: 1; overflow-y: auto; }
 .section-title { font-size: 24rpx; color: #9aa0a6; margin-bottom: 12rpx; padding-left: 4rpx; }
 .question-item { display: flex; align-items: flex-start; padding: 14rpx 12rpx; background: #f7f7f9; border-radius: 12rpx; margin-bottom: 8rpx; }
-.question-item.custom { background: linear-gradient(135deg, #ffeef3 0%, #fff5f7 100%); }
+.question-item.custom { background: linear-gradient(135deg, #e8f5f1 0%, #f0f9f6 100%); } /* 改为淡绿色渐变 */
 .q-num { font-size: 24rpx; color: #2bad81; font-weight: 600; margin-right: 8rpx; flex-shrink: 0; }
 .q-content { flex: 1; font-size: 26rpx; color: #2b2b2b; word-break: break-all; }
 .q-delete { font-size: 24rpx; color: #ff6b6b; margin-left: 12rpx; flex-shrink: 0; padding: 4rpx 8rpx; }

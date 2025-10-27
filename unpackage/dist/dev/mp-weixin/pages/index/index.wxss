@@ -5,36 +5,6 @@
   padding-bottom: 120rpx;
 }
 
-/* 自定义标题栏 */
-.custom-title-bar {
-  display: flex;
-  align-items: center;
-  padding: 30rpx 30rpx;
-  background-color: #f0f0f0;
-  border-bottom: 1rpx solid #e5e5e5;
-  position: relative;
-}
-.title-icon {
-  width: 90rpx;
-  height: 90rpx;
-  margin-right: 30rpx;
-}
-.title-text {
-  flex: 1;
-  font-size: 35rpx;
-  color: #4e3c3c;
-  font-weight: 600;
-}
-.logout-btn {
-  padding: 10rpx 24rpx;
-  background: rgba(255, 80, 127, 0.1);
-  border-radius: 20rpx;
-}
-.logout-text {
-  font-size: 24rpx;
-  color: #ff507f;
-}
-
 /* 日期区域背景样式 */
 .date-section {
   background-color: #f0f0f0;

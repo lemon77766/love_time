@@ -164,7 +164,7 @@ const _sfc_main = {
           });
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/heartwall/create.vue:142", "批量上传失败:", e);
+        common_vendor.index.__f__("error", "at pages/heartwall/create.vue:130", "批量上传失败:", e);
       }
     },
     // 获取所有空位的索引
@@ -278,17 +278,12 @@ const _sfc_main = {
         common_vendor.index.setStorageSync("heartwall_grid_images", this.images);
       } catch (e) {
       }
-    },
-    goBack() {
-      common_vendor.index.removeStorageSync("heartwall_editing_index");
-      common_vendor.index.navigateBack();
     }
   }
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: common_vendor.o((...args) => $options.goBack && $options.goBack(...args)),
-    b: common_vendor.f($data.heartMask, (cell, idx, i0) => {
+    a: common_vendor.f($data.heartMask, (cell, idx, i0) => {
       return common_vendor.e({
         a: $data.images[idx]
       }, $data.images[idx] ? {
@@ -300,16 +295,16 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         f: common_vendor.o(($event) => $options.onPickSingle(idx), idx)
       });
     }),
-    c: common_vendor.t($options.filledCount),
-    d: common_vendor.t($options.totalSlots),
-    e: $options.filledCount > 0
+    b: common_vendor.t($options.filledCount),
+    c: common_vendor.t($options.totalSlots),
+    d: $options.filledCount > 0
   }, $options.filledCount > 0 ? {
-    f: common_vendor.o((...args) => $options.clearAllImages && $options.clearAllImages(...args))
+    e: common_vendor.o((...args) => $options.clearAllImages && $options.clearAllImages(...args))
   } : {}, {
-    g: common_vendor.t($options.remainingSlots > 0 ? `还可添加${Math.min(9, $options.remainingSlots)}张` : "已满"),
-    h: common_vendor.o((...args) => $options.onBatchUpload && $options.onBatchUpload(...args)),
-    i: common_vendor.o((...args) => $options.onSaveProject && $options.onSaveProject(...args)),
-    j: common_vendor.o((...args) => $options.onSaveImage && $options.onSaveImage(...args))
+    f: common_vendor.t($options.remainingSlots > 0 ? `还可添加${Math.min(9, $options.remainingSlots)}张` : "已满"),
+    g: common_vendor.o((...args) => $options.onBatchUpload && $options.onBatchUpload(...args)),
+    h: common_vendor.o((...args) => $options.onSaveProject && $options.onSaveProject(...args)),
+    i: common_vendor.o((...args) => $options.onSaveImage && $options.onSaveImage(...args))
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

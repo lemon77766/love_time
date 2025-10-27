@@ -1,40 +1,61 @@
 <template>
   <view class="hundred-page">
-    <!-- 背景图与标题牌 -->
-    <image class="bg" src="/static/hundred/bg.jpg" mode="aspectFill" />
-    <view class="title-tag">我们的 100 件小事</view>
-
-    <!-- 卡片瀑布布局 -->
-    <view class="cards">
-      <view v-for="(item, i) in items" :key="item.id" class="card" :class="{ done: item.done }" @click="toggleDone(item)" @longpress="confirmDelete(item)">
-        <view class="stamp" :class="item.done ? 'stamp-done' : 'stamp-todo'">{{ item.done ? '已完成' : '待完成' }}</view>
-        <view class="delete-btn" @click.stop="confirmDelete(item)">×</view>
-        <image v-if="item.icon" class="card-icon" :src="item.icon" mode="aspectFit" />
-        <text class="card-text">{{ item.text }}</text>
-      </view>
-      <view v-if="items.length === 0" class="empty">暂无小事，点击右下角添加吧～</view>
-    </view>
-
-    <!-- 右下悬浮按钮：目录 & 添加 -->
-    <view class="fab-group">
-      <button class="fab menu" @click="openCatalog">≡ 目录</button>
-      <button class="fab add" @click="openAdd">＋ 添加小事</button>
-    </view>
-
-    <!-- 目录弹窗：按完成状态分组 -->
-    <view v-if="showCatalog" class="modal-mask" @click="closeCatalog">
-      <view class="modal" @click.stop>
-        <text class="modal-title">目录</text>
-        <scroll-view scroll-y class="catalog">
-          <text class="section">已完成</text>
-          <view v-for="it in items.filter(x=>x.done)" :key="it.id" class="catalog-item">• {{ it.text }}</view>
-          <text class="section">待完成</text>
-          <view v-for="it in items.filter(x=>!x.done)" :key="it.id" class="catalog-item">• {{ it.text }}</view>
-        </scroll-view>
-        <view class="modal-actions">
-          <button class="btn" @click="closeCatalog">关闭</button>
+    <!-- 顶部背景图 -->
+    <image class="top-bg" src="/static/hundred/shangmian.jpg" mode="aspectFill"></image>
+    
+    <!-- 标题和进度 -->
+    <view class="header-section">
+      <text class="main-title">情侣100件小事挑战</text>
+      <view class="progress-area">
+        <view class="progress-bar">
+          <view class="progress-fill" :style="{ width: progressPercent + '%' }"></view>
+        </view>
+        <text class="progress-text">{{ doneCount }}/100</text>
+        <view class="filter-dropdown" @click="toggleDropdown">
+          <text class="filter-label">{{ filterText }}</text>
+          <text class="dropdown-icon">{{ showDropdown ? '▲' : '▼' }}</text>
         </view>
       </view>
+      
+      <!-- 下拉菜单 -->
+      <view v-if="showDropdown" class="dropdown-menu">
+        <view 
+          v-for="option in filterOptions" 
+          :key="option.value" 
+          class="dropdown-item"
+          :class="{ active: filterMode === option.value }"
+          @click="selectFilter(option.value)"
+        >
+          <text class="item-label">{{ option.label }}</text>
+          <text v-if="filterMode === option.value" class="check-icon">✓</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 事件网格 -->
+    <view class="event-grid">
+      <view v-for="(item, i) in displayItems" :key="item.id" class="event-card">
+        <!-- 收藏标记 -->
+        <view class="favorite-icon" @click.stop="toggleFavorite(item)">
+          <text :class="{ 'favorite-active': item.favorite }">{{ item.favorite ? '★' : '☆' }}</text>
+        </view>
+        
+        <!-- 图片区域 -->
+        <view class="event-image" @click="uploadImage(item)">
+          <image v-if="item.image" :src="item.image" mode="aspectFill"></image>
+          <view v-else class="placeholder-icon">📸+</view>
+        </view>
+        
+        <!-- 标题区域 -->
+        <view class="event-title-wrapper" @click="toggleDone(item)" @longpress="openEdit(item)">
+          <text class="event-title" :class="{ done: item.done }">{{ item.text }}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 右下添加按钮 -->
+    <view class="fab-add" @click="openAdd">
+      <text class="fab-icon">+</text>
     </view>
 
     <!-- 添加弹窗 -->
@@ -42,11 +63,26 @@
       <view class="modal" @click.stop>
         <text class="modal-title">添加小事</text>
         <view class="form">
-          <input class="input" v-model="form.text" placeholder="例如：一起戴头饰过圣诞" />
+          <input class="input" v-model="form.text" placeholder="例如：一起看日出" />
         </view>
         <view class="modal-actions">
           <button class="btn secondary" @click="closeAdd">取消</button>
           <button class="btn primary" @click="saveItem">保存</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 编辑弹窗 -->
+    <view v-if="showEdit" class="modal-mask" @click="closeEdit">
+      <view class="modal" @click.stop>
+        <text class="modal-title">编辑小事</text>
+        <view class="form">
+          <input class="input" v-model="editForm.text" placeholder="修改事件名称" />
+        </view>
+        <view class="modal-actions">
+          <button class="btn danger" @click="confirmDelete(editForm)">删除</button>
+          <button class="btn secondary" @click="closeEdit">取消</button>
+          <button class="btn primary" @click="saveEdit">保存</button>
         </view>
       </view>
     </view>
@@ -58,21 +94,58 @@ export default {
   data() {
     return {
       items: [],
-      showCatalog: false,
       showAdd: false,
-      form: { text: '' }
+      showEdit: false,
+      form: { text: '' },
+      editForm: null,
+      filterMode: 'all', // 'all', 'done', 'todo', 'favorite'
+      showDropdown: false,
+      filterOptions: [
+        { label: '全部', value: 'all' },
+        { label: '待完成', value: 'todo' },
+        { label: '已完成', value: 'done' },
+        { label: '已收藏', value: 'favorite' }
+      ]
     };
+  },
+  computed: {
+    doneCount() {
+      return this.items.filter(item => item.done).length;
+    },
+    progressPercent() {
+      return this.items.length > 0 ? (this.doneCount / 100) * 100 : 0;
+    },
+    displayItems() {
+      if (this.filterMode === 'done') return this.items.filter(item => item.done);
+      if (this.filterMode === 'todo') return this.items.filter(item => !item.done);
+      if (this.filterMode === 'favorite') return this.items.filter(item => item.favorite);
+      return this.items;
+    },
+    filterText() {
+      if (this.filterMode === 'all') return '全部';
+      if (this.filterMode === 'done') return '已完成';
+      if (this.filterMode === 'todo') return '待完成';
+      if (this.filterMode === 'favorite') return '已收藏';
+      return '全部';
+    }
   },
   mounted() {
     this.loadItems();
     if (this.items.length === 0) {
       // 预置示例
       this.items = [
-        { id: 1, text: '用对方照片做壁纸', icon: '/static/hundred/wallpaper.png', done: false },
-        { id: 2, text: '给对方点下午茶', icon: '/static/hundred/tea.png', done: true },
-        { id: 3, text: '互相发动态宣言', icon: '/static/hundred/post.png', done: false },
-        { id: 4, text: '视频时截屏记录', icon: '/static/hundred/screenshot.png', done: true },
-        { id: 5, text: '一起戴头饰过圣诞', icon: '/static/hundred/christmas.png', done: false }
+        { id: 1, text: '一起看日出', image: '', done: false, favorite: false },
+        { id: 2, text: '一起看日落', image: '', done: false, favorite: false },
+        { id: 3, text: '一起去教堂', image: '', done: false, favorite: false },
+        { id: 4, text: '一起看星星', image: '', done: false, favorite: false },
+        { id: 5, text: '一起看电影', image: '', done: false, favorite: false },
+        { id: 6, text: '一起牵手逛街', image: '', done: false, favorite: false },
+        { id: 7, text: '一起做饭', image: '', done: false, favorite: false },
+        { id: 8, text: '一起逛超市', image: '', done: false, favorite: false },
+        { id: 9, text: '一起逛家', image: '', done: false, favorite: false },
+        { id: 10, text: '一起看相声', image: '', done: false, favorite: false },
+        { id: 11, text: '一起打黑', image: '', done: false, favorite: false },
+        { id: 12, text: '一起躺雨', image: '', done: false, favorite: false }
       ];
       this.saveItems();
     }
@@ -86,6 +159,73 @@ export default {
     },
     saveItems() {
       try { uni.setStorageSync('hundred_items', this.items); } catch (e) {}
+    },
+    toggleDropdown() {
+      this.showDropdown = !this.showDropdown;
+    },
+    selectFilter(value) {
+      this.filterMode = value;
+      this.showDropdown = false;
+      
+      // 显示提示
+      const tips = {
+        'all': '显示全部事件',
+        'todo': '显示待完成事件',
+        'done': '显示已完成事件',
+        'favorite': '显示已收藏事件'
+      };
+      uni.showToast({ 
+        title: tips[value], 
+        icon: 'none',
+        duration: 1500
+      });
+    },
+    uploadImage(item) {
+      uni.chooseImage({
+        count: 1,
+        sizeType: ['compressed'],
+        sourceType: ['album', 'camera'],
+        success: (res) => {
+          const tempFilePath = res.tempFilePaths[0];
+          item.image = tempFilePath;
+          this.saveItems();
+          uni.showToast({ title: '图片已上传', icon: 'success' });
+        },
+        fail: (err) => {
+          console.error('选择图片失败:', err);
+          uni.showToast({ title: '上传失败', icon: 'none' });
+        }
+      });
+    },
+    toggleFavorite(item) {
+      item.favorite = !item.favorite;
+      this.saveItems();
+      uni.showToast({ 
+        title: item.favorite ? '已收藏' : '取消收藏', 
+        icon: 'none',
+        duration: 1500
+      });
+    },
+    openEdit(item) {
+      this.editForm = { ...item };
+      this.showEdit = true;
+    },
+    closeEdit() {
+      this.showEdit = false;
+      this.editForm = null;
+    },
+    saveEdit() {
+      if (!this.editForm.text) {
+        uni.showToast({ title: '请输入内容', icon: 'none' });
+        return;
+      }
+      const index = this.items.findIndex(item => item.id === this.editForm.id);
+      if (index !== -1) {
+        this.items[index].text = this.editForm.text;
+        this.saveItems();
+        this.closeEdit();
+        uni.showToast({ title: '已保存', icon: 'success' });
+      }
     },
     confirmDelete(item) {
       uni.showModal({
@@ -112,7 +252,7 @@ export default {
     saveItem() {
       if (!this.form.text) { uni.showToast({ title: '请输入内容', icon: 'none' }); return; }
       const id = (this.items.reduce((m, it)=>Math.max(m, it.id||0), 0) + 1);
-      this.items.unshift({ id, text: this.form.text, icon: '', done: false });
+      this.items.unshift({ id, text: this.form.text, icon: '', done: false, favorite: false });
       this.saveItems();
       this.closeAdd();
       uni.showToast({ title: '已添加', icon: 'none' });
@@ -122,37 +262,303 @@ export default {
 </script>
 
 <style>
-.hundred-page { min-height: 100vh; position: relative; background: #f0f0f0; }
-.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.95; }
-.title-tag { position: absolute; left: 50%; top: 80rpx; transform: translateX(-50%); background: #ffffff; color: #4e3c3c; padding: 16rpx 28rpx; border-radius: 16rpx; font-size: 30rpx; font-weight: 700; box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.06); border: 1rpx solid #e5e5e5; }
+.hundred-page { 
+  min-height: 100vh; 
+  background: linear-gradient(to bottom, #e8f0e3 0%, #f5f5f0 100%);
+  padding-bottom: 120rpx;
+}
 
-.cards { position: relative; padding: 220rpx 24rpx 120rpx 24rpx; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20rpx; }
-.card { position: relative; background: #f7f7f7; border-radius: 30rpx; padding: 24rpx; box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.06); border: 1rpx solid #e5e5e5; }
-.delete-btn { position: absolute; right: 12rpx; top: 10rpx; width: 40rpx; height: 40rpx; border-radius: 20rpx; background: rgba(0,0,0,0.06); color: #666; display: flex; align-items: center; justify-content: center; font-size: 28rpx; }
-.delete-btn:active { transform: scale(0.95); }
-.card.done { opacity: 0.95; }
-.card-icon { width: 88rpx; height: 88rpx; }
-.card-text { margin-top: 8rpx; font-size: 28rpx; color: #5a4a4a; }
-.stamp { position: absolute; left: -6rpx; top: -10rpx; padding: 10rpx 16rpx; border-radius: 8rpx; font-size: 22rpx; font-weight: 700; }
-.stamp-todo { background: #f8f9fa; color: #666; border: 1rpx solid #e5e5e5; }
-.stamp-done { background: #e9f6f0; color: #2bad81; border: 1rpx solid #cbe9dc; }
-.empty { grid-column: 1 / -1; text-align: center; color: #7a7a7a; padding: 40rpx; }
+/* 顶部背景图 */
+.top-bg {
+  width: 100%;
+  height: 360rpx;
+  display: block;
+}
 
-.fab-group { position: fixed; right: 24rpx; bottom: 60rpx; display: flex; flex-direction: column; gap: 12rpx; z-index: 99; }
-.fab { border-radius: 999rpx; padding: 16rpx 24rpx; font-size: 24rpx; box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.08); }
-.fab.menu { background: #ffffff; color: #333; border: 1rpx solid #e5e5e5; }
-.fab.add { background: #2bad81; color: #ffffff; }
+/* 标题区域 */
+.header-section {
+  padding: 24rpx 32rpx;
+  position: relative;
+}
 
-.modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.modal { width: 86%; background: #ffffff; border-radius: 24rpx; padding: 24rpx; box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.06); border: 1rpx solid #e5e5e5; }
-.modal-title { font-size: 30rpx; font-weight: 700; color: #2b2b2b; }
-.catalog { max-height: 520rpx; margin-top: 10rpx; }
-.section { display: block; margin: 10rpx 0; font-size: 26rpx; color: #7a3b52; }
-.catalog-item { font-size: 24rpx; color: #5a4a4a; padding: 6rpx 0; }
-.form { margin-top: 12rpx; }
-.input { border: 1rpx solid #e5e5e5; border-radius: 14rpx; padding: 14rpx; font-size: 26rpx; background: #ffffff; }
-.modal-actions { margin-top: 14rpx; display: flex; justify-content: flex-end; gap: 10rpx; }
-.btn { padding: 14rpx 20rpx; border-radius: 14rpx; font-size: 26rpx; }
-.btn.primary { background: #2bad81; color: #fff; }
-.btn.secondary { background: #f0f0f0; color: #333; }
+.main-title {
+  font-size: 38rpx;
+  font-weight: 700;
+  color: #3a3a3a;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+/* 进度区域 */
+.progress-area {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 12rpx;
+  background: #e5e5e0;
+  border-radius: 6rpx;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #a8d5a3 0%, #7bc96f 100%);
+  border-radius: 6rpx;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 28rpx;
+  color: #5a5a5a;
+  font-weight: 600;
+}
+
+.filter-dropdown {
+  padding: 8rpx 16rpx;
+  background: #ffffff;
+  border: 2rpx solid #a8d5a3;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  color: #5a5a5a;
+  font-weight: 600;
+  box-shadow: 0 2rpx 8rpx rgba(168, 213, 163, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  cursor: pointer;
+}
+
+.filter-label {
+  font-size: 24rpx;
+  color: #5a5a5a;
+}
+
+.dropdown-icon {
+  font-size: 20rpx;
+  color: #a8d5a3;
+  transition: transform 0.3s ease;
+}
+
+/* 下拉菜单 */
+.dropdown-menu {
+  position: absolute;
+  right: 32rpx;
+  top: 130rpx;
+  background: #ffffff;
+  border-radius: 16rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.12);
+  overflow: hidden;
+  z-index: 10;
+  min-width: 160rpx;
+  border: 2rpx solid #a8d5a3;
+}
+
+.dropdown-item {
+  padding: 20rpx 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1rpx solid #f0f0f0;
+  transition: background 0.2s ease;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:active {
+  background: #f5f9f3;
+}
+
+.dropdown-item.active {
+  background: #e8f5e3;
+}
+
+.item-label {
+  font-size: 26rpx;
+  color: #5a5a5a;
+}
+
+.dropdown-item.active .item-label {
+  color: #2bad81;
+  font-weight: 600;
+}
+
+.check-icon {
+  font-size: 28rpx;
+  color: #2bad81;
+  font-weight: bold;
+}
+
+/* 事件网格 */
+.event-grid {
+  padding: 0 24rpx;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+}
+
+.event-card {
+  background: #faf9f5;
+  border-radius: 16rpx;
+  padding: 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.06);
+  border: 1rpx solid #e8e8e0;
+  position: relative;
+}
+
+/* 收藏图标 */
+.favorite-icon {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  font-size: 32rpx;
+  z-index: 5;
+  cursor: pointer;
+}
+
+.favorite-icon text {
+  color: #d0d0d0;
+  filter: drop-shadow(0 2rpx 4rpx rgba(0,0,0,0.1));
+  transition: all 0.3s ease;
+}
+
+.favorite-icon .favorite-active {
+  color: #2bad81;
+  transform: scale(1.1);
+}
+
+.event-image {
+  width: 100%;
+  height: 160rpx;
+  border-radius: 12rpx;
+  background: #e8e8e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 12rpx;
+}
+
+.event-image image {
+  width: 100%;
+  height: 100%;
+}
+
+.placeholder-icon {
+  font-size: 48rpx;
+  color: #b8b8a8;
+}
+
+.event-title-wrapper {
+  width: 100%;
+  padding: 8rpx 0;
+}
+
+.event-title {
+  font-size: 24rpx;
+  color: #5a5a5a;
+  text-align: center;
+  line-height: 1.4;
+  display: block;
+}
+
+.event-title.done {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* 右下添加按钮 */
+.fab-add {
+  position: fixed;
+  right: 32rpx;
+  bottom: 100rpx;
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 48rpx;
+  background: #3a3a3a;
+  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99;
+}
+
+.fab-icon {
+  font-size: 48rpx;
+  color: #ffffff;
+  font-weight: 300;
+}
+
+/* 弹窗样式 */
+.modal-mask { 
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0,0,0,0.35); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  z-index: 100; 
+}
+
+.modal { 
+  width: 86%; 
+  background: #ffffff; 
+  border-radius: 24rpx; 
+  padding: 32rpx; 
+}
+
+.modal-title { 
+  font-size: 32rpx; 
+  font-weight: 700; 
+  color: #2b2b2b; 
+}
+
+.form { 
+  margin-top: 20rpx; 
+}
+
+.input { 
+  border: 1rpx solid #e5e5e5; 
+  border-radius: 12rpx; 
+  padding: 16rpx; 
+  font-size: 26rpx; 
+  background: #ffffff; 
+}
+
+.modal-actions { 
+  margin-top: 24rpx; 
+  display: flex; 
+  justify-content: flex-end; 
+  gap: 12rpx; 
+}
+
+.btn { 
+  padding: 14rpx 24rpx; 
+  border-radius: 12rpx; 
+  font-size: 26rpx; 
+  border: none;
+}
+
+.btn.primary { 
+  background: #2bad81; 
+  color: #fff; 
+}
+
+.btn.secondary { 
+  background: #f0f0f0; 
+  color: #333; 
+}
+
+.btn.danger {
+  background: #ff6b6b;
+  color: #fff;
+}
 </style>

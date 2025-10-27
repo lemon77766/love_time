@@ -1,13 +1,5 @@
 <template>
   <view class="container">
-    <!-- 自定义标题栏 -->
-    <view class="custom-title-bar">
-      <image class="title-icon" src="/static/zhuye/sun.png" />
-      <text class="title-text">记得喝杯水补充能量</text>
-      <view class="logout-btn" @click="handleLogout">
-        <text class="logout-text">退出</text>
-      </view>
-    </view>
     <!-- 日期和头像区域 -->
     <view class="date-section">
       <!-- 时间样式容器 -->
@@ -120,6 +112,8 @@ export default {
         uni.navigateTo({ url: '/pages/hundred/index' });
       } else if (item.text === '心形墙') {
         uni.navigateTo({ url: '/pages/heartwall/index' });
+      } else if (item.text === '未来情书') {
+        uni.navigateTo({ url: '/pages/xinxiang/index' });
       } else {
         uni.showToast({ title: item.text + '（待开发）', icon: 'none' });
       }
@@ -154,40 +148,6 @@ export default {
   background-color: #f0f0f0;
   min-height: 100vh;
   padding-bottom: 120rpx;
-}
-
-/* 自定义标题栏 */
-.custom-title-bar {
-  display: flex;
-  align-items: center;
-  padding: 30rpx 30rpx;
-  background-color: #f0f0f0;
-  border-bottom: 1rpx solid #e5e5e5;
-  position: relative;
-}
-
-.title-icon {
-  width: 90rpx;
-  height: 90rpx;
-  margin-right: 30rpx;
-}
-
-.title-text {
-  flex: 1;
-  font-size: 35rpx;
-  color: #4e3c3c;
-  font-weight: 600;
-}
-
-.logout-btn {
-  padding: 10rpx 24rpx;
-  background: rgba(255, 80, 127, 0.1);
-  border-radius: 20rpx;
-}
-
-.logout-text {
-  font-size: 24rpx;
-  color: #ff507f;
 }
 
 /* 日期区域背景样式 */

@@ -1,17 +1,5 @@
 <template>
   <view class="create-page">
-    <!-- 自定义导航栏 -->
-    <view class="custom-nav">
-      <view class="nav-left" @click="goBack">
-        <text class="back-icon">‹</text>
-      </view>
-      <text class="nav-title">爱心照片墙</text>
-      <view class="nav-right">
-        <text class="menu-icon">⋯</text>
-        <text class="scan-icon">○</text>
-      </view>
-    </view>
-
     <view class="center">
       <view id="heartArea" class="heart-grid">
         <view v-for="(cell, idx) in heartMask" :key="idx" class="cell" :class="{ hole: !cell, filled: cell && images[idx] }" @tap="onPickSingle(idx)">
@@ -286,12 +274,6 @@ export default {
     },
     persist() {
       try { uni.setStorageSync('heartwall_grid_images', this.images); } catch (e) {}
-    },
-    
-    goBack() {
-      // 返回前清除编辑状态
-      uni.removeStorageSync('heartwall_editing_index');
-      uni.navigateBack();
     }
   }
 };
@@ -300,69 +282,7 @@ export default {
 <style>
 .create-page { min-height: 100vh; background: #ffe4eb; display: flex; flex-direction: column; overflow: hidden; }
 
-/* 自定义导航栏 */
-.custom-nav {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 44px;
-  padding-top: env(safe-area-inset-top);
-  background: #f8f8f8;
-  border-bottom: 0.5px solid #d8d8d8;
-}
-.nav-left {
-  position: absolute;
-  left: 16px;
-  top: calc(env(safe-area-inset-top) + 50%);
-  transform: translateY(-50%);
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-.back-icon {
-  font-size: 34px;
-  color: #000000;
-  font-weight: 400;
-  line-height: 1;
-}
-.nav-title {
-  font-size: 17px;
-  color: #000000;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-.nav-right {
-  position: absolute;
-  right: 16px;
-  top: calc(env(safe-area-inset-top) + 50%);
-  transform: translateY(-50%);
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-.menu-icon {
-  font-size: 24px;
-  color: #000000;
-  line-height: 1;
-  font-weight: 600;
-}
-.scan-icon {
-  font-size: 24px;
-  color: #000000;
-  width: 24px;
-  height: 24px;
-  border: 2px solid #000000;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-
-.center { display: flex; align-items: flex-start; justify-content: center; padding: 80rpx 0 0 0; }
+.center { display: flex; align-items: flex-start; justify-content: center; padding: 80rpx 0 0 60rpx; }
 .heart-grid { width: 640rpx; margin: 0 auto; display: grid; grid-template-columns: repeat(9, 1fr); grid-gap: 10rpx; }
 .cell { position: relative; width: 1fr; padding-bottom: 100%; background: rgba(255,255,255,0.7); border-radius: 12rpx; overflow: hidden; }
 .cell.hole { background: transparent; }
@@ -391,7 +311,7 @@ export default {
 
 .actions { margin-top: 24rpx; padding-bottom: 24rpx; display: flex; flex-direction: column; align-items: center; gap: 16rpx; }
 .btn { width: 70%; border-radius: 999rpx; padding: 18rpx 0; font-size: 26rpx; box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.12); }
-.btn.yellow { background: linear-gradient(90deg, #ffd36b, #ffb300); color: #333; }
-.btn.green { background: linear-gradient(90deg, #2bad81, #1a9966); color: #ffffff; }
-.btn.pink { background: linear-gradient(90deg, #ff8fb3, #ff507f); color: #ffffff; }
+.btn.yellow { background: linear-gradient(90deg, #ffc1d1 0%, #ffaac0 100%); color: #ffffff; }
+.btn.green { background: linear-gradient(90deg, #ff8fb3 0%, #ff7aa0 100%); color: #ffffff; }
+.btn.pink { background: linear-gradient(90deg, #ffb3c6 0%, #ff9eb8 100%); color: #ffffff; }
 </style>

@@ -10,7 +10,7 @@
     <view class="river-wrapper" :class="{ active: isRiverActive }" @mouseenter="setHover(true)" @mouseleave="setHover(false)" @click="onRiverClick" @touchstart="onRiverClick">
       <!-- 背景底图 -->
       <image class="river-bg" src="/static/changhe/ditu.jpg" mode="aspectFill" />
-      <view v-if="!isRiverActive" class="hover-hint">将鼠标移动到长河上显示阶段（移动端请点击）</view>
+      <!-- 已删除悬停提示 -->
       <!-- 选择位置提示与临时节点 -->
       <view v-if="showAdd && selectPosMode" class="select-hint">在长河图片上点击设置节点位置</view>
       <view v-if="tempPos" class="temp-dot" :style="{ top: tempPos.top + '%', left: tempPos.left + '%' }"></view>
@@ -22,16 +22,11 @@
         class="stage-card"
         :class="stage.side"
         :style="{ top: stage.top + '%', left: (stage.left || 50) + '%' }"
-        @mouseenter="setStageHover(idx, true)"
-        @mouseleave="setStageHover(idx, false)"
         @click="openStage(stage)"
       >
-        <view class="stage-dot"></view>
-        <!-- 悬浮后按需渲染对应文本框（性能更优）-->
-        <view v-if="isRiverActive && hoveredIdx === idx" class="stage-popup" :class="stage.side">
-          <text class="stage-title">{{ stage.title }}</text>
-          <text class="stage-date">{{ stage.date }}</text>
-          <text class="stage-desc">{{ stage.summary }}</text>
+        <!-- 蓝色心形标记点 -->
+        <view class="stage-marker">
+          <text class="heart-icon">💙</text>
         </view>
       </view>
 
@@ -44,12 +39,18 @@
 
     <!-- 阶段详情弹窗 -->
     <view v-if="showDetail" class="modal-mask" @click="closeDetail">
-      <view class="modal" @click.stop>
-        <text class="modal-title">{{ currentStage.title }}</text>
-        <text class="modal-sub">{{ currentStage.date }}</text>
-        <text class="modal-desc">{{ currentStage.description || currentStage.summary }}</text>
-        <view class="modal-actions">
-          <button class="btn" @click="closeDetail">关闭</button>
+      <view class="modal detail-modal" @click.stop>
+        <image class="detail-bg-image" src="/static/changhe/xinfeng.jpg" mode="aspectFill"></image>
+        <view class="detail-content-wrapper">
+          <text class="detail-title">{{ currentStage.title }}</text>
+          <text class="detail-date">{{ currentStage.date }}</text>
+          <view class="detail-content">
+            <text class="detail-desc" v-if="currentStage.description">{{ currentStage.description }}</text>
+            <text class="detail-empty" v-else>暂无详细描述</text>
+          </view>
+          <view class="modal-actions">
+            <button class="btn" @click="closeDetail">关闭</button>
+          </view>
         </view>
       </view>
     </view>
@@ -68,18 +69,8 @@
             <input class="input" v-model="form.date" placeholder="如：2023-05-20" />
           </view>
           <view class="form-item">
-            <text class="label">摘要</text>
-            <input class="input" v-model="form.summary" placeholder="一句话描述该阶段" />
-          </view>
-          <view class="form-item">
             <text class="label">详细描述</text>
             <textarea class="textarea" v-model="form.description" placeholder="记录更详细的故事..."></textarea>
-          </view>
-          <view class="form-item">
-            <text class="label">位置侧边</text>
-            <picker :range="sideOptions" :value="form.sideIndex" @change="onSideChange">
-              <view class="picker-value">{{ sideOptions[form.sideIndex] }}</view>
-            </picker>
           </view>
           <view class="form-item">
             <button class="btn primary" @click="onStartSelectPosition">在长河上选择位置</button>
@@ -99,15 +90,7 @@
 export default {
   data() {
     return {
-      stages: [
-        { title: '初遇', date: '2022-03-12', summary: '第一次见面，怦然心动', description: '图书馆偶遇，笑容很温暖。', side: 'left', top: 6 },
-        { title: '表白', date: '2022-05-20', summary: '确定关系的那一天', description: '晚风微醺，你说我们在一起吧。', side: 'right', top: 18 },
-        { title: '第一次旅行', date: '2022-08-15', summary: '海边日落很美', description: '一起踏浪、看日出，拍了很多照片。', side: 'left', top: 32 },
-        { title: '第一次共度新年', date: '2023-01-01', summary: '倒数的那一刻拥抱', description: '在家做了很多好吃的，烟花很绚烂。', side: 'right', top: 46 },
-        { title: '见家长', date: '2023-03-18', summary: '紧张又期待', description: '叔叔阿姨都很亲切，准备了礼物。', side: 'left', top: 60 },
-        { title: '同居', date: '2023-09-01', summary: '开启新的生活', description: '一起装修小家，买了绿植。', side: 'right', top: 74 },
-        { title: '订婚', date: '2024-02-14', summary: '玫瑰与承诺', description: '在一起更坚定了彼此。', side: 'left', top: 88 }
-      ],
+      stages: [],  // 清空默认阶段，由用户自己添加
       isRiverActive: false,
       hoveredIdx: -1,
       showDetail: false,
@@ -116,13 +99,10 @@ export default {
       form: {
         title: '',
         date: '',
-        summary: '',
         description: '',
-        sideIndex: 0,
         top: null,
         left: null,
       },
-      sideOptions: ['左侧', '右侧'],
       selectPosMode: false,
       tempPos: null,
     };
@@ -168,7 +148,7 @@ export default {
       this.hoveredIdx = v ? idx : -1;
     },
     openStage(stage) {
-      if (!this.isRiverActive) return; // 仅在激活时可点击卡片
+      // 移除 isRiverActive 限制，允许随时点击查看详情
       this.currentStage = stage;
       this.showDetail = true;
     },
@@ -185,13 +165,13 @@ export default {
         uni.showToast({ title: '请填写标题和日期', icon: 'none' });
         return;
       }
-      const side = this.form.sideIndex === 0 ? 'left' : 'right';
+      // 根据left位置自动判断侧边
+      const side = (this.form.left != null && this.form.left > 50) ? 'right' : 'left';
       const top = this.form.top != null ? this.form.top : this.computeNextTop();
       const left = this.form.left != null ? this.form.left : 50;
       this.stages.push({
         title: this.form.title,
         date: this.form.date,
-        summary: this.form.summary,
         description: this.form.description,
         side,
         top,
@@ -210,7 +190,7 @@ export default {
       return Math.min(94, last.top + 12);
     },
     resetForm() {
-      this.form = { title: '', date: '', summary: '', description: '', sideIndex: 0 };
+      this.form = { title: '', date: '', description: '', top: null, left: null };
     }
   }
 }
@@ -246,18 +226,14 @@ export default {
   overflow: hidden;
   box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.06);
 }
-.river-wrapper .hover-hint {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  background: rgba(255,255,255,0.9); color: #2b2b2b; border-radius: 16rpx;
-  padding: 20rpx 24rpx; font-size: 26rpx; box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.08);
-}
+/* 已删除 .hover-hint 样式 */
 .select-hint {
   position: absolute; left: 50%; bottom: 24rpx; transform: translateX(-50%);
   background: rgba(43,173,129,0.95); color: #ffffff; border-radius: 999rpx;
   padding: 12rpx 24rpx; font-size: 24rpx; box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.08);
 }
 .temp-dot { position: absolute; width: 18rpx; height: 18rpx; border-radius: 9rpx; background: #ff6b6b; box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.12); }
-.river-wrapper.active .hover-hint { display: none; }
+/* 已删除 .river-wrapper.active .hover-hint 样式 */
 .river-bg {
   position: absolute;
   inset: 0;
@@ -270,44 +246,92 @@ export default {
 /* 阶段卡片沿河分布 */
 .stage-card {
   position: absolute;
-  width: auto;
-  min-height: 32rpx; /* 仅节点尺寸 */
+  width: 40rpx;
+  height: 40rpx;
   background: transparent;
-  border-radius: 20rpx;
-  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
-.stage-dot {
-  width: 18rpx;
-  height: 18rpx;
-  border-radius: 9rpx;
-  background: #2ecc71;
-  box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.12);
+
+/* 添加可见的标记点 - 蓝色心形设计 */
+.stage-marker {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  filter: drop-shadow(0 4rpx 12rpx rgba(52, 152, 219, 0.5));
+  transition: all 0.3s ease;
 }
-/* 悬浮后显示的文本框 */
-.stage-popup {
+
+/* 心形图标 */
+.heart-icon {
+  font-size: 32rpx;
+  line-height: 1;
+  animation: heartbeat 1.5s infinite;
+}
+
+/* 心跳动画 */
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  10% {
+    transform: scale(1.2);
+  }
+  20% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.2);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+/* 添加蓝色光晕效果 */
+.stage-marker::before {
+  content: '';
   position: absolute;
-  top: -8rpx;
-  /* 默认靠近节点的相反侧以避免遮挡 */
-  max-width: 62%;
-  background: rgba(255,255,255,0.95);
-  border-radius: 20rpx;
-  padding: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.12);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(52, 152, 219, 0.4) 0%, rgba(41, 128, 185, 0.2) 50%, transparent 70%);
+  animation: pulse-heart 2s infinite;
 }
-.stage-popup.left { left: 28rpx; }
-.stage-popup.right { right: 28rpx; }
-.stage-title { font-size: 30rpx; font-weight: 700; color: #2b2b2b; }
-.stage-date { margin-top: 6rpx; font-size: 24rpx; color: #7a7a7a; }
-.stage-desc { margin-top: 8rpx; font-size: 24rpx; color: #555; }
+
+@keyframes pulse-heart {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.stage-card:active .stage-marker {
+  transform: scale(1.3);
+  filter: drop-shadow(0 6rpx 16rpx rgba(52, 152, 219, 0.7));
+}
+
+.stage-card:active .heart-icon {
+  animation: none;
+  transform: scale(1.2);
+}
+
 .stage-card.left { left: 4%; }
 .stage-card.right { right: 4%; }
-.stage-dot {
-  width: 18rpx;
-  height: 18rpx;
-  border-radius: 9rpx;
-  background: #2ecc71;
-  margin-top: 10rpx;
-}
+/* 已删除重复的 .stage-dot 样式 */
 .stage-content { flex: 1; }
 .stage-title { font-size: 30rpx; font-weight: 700; color: #2b2b2b; }
 .stage-date { margin-top: 6rpx; font-size: 24rpx; color: #7a7a7a; }
@@ -334,7 +358,7 @@ export default {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -342,15 +366,80 @@ export default {
 }
 .modal {
   width: 86%;
+  max-width: 600rpx;
   background: #ffffff;
   border-radius: 24rpx;
-  padding: 30rpx 26rpx;
+  padding: 40rpx 32rpx;
+  box-shadow: 0 12rpx 40rpx rgba(0,0,0,0.15);
 }
+
+/* 详情弹窗 - 使用默认样式 */
+.detail-modal {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  min-height: 600rpx; /* 设置最小高度，让背景图可以显示 */
+}
+
+/* 背景图片 */
+.detail-bg-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 1; /* 确保图片不透明 */
+}
+
+/* 内容容器 - 覆盖在背景图上 */
+.detail-content-wrapper {
+  position: relative;
+  z-index: 1;
+  padding: 40rpx 32rpx;
+  background: rgba(255, 255, 255, 0.5); /* 降低到50%透明度，背景图更明显 */
+  min-height: 600rpx; /* 与弹窗高度一致 */
+}
+
+.detail-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #2b2b2b;
+  display: block;
+}
+
+.detail-date {
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  color: #7a7a7a;
+  display: block;
+}
+
+.detail-content {
+  margin-top: 16rpx;
+}
+
+.detail-desc {
+  font-size: 26rpx;
+  color: #555;
+  line-height: 1.6;
+  display: block;
+}
+
+.detail-empty {
+  font-size: 26rpx;
+  color: #999;
+  text-align: center;
+  padding: 20rpx 0;
+  display: block;
+}
+
+/* 原有样式 */
 .modal-title { font-size: 34rpx; font-weight: 700; color: #2b2b2b; }
 .modal-sub { margin-top: 8rpx; font-size: 26rpx; color: #7a7a7a; }
 .modal-desc { margin-top: 16rpx; font-size: 26rpx; color: #555; line-height: 1.6; }
-.modal-actions { margin-top: 20rpx; display: flex; justify-content: flex-end; gap: 16rpx; }
-.btn { padding: 16rpx 26rpx; border-radius: 12rpx; font-size: 26rpx; }
+.modal-actions { margin-top: 60rpx; display: flex; justify-content: flex-end; gap: 16rpx; }
+.btn { padding: 16rpx 26rpx; border-radius: 12rpx; font-size: 26rpx; border: none; }
 .btn.primary { background: #2ecc71; color: #ffffff; }
 .btn.secondary { background: #f0f0f0; color: #333; }
 

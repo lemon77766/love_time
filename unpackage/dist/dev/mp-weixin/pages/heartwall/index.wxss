@@ -33,5 +33,5 @@
 }
 .bottom { position: fixed; left: 0; right: 0; bottom: 24rpx; display: flex; justify-content: center;
 }
-.start-btn { width: 80%; border-radius: 999rpx; padding: 18rpx 0; background: #2bad81; color: #ffffff; font-size: 28rpx; box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.12);
+.start-btn { width: 80%; border-radius: 999rpx; padding: 18rpx 0; background: #ff8fb3; color: #ffffff; font-size: 28rpx; box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.12);
 }

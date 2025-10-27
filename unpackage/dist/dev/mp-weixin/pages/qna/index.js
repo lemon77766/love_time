@@ -2,22 +2,21 @@
 const common_vendor = require("../../common/vendor.js");
 const _sfc_main = {
   onLoad(options) {
+    this.loadHistory();
+    this.loadCustomQuestions();
     const qid = Number(options && options.qid);
     if (qid) {
-      const idx = this.questions.findIndex((q) => q.id === qid);
+      const idx = this.unansweredQuestions.findIndex((q) => q.id === qid);
       if (idx >= 0)
         this.qIndex = idx;
+    } else {
+      this.qIndex = 0;
     }
     const time = options && options.time ? decodeURIComponent(options.time) : "";
-    try {
-      const data = common_vendor.index.getStorageSync("qna_history");
-      const list = Array.isArray(data) ? data : [];
-      const rec = list.find((r) => r.questionId === (qid || this.currentQuestion.id) && (!time || r.time === time));
-      if (rec) {
-        this.myAnswer = rec.myAnswer || "";
-        this.partnerAnswer = rec.partnerAnswer || "";
-      }
-    } catch (e) {
+    const rec = this.history.find((r) => r.questionId === (qid || this.currentQuestion.id) && (!time || r.time === time));
+    if (rec) {
+      this.myAnswer = rec.myAnswer || "";
+      this.partnerAnswer = rec.partnerAnswer || "";
     }
   },
   data() {
@@ -43,8 +42,16 @@ const _sfc_main = {
     questions() {
       return [...this.defaultQuestions, ...this.customQuestions];
     },
+    // 计算未回答的问题列表
+    unansweredQuestions() {
+      const answeredIds = this.history.map((h) => h.questionId);
+      return this.questions.filter((q) => !answeredIds.includes(q.id));
+    },
     currentQuestion() {
-      return this.questions[this.qIndex] || { id: 0, text: "问题已全部完成" };
+      if (this.unansweredQuestions.length === 0) {
+        return { id: 0, text: "所有问题已回答完毕！🎉" };
+      }
+      return this.unansweredQuestions[this.qIndex] || this.unansweredQuestions[0];
     }
   },
   mounted() {
@@ -55,6 +62,15 @@ const _sfc_main = {
     submitAnswer() {
       if (!this.myAnswer) {
         common_vendor.index.showToast({ title: "请填写你的答案", icon: "none" });
+        return;
+      }
+      if (this.currentQuestion.id === 0) {
+        common_vendor.index.showToast({ title: "所有问题已回答完毕", icon: "none" });
+        return;
+      }
+      const alreadyAnswered = this.history.some((h) => h.questionId === this.currentQuestion.id);
+      if (alreadyAnswered) {
+        common_vendor.index.showToast({ title: "该问题已经回答过了", icon: "none" });
         return;
       }
       this.partnerAnswer = this.generatePartnerAnswer(this.currentQuestion.id);
@@ -69,15 +85,21 @@ const _sfc_main = {
       };
       this.history.unshift(record);
       this.saveHistory();
-      common_vendor.index.showToast({ title: "已提交", icon: "none" });
+      common_vendor.index.showToast({ title: "已提交", icon: "success" });
+      setTimeout(() => {
+        this.nextQuestion();
+      }, 1500);
     },
     nextQuestion() {
       this.partnerAnswer = "";
       this.myAnswer = "";
-      if (this.qIndex < this.questions.length - 1) {
+      if (this.qIndex < this.unansweredQuestions.length - 1) {
         this.qIndex += 1;
       } else {
-        common_vendor.index.showToast({ title: "已到最后一题", icon: "none" });
+        this.qIndex = 0;
+      }
+      if (this.unansweredQuestions.length === 0) {
+        common_vendor.index.showToast({ title: "所有问题已回答完毕！", icon: "success" });
       }
     },
     openHistory() {
@@ -165,16 +187,16 @@ const _sfc_main = {
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: common_vendor.o(($event) => $data.showCustomModal = true),
-    b: common_vendor.t($options.currentQuestion.text),
-    c: $data.myAnswer,
-    d: common_vendor.o(($event) => $data.myAnswer = $event.detail.value),
-    e: common_vendor.o((...args) => $options.submitAnswer && $options.submitAnswer(...args)),
-    f: common_vendor.o((...args) => $options.nextQuestion && $options.nextQuestion(...args)),
-    g: $data.partnerAnswer
+    a: common_vendor.t($options.currentQuestion.text),
+    b: $data.myAnswer,
+    c: common_vendor.o(($event) => $data.myAnswer = $event.detail.value),
+    d: common_vendor.o((...args) => $options.submitAnswer && $options.submitAnswer(...args)),
+    e: common_vendor.o((...args) => $options.nextQuestion && $options.nextQuestion(...args)),
+    f: $data.partnerAnswer
   }, $data.partnerAnswer ? {
-    h: common_vendor.t($data.partnerAnswer)
+    g: common_vendor.t($data.partnerAnswer)
   } : {}, {
+    h: common_vendor.o(($event) => $data.showCustomModal = true),
     i: common_vendor.o((...args) => $options.openHistory && $options.openHistory(...args)),
     j: $data.showHistory
   }, $data.showHistory ? {
