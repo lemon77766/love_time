@@ -6,6 +6,10 @@ const _sfc_main = {
   data() {
     return {
       currentTab: "home",
+      currentDay: "",
+      currentYearMonth: "",
+      currentWeek: "",
+      timer: null,
       gridItems: [
         { icon: "/static/zhuye/question1.png", text: "甜蜜问答" },
         { icon: "/static/zhuye/100.png", text: "一百事" },
@@ -19,7 +23,29 @@ const _sfc_main = {
       ]
     };
   },
+  onLoad() {
+    this.updateDateTime();
+    this.timer = setInterval(() => {
+      this.updateDateTime();
+    }, 6e4);
+  },
+  onUnload() {
+    if (this.timer) {
+      clearInterval(this.timer);
+    }
+  },
   methods: {
+    updateDateTime() {
+      const now = /* @__PURE__ */ new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = now.getDate();
+      const weekDay = now.getDay();
+      const weekNames = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+      this.currentDay = day;
+      this.currentYearMonth = `${year}年${month}月`;
+      this.currentWeek = weekNames[weekDay];
+    },
     switchTab(tab) {
       this.currentTab = tab;
     },
@@ -61,10 +87,13 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return {
     a: common_assets._imports_0$1,
     b: common_vendor.o((...args) => $options.handleLogout && $options.handleLogout(...args)),
-    c: common_assets._imports_1$1,
-    d: common_assets._imports_0$2,
-    e: common_assets._imports_3,
-    f: common_vendor.f($data.gridItems, (item, index, i0) => {
+    c: common_vendor.t($data.currentDay),
+    d: common_vendor.t($data.currentYearMonth),
+    e: common_vendor.t($data.currentWeek),
+    f: common_assets._imports_1$1,
+    g: common_assets._imports_0$2,
+    h: common_assets._imports_3,
+    i: common_vendor.f($data.gridItems, (item, index, i0) => {
       return {
         a: item.icon,
         b: common_vendor.t(item.text),

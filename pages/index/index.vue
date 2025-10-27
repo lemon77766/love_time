@@ -13,11 +13,11 @@
       <!-- 时间样式容器 -->
       <view class="time-container">
         <!-- 日期数字 -->
-        <text class="date-number">23</text>
+        <text class="date-number">{{ currentDay }}</text>
         <!-- 日期文字 -->
         <view class="date-info">
-          <text class="date-text">2025年04月</text>
-          <text class="week-text">星期三</text>
+          <text class="date-text">{{ currentYearMonth }}</text>
+          <text class="week-text">{{ currentWeek }}</text>
         </view>
         <!-- 右侧笑脸图标 -->
         <image class="emoji" src="/static/zhuye/smile.png" />
@@ -66,6 +66,10 @@ export default {
   data() {
     return {
       currentTab: 'home',
+      currentDay: '',
+      currentYearMonth: '',
+      currentWeek: '',
+      timer: null,
       gridItems: [
         { icon: '/static/zhuye/question1.png', text: '甜蜜问答' },
         { icon: '/static/zhuye/100.png', text: '一百事' },
@@ -79,7 +83,33 @@ export default {
       ]
     };
   },
+  onLoad() {
+    this.updateDateTime();
+    // 每秒更新一次时间（可选：如果只需要日期不变，可以去掉定时器）
+    this.timer = setInterval(() => {
+      this.updateDateTime();
+    }, 60000); // 每分钟更新一次
+  },
+  onUnload() {
+    // 页面卸载时清除定时器
+    if (this.timer) {
+      clearInterval(this.timer);
+    }
+  },
   methods: {
+    updateDateTime() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = now.getDate();
+      const weekDay = now.getDay();
+      
+      const weekNames = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      
+      this.currentDay = day;
+      this.currentYearMonth = `${year}年${month}月`;
+      this.currentWeek = weekNames[weekDay];
+    },
     switchTab(tab) {
       this.currentTab = tab;
     },
@@ -264,12 +294,12 @@ export default {
 
 /* 情侣信息区域 */
 .couple-section {
-  margin: 20rpx 24rpx;    /* 外边距，让卡片与周围更均衡 */
-  padding: 30rpx 40rpx;   /* 内边距更大一些 */
+  margin: 16rpx 24rpx;    /* 减小外边距 */
+  padding: 20rpx 30rpx;   /* 减小内边距 */
   background-color: #ffffff;
-  border-radius: 32rpx;   /* 更明显的圆角 */
-  overflow: hidden;       /* 裁剪子元素，确保圆角生效 */
-  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.06); /* 轻微阴影增加层次 */
+  border-radius: 32rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.06);
 }
 
 .couple-content {
@@ -278,7 +308,7 @@ export default {
   align-items: center;
   background-color: #ffffff;
   border-radius: 20rpx;
-  padding: 30rpx;
+  padding: 16rpx;    /* 减小内边距 */
 }
 
 .boy, .girl {
@@ -288,10 +318,10 @@ export default {
 }
 
 .boy-avatar, .girl-avatar {
-  width: 140rpx;
-  height: 140rpx;
-  border-radius: 70rpx;
-  margin-bottom: 12rpx;
+  width: 100rpx;    /* 缩小头像 */
+  height: 100rpx;
+  border-radius: 50rpx;
+  margin-bottom: 8rpx;    /* 减小间距 */
 }
 
 .boy-name, .girl-name {
@@ -304,17 +334,17 @@ export default {
 }
 
 .anniversary-text {
-  font-size: 28rpx;
+  font-size: 24rpx;    /* 缩小字体 */
   color: #333;
-  margin-bottom: 15rpx;
+  margin-bottom: 10rpx;    /* 减小间距 */
   display: block;
 }
 
 .progress-bar {
-  width: 200rpx;
-  height: 8rpx;
+  width: 180rpx;    /* 缩小进度条宽度 */
+  height: 6rpx;    /* 缩小进度条高度 */
   background-color: #e5e5e5;
-  border-radius: 4rpx;
+  border-radius: 3rpx;
   overflow: hidden;
 }
 
@@ -322,7 +352,7 @@ export default {
   width: 70%;
   height: 100%;
   background-color: #2bad81;
-  border-radius: 4rpx;
+  border-radius: 3rpx;
 }
 
 /* 九宫格功能区 */
