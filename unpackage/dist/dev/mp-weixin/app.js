@@ -12,6 +12,8 @@ if (!Math) {
   "./pages/heartwall/index.js";
   "./pages/heartwall/create.js";
   "./pages/xinxiang/index.js";
+  "./pages/xinxiang/create.js";
+  "./pages/xinxiang/history.js";
 }
 const pages = [
   {

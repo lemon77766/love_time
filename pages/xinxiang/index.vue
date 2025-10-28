@@ -5,10 +5,10 @@
     
     <!-- 内容层 -->
     <view class="content-layer">
-      <!-- 顶部订单记录按钮 -->
+      <!-- 顶部信件记录按钮 -->
       <view class="top-menu" @click="openHistory">
         <text class="menu-icon">📋</text>
-        <text class="menu-text">订单记录</text>
+        <text class="menu-text">信件记录</text>
       </view>
 
       <!-- 文字描述 -->
@@ -35,14 +35,10 @@ export default {
   },
   methods: {
     openHistory() {
-      uni.showToast({ title: '订单记录功能开发中', icon: 'none' });
-      // 后续可以导航到历史记录页面
-      // uni.navigateTo({ url: '/pages/xinxiang/history' });
+      uni.navigateTo({ url: '/pages/xinxiang/history' });
     },
     createLetter() {
-      uni.showToast({ title: '写信功能开发中', icon: 'none' });
-      // 后续可以导航到写信页面
-      // uni.navigateTo({ url: '/pages/xinxiang/create' });
+      uni.navigateTo({ url: '/pages/xinxiang/create' });
     }
   }
 };
@@ -87,14 +83,15 @@ export default {
 .menu-icon {
   font-size: 48rpx;
   color: #ffffff;
-  filter: drop-shadow(0 2rpx 8rpx rgba(0,0,0,0.5));
+  filter: drop-shadow(0 4rpx 12rpx rgba(0,0,0,0.8));
 }
 
 .menu-text {
   font-size: 24rpx;
   color: #ffffff;
   letter-spacing: 2rpx;
-  text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.5);
+  text-shadow: 0 4rpx 12rpx rgba(0,0,0,0.8);
+  font-weight: 600;
 }
 
 /* 删除信封容器相关样式 */
@@ -113,11 +110,12 @@ export default {
 }
 
 .text-line {
-  font-size: 32rpx;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 36rpx;
+  color: #ffffff;
   letter-spacing: 2rpx;
   line-height: 1.6;
-  text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.5);
+  text-shadow: 0 4rpx 12rpx rgba(0,0,0,0.8);
+  font-weight: 500;
 }
 
 /* 底部前进按钮 */
@@ -133,23 +131,28 @@ export default {
 .arrow-button {
   width: 120rpx;
   height: 120rpx;
-  border: 3rpx solid rgba(255, 255, 255, 0.6);
+  border: 4rpx solid rgba(255, 255, 255, 0.9);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.6),
+              0 4rpx 12rpx rgba(0, 0, 0, 0.4),
+              inset 0 2rpx 4rpx rgba(255, 255, 255, 0.2);
 }
 
 .arrow-button:active {
   background: rgba(255, 255, 255, 0.1);
   transform: scale(0.95);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.8),
+              0 2rpx 8rpx rgba(0, 0, 0, 0.5);
 }
 
 .arrow-icon {
   font-size: 60rpx;
   color: #ffffff;
   font-weight: 300;
-  filter: drop-shadow(0 2rpx 8rpx rgba(0,0,0,0.3));
+  filter: drop-shadow(0 4rpx 12rpx rgba(0,0,0,0.8));
 }
 </style>

@@ -7,10 +7,10 @@ const _sfc_main = {
   },
   methods: {
     openHistory() {
-      common_vendor.index.showToast({ title: "订单记录功能开发中", icon: "none" });
+      common_vendor.index.navigateTo({ url: "/pages/xinxiang/history" });
     },
     createLetter() {
-      common_vendor.index.showToast({ title: "写信功能开发中", icon: "none" });
+      common_vendor.index.navigateTo({ url: "/pages/xinxiang/create" });
     }
   }
 };

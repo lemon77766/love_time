@@ -59,6 +59,18 @@
         "navigationBarTextStyle": "black",
         "navigationBarBackgroundColor": "#ffffff"
       }
+    },
+    {
+      "path": "pages/xinxiang/create",
+      "style": {
+        "navigationBarTitleText": "写信"
+      }
+    },
+    {
+      "path": "pages/xinxiang/history",
+      "style": {
+        "navigationBarTitleText": "信件记录"
+      }
     }
   ],
   "tabBar": {

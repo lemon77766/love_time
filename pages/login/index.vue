@@ -57,6 +57,9 @@
 </template>
 
 <script>
+import { wxLogin } from '@/api/login.js';
+import config from '@/utils/config.js';
+
 export default {
   data() {
     return {
@@ -86,43 +89,62 @@ export default {
       }
     },
 
-    // 微信授权登录
+    /**
+     * 微信授权登录主流程
+     * 流程说明：
+     * 1. 调用 wx.login 获取临时登录凭证 code
+     * 2. 调用 uni.getUserProfile 获取用户信息（昵称、头像）
+     * 3. 将 code 和用户信息发送到后端服务器
+     * 4. 后端验证后返回 session_key 和 openid
+     * 5. 前端保存登录状态和用户信息
+     */
     async handleWxLogin() {
       this.isLoading = true;
 
       try {
-        // 1. 获取用户信息
+        // 步骤1：调用 wx.login 获取 code
+        const loginCode = await this.getWxLoginCode();
+        console.log('获取到登录凭证 code:', loginCode);
+
+        // 步骤2：获取用户信息
         const userProfile = await this.getUserProfile();
+        console.log('获取到用户信息:', userProfile);
         
-        if (userProfile) {
-          // 2. 保存用户信息
-          this.userInfo = {
-            nickName: userProfile.nickName,
-            avatarUrl: userProfile.avatarUrl
-          };
+        // 步骤3：将 code 和用户信息发送到后端
+        const loginResult = await this.sendLoginToBackend(loginCode, userProfile);
+        console.log('后端验证结果:', loginResult);
 
-          // 3. 保存登录状态
-          const loginInfo = {
-            isLoggedIn: true,
-            userInfo: this.userInfo,
-            loginTime: new Date().toISOString()
-          };
-          uni.setStorageSync('login_info', loginInfo);
+        // 步骤4：保存用户信息和登录状态
+        this.userInfo = {
+          nickName: userProfile.nickName,
+          avatarUrl: userProfile.avatarUrl
+        };
 
-          this.isLoggedIn = true;
+        // 保存登录信息到本地存储
+        const loginInfo = {
+          isLoggedIn: true,
+          userInfo: this.userInfo,
+          token: loginResult.token || '',  // 后端返回的 token
+          openid: loginResult.openid || '',  // 后端返回的 openid
+          sessionKey: loginResult.session_key || '',  // 后端返回的 session_key
+          loginTime: new Date().toISOString()
+        };
+        uni.setStorageSync('login_info', loginInfo);
 
-          // 4. 提示登录成功
-          uni.showToast({
-            title: '登录成功',
-            icon: 'success',
-            duration: 1500
-          });
+        this.isLoggedIn = true;
 
-          // 5. 延迟进入首页
-          setTimeout(() => {
-            this.enterApp();
-          }, 1500);
-        }
+        // 步骤5：提示登录成功
+        uni.showToast({
+          title: '登录成功',
+          icon: 'success',
+          duration: 1500
+        });
+
+        // 步骤6：延迟进入首页
+        setTimeout(() => {
+          this.enterApp();
+        }, 1500);
+        
       } catch (e) {
         console.error('登录失败', e);
         uni.showToast({
@@ -134,7 +156,39 @@ export default {
       }
     },
 
-    // 获取用户信息（微信小程序）
+    /**
+     * 调用微信 wx.login 接口获取临时登录凭证 code
+     * @returns {Promise<string>} 返回 code字符串
+     */
+    getWxLoginCode() {
+      return new Promise((resolve, reject) => {
+        // #ifdef MP-WEIXIN
+        uni.login({
+          provider: 'weixin',
+          success: (res) => {
+            if (res.code) {
+              resolve(res.code);
+            } else {
+              reject(new Error('获取code失败'));
+            }
+          },
+          fail: (err) => {
+            reject(err);
+          }
+        });
+        // #endif
+
+        // #ifndef MP-WEIXIN
+        // H5 或其他平台返回模拟 code
+        resolve('mock_code_' + Date.now());
+        // #endif
+      });
+    },
+
+    /**
+     * 获取用户信息（微信小程序）
+     * @returns {Promise<Object>} 返回用户信息对象
+     */
     getUserProfile() {
       return new Promise((resolve, reject) => {
         // #ifdef MP-WEIXIN
@@ -157,6 +211,32 @@ export default {
         });
         // #endif
       });
+    },
+
+    /**
+     * 将登录信息发送到后端服务器（使用封装好的API）
+     * @param {string} code - 微信登录凭证
+     * @param {Object} userInfo - 用户信息
+     * @returns {Promise<Object>} 返回后端响应数据
+     */
+    async sendLoginToBackend(code, userInfo) {
+      try {
+        // 调用封装好的登录API
+        const result = await wxLogin(code, userInfo);
+        return result;
+      } catch (error) {
+        // 开发阶段：如果后端未就绪，返回模拟数据
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('开发模式：使用模拟数据，后端接口未就绪');
+          console.warn('后端接口地址应为：', config.baseURL + config.API.LOGIN.WECHAT);
+          return {
+            token: 'mock_token_' + Date.now(),
+            openid: 'mock_openid',
+            session_key: 'mock_session_key'
+          };
+        }
+        throw error;
+      }
     },
 
     // 进入应用

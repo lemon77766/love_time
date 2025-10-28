@@ -9,7 +9,9 @@
     "pages/hundred/index",
     "pages/heartwall/index",
     "pages/heartwall/create",
-    "pages/xinxiang/index"
+    "pages/xinxiang/index",
+    "pages/xinxiang/create",
+    "pages/xinxiang/history"
   ],
   "window": {
     "navigationBarTextStyle": "black",
