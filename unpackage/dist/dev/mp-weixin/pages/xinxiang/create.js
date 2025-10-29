@@ -18,6 +18,10 @@ const _sfc_main = {
         width: 100,
         height: 100
       },
+      // 底图缩放比例（100% 为原始大小）
+      imageScale: 100,
+      // 是否从预览打开的调整弹窗
+      fromPreview: false,
       isDragging: false,
       isResizing: false,
       dragStart: { x: 0, y: 0 },
@@ -92,6 +96,14 @@ const _sfc_main = {
     onOpacityChange(e) {
       this.opacity = e.detail.value;
     },
+    // 调整图片缩放（滑动中）
+    onScaleChanging(e) {
+      this.imageScale = e.detail.value;
+    },
+    // 调整图片缩放（松开）
+    onScaleChange(e) {
+      this.imageScale = e.detail.value;
+    },
     // 开始拖动裁剪框
     startDrag(e) {
       this.isDragging = true;
@@ -157,8 +169,17 @@ const _sfc_main = {
     openPreview() {
       this.showLivePreviewModal = true;
     },
-    // 打开调整弹窗
-    openAdjustModal() {
+    // 完成调整（智能判断是否需要返回预览）
+    finishAdjust() {
+      this.showOpacityModal = false;
+      if (this.fromPreview) {
+        this.showLivePreviewModal = true;
+        this.fromPreview = false;
+      }
+    },
+    // 从预览打开调整弹窗
+    openAdjustFromPreview() {
+      this.fromPreview = true;
       this.showLivePreviewModal = false;
       this.showOpacityModal = true;
     },
@@ -270,124 +291,143 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     x: $data.showOpacityModal
   }, $data.showOpacityModal ? {
     y: $data.customImage,
-    z: 1 - $data.opacity / 100,
-    A: $data.cropArea.top + "%",
-    B: $data.cropArea.left + "%",
-    C: $data.cropArea.width + "%",
-    D: 100 - $data.cropArea.left - $data.cropArea.width + "%",
-    E: $data.cropArea.top + "%",
-    F: $data.cropArea.height + "%",
-    G: $data.cropArea.top + $data.cropArea.height + "%",
-    H: 100 - $data.cropArea.top - $data.cropArea.height + "%",
-    I: common_vendor.o((...args) => $options.startResize && $options.startResize(...args)),
-    J: common_vendor.o((...args) => $options.onResize && $options.onResize(...args)),
-    K: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args)),
-    L: $data.cropArea.left + "%",
-    M: $data.cropArea.top + "%",
-    N: $data.cropArea.width + "%",
-    O: $data.cropArea.height + "%",
-    P: common_vendor.o((...args) => $options.startDrag && $options.startDrag(...args)),
-    Q: common_vendor.o((...args) => $options.onDrag && $options.onDrag(...args)),
-    R: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args)),
-    S: common_vendor.o((...args) => $options.onDrag && $options.onDrag(...args)),
-    T: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args)),
-    U: $data.opacity,
-    V: common_vendor.o((...args) => $options.onOpacityChange && $options.onOpacityChange(...args)),
-    W: common_vendor.o((...args) => $options.onOpacityChanging && $options.onOpacityChanging(...args)),
-    X: common_vendor.t($data.opacity),
-    Y: common_vendor.o(($event) => $data.showOpacityModal = false),
-    Z: common_vendor.o(() => {
+    z: "scale(" + $data.imageScale / 100 + ")",
+    A: 1 - $data.opacity / 100,
+    B: $data.cropArea.top + "%",
+    C: $data.cropArea.left + "%",
+    D: $data.cropArea.width + "%",
+    E: 100 - $data.cropArea.left - $data.cropArea.width + "%",
+    F: $data.cropArea.top + "%",
+    G: $data.cropArea.height + "%",
+    H: $data.cropArea.top + $data.cropArea.height + "%",
+    I: 100 - $data.cropArea.top - $data.cropArea.height + "%",
+    J: common_vendor.o((...args) => $options.startResize && $options.startResize(...args)),
+    K: common_vendor.o((...args) => $options.onResize && $options.onResize(...args)),
+    L: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args)),
+    M: $data.cropArea.left + "%",
+    N: $data.cropArea.top + "%",
+    O: $data.cropArea.width + "%",
+    P: $data.cropArea.height + "%",
+    Q: common_vendor.o((...args) => $options.startDrag && $options.startDrag(...args)),
+    R: common_vendor.o((...args) => $options.onDrag && $options.onDrag(...args)),
+    S: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args)),
+    T: common_vendor.o((...args) => $options.onDrag && $options.onDrag(...args)),
+    U: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args)),
+    V: $data.opacity,
+    W: common_vendor.o((...args) => $options.onOpacityChange && $options.onOpacityChange(...args)),
+    X: common_vendor.o((...args) => $options.onOpacityChanging && $options.onOpacityChanging(...args)),
+    Y: common_vendor.t($data.opacity),
+    Z: $data.imageScale,
+    aa: common_vendor.o((...args) => $options.onScaleChange && $options.onScaleChange(...args)),
+    ab: common_vendor.o((...args) => $options.onScaleChanging && $options.onScaleChanging(...args)),
+    ac: common_vendor.t($data.imageScale),
+    ad: common_vendor.o((...args) => $options.finishAdjust && $options.finishAdjust(...args)),
+    ae: common_vendor.o(() => {
     }),
-    aa: common_vendor.o(($event) => $data.showOpacityModal = false)
+    af: common_vendor.o(($event) => $data.showOpacityModal = false)
   } : {}, {
-    ab: $data.currentStep === 2
+    ag: $data.currentStep === 2
   }, $data.currentStep === 2 ? {
-    ac: $data.form.title,
-    ad: common_vendor.o(($event) => $data.form.title = $event.detail.value),
-    ae: common_vendor.t($data.form.deliveryDate || "请选择日期"),
-    af: $data.form.deliveryDate,
-    ag: common_vendor.o((...args) => $options.onDateChange && $options.onDateChange(...args)),
-    ah: $options.minDate,
-    ai: $data.form.phone,
-    aj: common_vendor.o(($event) => $data.form.phone = $event.detail.value),
-    ak: $data.form.wechat,
-    al: common_vendor.o(($event) => $data.form.wechat = $event.detail.value),
-    am: $data.form.content,
-    an: common_vendor.o(($event) => $data.form.content = $event.detail.value),
-    ao: common_vendor.t($data.form.content.length),
-    ap: common_vendor.o((...args) => $options.prevStep && $options.prevStep(...args)),
-    aq: common_vendor.o((...args) => $options.openPreview && $options.openPreview(...args)),
-    ar: common_vendor.o((...args) => $options.submitLetter && $options.submitLetter(...args))
+    ah: $data.form.title,
+    ai: common_vendor.o(($event) => $data.form.title = $event.detail.value),
+    aj: common_vendor.t($data.form.deliveryDate || "请选择日期"),
+    ak: $data.form.deliveryDate,
+    al: common_vendor.o((...args) => $options.onDateChange && $options.onDateChange(...args)),
+    am: $options.minDate,
+    an: $data.form.phone,
+    ao: common_vendor.o(($event) => $data.form.phone = $event.detail.value),
+    ap: $data.form.wechat,
+    aq: common_vendor.o(($event) => $data.form.wechat = $event.detail.value),
+    ar: $data.form.content,
+    as: common_vendor.o(($event) => $data.form.content = $event.detail.value),
+    at: common_vendor.t($data.form.content.length),
+    av: common_vendor.o((...args) => $options.prevStep && $options.prevStep(...args)),
+    aw: common_vendor.o((...args) => $options.openPreview && $options.openPreview(...args)),
+    ax: common_vendor.o((...args) => $options.submitLetter && $options.submitLetter(...args))
   } : {}, {
-    as: $data.showLivePreviewModal
+    ay: $data.showLivePreviewModal
   }, $data.showLivePreviewModal ? common_vendor.e({
-    at: $options.letterBackground,
-    av: 1 - $data.opacity / 100,
-    aw: common_vendor.t($data.form.title || "信件主题"),
-    ax: common_vendor.t($data.form.deliveryDate || "未选择"),
-    ay: common_vendor.t($data.form.content || "信件内容..."),
-    az: $data.form.phone
+    az: $options.letterBackground,
+    aA: "scale(" + $data.imageScale / 100 + ")",
+    aB: 1 - $data.opacity / 100,
+    aC: common_vendor.t($data.form.title || "信件主题"),
+    aD: common_vendor.t($data.form.deliveryDate || "未选择"),
+    aE: common_vendor.t($data.form.content || "信件内容..."),
+    aF: $data.form.phone
   }, $data.form.phone ? {
-    aA: common_vendor.t($data.form.phone.slice(0, 3)),
-    aB: common_vendor.t($data.form.phone.slice(-4))
+    aG: common_vendor.t($data.form.phone.slice(0, 3)),
+    aH: common_vendor.t($data.form.phone.slice(-4))
   } : {}, {
-    aC: common_vendor.o((...args) => $options.openAdjustModal && $options.openAdjustModal(...args)),
-    aD: common_vendor.o(($event) => $data.showLivePreviewModal = false),
-    aE: common_vendor.o(() => {
+    aI: $data.opacity,
+    aJ: common_vendor.o((...args) => $options.onOpacityChange && $options.onOpacityChange(...args)),
+    aK: common_vendor.o((...args) => $options.onOpacityChanging && $options.onOpacityChanging(...args)),
+    aL: common_vendor.t($data.opacity),
+    aM: $data.imageScale,
+    aN: common_vendor.o((...args) => $options.onScaleChange && $options.onScaleChange(...args)),
+    aO: common_vendor.o((...args) => $options.onScaleChanging && $options.onScaleChanging(...args)),
+    aP: common_vendor.t($data.imageScale),
+    aQ: common_vendor.o((...args) => $options.openAdjustFromPreview && $options.openAdjustFromPreview(...args)),
+    aR: common_vendor.o(($event) => $data.showLivePreviewModal = false),
+    aS: common_vendor.o(() => {
     }),
-    aF: common_vendor.o(($event) => $data.showLivePreviewModal = false)
+    aT: common_vendor.o(($event) => $data.showLivePreviewModal = false)
   }) : {}, {
-    aG: $data.showOpacityModal
+    aU: $data.showOpacityModal
   }, $data.showOpacityModal ? common_vendor.e({
-    aH: $options.letterBackground,
-    aI: 1 - $data.opacity / 100,
-    aJ: $data.isCustomStyle
+    aV: $options.letterBackground,
+    aW: "scale(" + $data.imageScale / 100 + ")",
+    aX: 1 - $data.opacity / 100,
+    aY: $data.isCustomStyle
   }, $data.isCustomStyle ? {
-    aK: $data.cropArea.top + "%",
-    aL: $data.cropArea.left + "%",
-    aM: $data.cropArea.width + "%",
-    aN: 100 - $data.cropArea.left - $data.cropArea.width + "%",
-    aO: $data.cropArea.top + "%",
-    aP: $data.cropArea.height + "%",
-    aQ: $data.cropArea.top + $data.cropArea.height + "%",
-    aR: 100 - $data.cropArea.top - $data.cropArea.height + "%"
+    aZ: $data.cropArea.top + "%",
+    ba: $data.cropArea.left + "%",
+    bb: $data.cropArea.width + "%",
+    bc: 100 - $data.cropArea.left - $data.cropArea.width + "%",
+    bd: $data.cropArea.top + "%",
+    be: $data.cropArea.height + "%",
+    bf: $data.cropArea.top + $data.cropArea.height + "%",
+    bg: 100 - $data.cropArea.top - $data.cropArea.height + "%"
   } : {}, {
-    aS: $data.isCustomStyle
+    bh: $data.isCustomStyle
   }, $data.isCustomStyle ? {
-    aT: common_vendor.o((...args) => $options.startResize && $options.startResize(...args)),
-    aU: common_vendor.o((...args) => $options.onResize && $options.onResize(...args)),
-    aV: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args)),
-    aW: $data.cropArea.left + "%",
-    aX: $data.cropArea.top + "%",
-    aY: $data.cropArea.width + "%",
-    aZ: $data.cropArea.height + "%",
-    ba: common_vendor.o((...args) => $options.startDrag && $options.startDrag(...args)),
-    bb: common_vendor.o((...args) => $options.onDrag && $options.onDrag(...args)),
-    bc: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args))
+    bi: common_vendor.o((...args) => $options.startResize && $options.startResize(...args)),
+    bj: common_vendor.o((...args) => $options.onResize && $options.onResize(...args)),
+    bk: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args)),
+    bl: $data.cropArea.left + "%",
+    bm: $data.cropArea.top + "%",
+    bn: $data.cropArea.width + "%",
+    bo: $data.cropArea.height + "%",
+    bp: common_vendor.o((...args) => $options.startDrag && $options.startDrag(...args)),
+    bq: common_vendor.o((...args) => $options.onDrag && $options.onDrag(...args)),
+    br: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args))
   } : {}, {
-    bd: common_vendor.o((...args) => $options.onDrag && $options.onDrag(...args)),
-    be: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args)),
-    bf: $data.opacity,
-    bg: common_vendor.o((...args) => $options.onOpacityChange && $options.onOpacityChange(...args)),
-    bh: common_vendor.o((...args) => $options.onOpacityChanging && $options.onOpacityChanging(...args)),
-    bi: common_vendor.t($data.opacity),
-    bj: common_vendor.o(($event) => $data.showOpacityModal = false),
-    bk: common_vendor.o(() => {
+    bs: common_vendor.o((...args) => $options.onDrag && $options.onDrag(...args)),
+    bt: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args)),
+    bv: $data.opacity,
+    bw: common_vendor.o((...args) => $options.onOpacityChange && $options.onOpacityChange(...args)),
+    bx: common_vendor.o((...args) => $options.onOpacityChanging && $options.onOpacityChanging(...args)),
+    by: common_vendor.t($data.opacity),
+    bz: $data.imageScale,
+    bA: common_vendor.o((...args) => $options.onScaleChange && $options.onScaleChange(...args)),
+    bB: common_vendor.o((...args) => $options.onScaleChanging && $options.onScaleChanging(...args)),
+    bC: common_vendor.t($data.imageScale),
+    bD: common_vendor.o((...args) => $options.finishAdjust && $options.finishAdjust(...args)),
+    bE: common_vendor.o(() => {
     }),
-    bl: common_vendor.o(($event) => $data.showOpacityModal = false)
+    bF: common_vendor.o(($event) => $data.showOpacityModal = false)
   }) : {}, {
-    bm: $data.showPreviewModal
+    bG: $data.showPreviewModal
   }, $data.showPreviewModal ? {
-    bn: $options.letterBackground,
-    bo: $data.isCustomStyle ? `inset(${$data.cropArea.top}% ${100 - $data.cropArea.left - $data.cropArea.width}% ${100 - $data.cropArea.top - $data.cropArea.height}% ${$data.cropArea.left}%)` : "none",
-    bp: 1 - $data.opacity / 100,
-    bq: common_vendor.t($data.form.title),
-    br: common_vendor.t($data.form.deliveryDate),
-    bs: common_vendor.t($data.form.content),
-    bt: common_vendor.t($data.form.phone.slice(0, 3)),
-    bv: common_vendor.t($data.form.phone.slice(-4)),
-    bw: common_vendor.o((...args) => $options.closePreviewAndBack && $options.closePreviewAndBack(...args)),
-    bx: common_vendor.o(() => {
+    bH: $options.letterBackground,
+    bI: $data.isCustomStyle ? `inset(${$data.cropArea.top}% ${100 - $data.cropArea.left - $data.cropArea.width}% ${100 - $data.cropArea.top - $data.cropArea.height}% ${$data.cropArea.left}%)` : "none",
+    bJ: 1 - $data.opacity / 100,
+    bK: common_vendor.t($data.form.title),
+    bL: common_vendor.t($data.form.deliveryDate),
+    bM: common_vendor.t($data.form.content),
+    bN: common_vendor.t($data.form.phone.slice(0, 3)),
+    bO: common_vendor.t($data.form.phone.slice(-4)),
+    bP: common_vendor.o((...args) => $options.closePreviewAndBack && $options.closePreviewAndBack(...args)),
+    bQ: common_vendor.o(() => {
     })
   } : {});
 }

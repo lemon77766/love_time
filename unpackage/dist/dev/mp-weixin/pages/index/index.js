@@ -14,12 +14,7 @@ const _sfc_main = {
         { icon: "/static/zhuye/question1.png", text: "甜蜜问答" },
         { icon: "/static/zhuye/100.png", text: "一百事" },
         { icon: "/static/zhuye/yellow_love.png", text: "心形墙" },
-        { icon: "/static/zhuye/letter.png", text: "未来情书" },
-        { icon: "/static/zhuye/jinian.png", text: "纪念日" },
-        { icon: "/static/zhuye/guiji.png", text: "情侣轨迹" },
-        { icon: "/static/zhuye/jiudian.png", text: "情侣酒店" },
-        { icon: "/static/zhuye/xiangce.png", text: "相册" },
-        { icon: "/static/zhuye/xuyuandeng.png", text: "许愿灯" }
+        { icon: "/static/zhuye/letter.png", text: "未来情书" }
       ]
     };
   },

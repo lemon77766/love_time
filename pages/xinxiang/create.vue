@@ -84,7 +84,15 @@
             @touchmove="onDrag"
             @touchend="endDrag"
           >
-            <image class="preview-bg" :src="customImage" mode="aspectFill"></image>
+            <image 
+              class="preview-bg" 
+              :src="customImage" 
+              mode="aspectFill"
+              :style="{
+                transform: 'scale(' + (imageScale / 100) + ')',
+                transformOrigin: 'center center'
+              }"
+            ></image>
             <view class="preview-overlay" :style="{ opacity: 1 - opacity / 100 }"></view>
             
             <!-- 遮罩层：使未选中区域变暗 -->
@@ -147,8 +155,24 @@
           <text class="control-value">{{ opacity }}%</text>
         </view>
 
+        <!-- 新增：图片缩放控制 -->
+        <view class="opacity-control">
+          <text class="control-label">底图大小</text>
+          <slider 
+            class="slider"
+            :value="imageScale" 
+            @change="onScaleChange" 
+            @changing="onScaleChanging"
+            min="50" 
+            max="200"
+            activeColor="#2bad81"
+            block-size="20"
+          />
+          <text class="control-value">{{ imageScale }}%</text>
+        </view>
+
         <view class="modal-actions">
-          <button class="modal-btn cancel" @click="showOpacityModal = false">完成</button>
+          <button class="modal-btn cancel" @click="finishAdjust">完成</button>
         </view>
       </view>
     </view>
@@ -239,6 +263,10 @@
               class="letter-bg" 
               :src="letterBackground" 
               mode="aspectFill"
+              :style="{
+                transform: 'scale(' + (imageScale / 100) + ')',
+                transformOrigin: 'center center'
+              }"
             ></image>
             
             <!-- 透明度遮罩 -->
@@ -262,8 +290,41 @@
           </view>
         </view>
 
+        <!-- 调整控制区域 -->
+        <view class="preview-controls">
+          <view class="opacity-control">
+            <text class="control-label">透明度</text>
+            <slider 
+              class="slider"
+              :value="opacity" 
+              @change="onOpacityChange" 
+              @changing="onOpacityChanging"
+              min="0" 
+              max="100"
+              activeColor="#2bad81"
+              block-size="20"
+            />
+            <text class="control-value">{{ opacity }}%</text>
+          </view>
+
+          <view class="opacity-control">
+            <text class="control-label">底图大小</text>
+            <slider 
+              class="slider"
+              :value="imageScale" 
+              @change="onScaleChange" 
+              @changing="onScaleChanging"
+              min="50" 
+              max="200"
+              activeColor="#2bad81"
+              block-size="20"
+            />
+            <text class="control-value">{{ imageScale }}%</text>
+          </view>
+        </view>
+
         <view class="preview-modal-actions">
-          <button class="preview-modal-btn adjust" @click="openAdjustModal">调整底图</button>
+          <button class="preview-modal-btn adjust" @click="openAdjustFromPreview">调整底图</button>
           <button class="preview-modal-btn close" @click="showLivePreviewModal = false">关闭</button>
         </view>
       </view>
@@ -280,7 +341,15 @@
             @touchmove="onDrag"
             @touchend="endDrag"
           >
-            <image class="preview-bg" :src="letterBackground" mode="aspectFill"></image>
+            <image 
+              class="preview-bg" 
+              :src="letterBackground" 
+              mode="aspectFill"
+              :style="{
+                transform: 'scale(' + (imageScale / 100) + ')',
+                transformOrigin: 'center center'
+              }"
+            ></image>
             <view class="preview-overlay" :style="{ opacity: 1 - opacity / 100 }"></view>
             
             <!-- 遮罩层：使未选中区域变暗 -->
@@ -338,8 +407,24 @@
           <text class="control-value">{{ opacity }}%</text>
         </view>
 
+        <!-- 新增：图片缩放控制 -->
+        <view class="opacity-control">
+          <text class="control-label">底图大小</text>
+          <slider 
+            class="slider"
+            :value="imageScale" 
+            @change="onScaleChange" 
+            @changing="onScaleChanging"
+            min="50" 
+            max="200"
+            activeColor="#2bad81"
+            block-size="20"
+          />
+          <text class="control-value">{{ imageScale }}%</text>
+        </view>
+
         <view class="modal-actions">
-          <button class="modal-btn cancel" @click="showOpacityModal = false">完成</button>
+          <button class="modal-btn cancel" @click="finishAdjust">完成</button>
         </view>
       </view>
     </view>
@@ -410,6 +495,10 @@ export default {
         width: 100,
         height: 100
       },
+      // 底图缩放比例（100% 为原始大小）
+      imageScale: 100,
+      // 是否从预览打开的调整弹窗
+      fromPreview: false,
       isDragging: false,
       isResizing: false,
       dragStart: { x: 0, y: 0 },
@@ -488,6 +577,16 @@ export default {
     // 调整透明度（松开）
     onOpacityChange(e) {
       this.opacity = e.detail.value;
+    },
+    
+    // 调整图片缩放（滑动中）
+    onScaleChanging(e) {
+      this.imageScale = e.detail.value;
+    },
+    
+    // 调整图片缩放（松开）
+    onScaleChange(e) {
+      this.imageScale = e.detail.value;
     },
     
     // 开始拖动裁剪框
@@ -575,8 +674,19 @@ export default {
       this.showLivePreviewModal = true;
     },
     
-    // 打开调整弹窗
-    openAdjustModal() {
+    // 完成调整（智能判断是否需要返回预览）
+    finishAdjust() {
+      this.showOpacityModal = false;
+      // 如果是从预览打开的，返回预览；否则关闭modal
+      if (this.fromPreview) {
+        this.showLivePreviewModal = true;
+        this.fromPreview = false;
+      }
+    },
+    
+    // 从预览打开调整弹窗
+    openAdjustFromPreview() {
+      this.fromPreview = true;
       this.showLivePreviewModal = false;
       this.showOpacityModal = true;
     },

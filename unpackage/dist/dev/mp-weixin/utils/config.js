@@ -2,8 +2,8 @@
 const CONFIG = {
   // 开发环境
   development: {
-    baseURL: "http://localhost:3000",
-    // 本地开发服务器
+    baseURL: "http://192.168.54.229:8080/lovetime",
+    // 后端服务器地址
     timeout: 1e4
   },
   // 生产环境

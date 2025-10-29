@@ -1,7 +1,6 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
 const api_login = require("../../api/login.js");
-const utils_config = require("../../utils/config.js");
 const common_assets = require("../../common/assets.js");
 const _sfc_main = {
   data() {
@@ -23,18 +22,24 @@ const _sfc_main = {
       try {
         const loginInfo = common_vendor.index.getStorageSync("login_info");
         if (loginInfo && loginInfo.isLoggedIn) {
+          common_vendor.index.__f__("log", "at pages/login/index.vue:76", "检测到已登录，自动跳转到首页");
           this.isLoggedIn = true;
           this.userInfo = loginInfo.userInfo || {};
+          setTimeout(() => {
+            common_vendor.index.reLaunch({
+              url: "/pages/index/index"
+            });
+          }, 300);
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:88", "检查登录状态失败", e);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:87", "检查登录状态失败", e);
       }
     },
     /**
      * 微信授权登录主流程
      * 流程说明：
-     * 1. 调用 wx.login 获取临时登录凭证 code
-     * 2. 调用 uni.getUserProfile 获取用户信息（昵称、头像）
+     * 1. 调用 uni.getUserProfile 获取用户信息（昵称、头像）- 必须由用户点击直接触发
+     * 2. 调用 wx.login 获取临时登录凭证 code
      * 3. 将 code 和用户信息发送到后端服务器
      * 4. 后端验证后返回 session_key 和 openid
      * 5. 前端保存登录状态和用户信息
@@ -42,12 +47,12 @@ const _sfc_main = {
     async handleWxLogin() {
       this.isLoading = true;
       try {
-        const loginCode = await this.getWxLoginCode();
-        common_vendor.index.__f__("log", "at pages/login/index.vue:107", "获取到登录凭证 code:", loginCode);
         const userProfile = await this.getUserProfile();
-        common_vendor.index.__f__("log", "at pages/login/index.vue:111", "获取到用户信息:", userProfile);
+        common_vendor.index.__f__("log", "at pages/login/index.vue:106", "获取到用户信息:", userProfile);
+        const loginCode = await this.getWxLoginCode();
+        common_vendor.index.__f__("log", "at pages/login/index.vue:110", "获取到登录凭证 code:", loginCode);
         const loginResult = await this.sendLoginToBackend(loginCode, userProfile);
-        common_vendor.index.__f__("log", "at pages/login/index.vue:115", "后端验证结果:", loginResult);
+        common_vendor.index.__f__("log", "at pages/login/index.vue:114", "后端验证结果:", loginResult);
         this.userInfo = {
           nickName: userProfile.nickName,
           avatarUrl: userProfile.avatarUrl
@@ -74,7 +79,7 @@ const _sfc_main = {
           this.enterApp();
         }, 1500);
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:149", "登录失败", e);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:148", "登录失败", e);
         common_vendor.index.showToast({
           title: e.errMsg || "登录失败，请重试",
           icon: "none"
@@ -132,15 +137,7 @@ const _sfc_main = {
         const result = await api_login.wxLogin(code, userInfo);
         return result;
       } catch (error) {
-        {
-          common_vendor.index.__f__("warn", "at pages/login/index.vue:230", "开发模式：使用模拟数据，后端接口未就绪");
-          common_vendor.index.__f__("warn", "at pages/login/index.vue:231", "后端接口地址应为：", utils_config.config.baseURL + utils_config.config.API.LOGIN.WECHAT);
-          return {
-            token: "mock_token_" + Date.now(),
-            openid: "mock_openid",
-            session_key: "mock_session_key"
-          };
-        }
+        throw error;
       }
     },
     // 进入应用
@@ -164,9 +161,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   }, !$data.isLoggedIn ? {
     g: common_vendor.o((...args) => $options.handleWxLogin && $options.handleWxLogin(...args)),
     h: $data.isLoading
-  } : {
-    i: common_vendor.o((...args) => $options.enterApp && $options.enterApp(...args))
-  });
+  } : {});
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-d08ef7d4"]]);
 wx.createPage(MiniProgramPage);

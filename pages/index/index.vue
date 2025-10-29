@@ -66,12 +66,7 @@ export default {
         { icon: '/static/zhuye/question1.png', text: '甜蜜问答' },
         { icon: '/static/zhuye/100.png', text: '一百事' },
         { icon: '/static/zhuye/yellow_love.png', text: '心形墙' },
-        { icon: '/static/zhuye/letter.png', text: '未来情书' },
-        { icon: '/static/zhuye/jinian.png', text: '纪念日' },
-        { icon: '/static/zhuye/guiji.png', text: '情侣轨迹' },
-        { icon: '/static/zhuye/jiudian.png', text: '情侣酒店' },
-        { icon: '/static/zhuye/xiangce.png', text: '相册' },
-        { icon: '/static/zhuye/xuyuandeng.png', text: '许愿灯' }
+        { icon: '/static/zhuye/letter.png', text: '未来情书' }
       ]
     };
   },
@@ -254,8 +249,8 @@ export default {
 
 /* 情侣信息区域 */
 .couple-section {
-  margin: 16rpx 24rpx;    /* 减小外边距 */
-  padding: 20rpx 30rpx;   /* 减小内边距 */
+  margin: 30rpx 16rpx;    /* 增大外边距 */
+  padding: 40rpx 30rpx;   /* 增大内边距 */
   background-color: #ffffff;
   border-radius: 32rpx;
   overflow: hidden;
@@ -268,7 +263,7 @@ export default {
   align-items: center;
   background-color: #ffffff;
   border-radius: 20rpx;
-  padding: 16rpx;    /* 减小内边距 */
+  padding: 30rpx;    /* 增大内边距 */
 }
 
 .boy, .girl {
@@ -278,10 +273,10 @@ export default {
 }
 
 .boy-avatar, .girl-avatar {
-  width: 100rpx;    /* 缩小头像 */
-  height: 100rpx;
-  border-radius: 50rpx;
-  margin-bottom: 8rpx;    /* 减小间距 */
+  width: 140rpx;    /* 从100rpx增大到140rpx */
+  height: 140rpx;
+  border-radius: 70rpx;
+  margin-bottom: 16rpx;    /* 增大间距 */
 }
 
 .boy-name, .girl-name {
@@ -291,62 +286,81 @@ export default {
 
 .anniversary {
   text-align: center;
+  flex: 1;
 }
 
 .anniversary-text {
-  font-size: 24rpx;    /* 缩小字体 */
+  font-size: 28rpx;    /* 从24rpx增大到28rpx */
   color: #333;
-  margin-bottom: 10rpx;    /* 减小间距 */
+  margin-bottom: 16rpx;    /* 增大间距 */
   display: block;
+  font-weight: 600;
 }
 
 .progress-bar {
-  width: 180rpx;    /* 缩小进度条宽度 */
-  height: 6rpx;    /* 缩小进度条高度 */
+  width: 220rpx;    /* 从180rpx增大到220rpx */
+  height: 8rpx;    /* 从6rpx增大到8rpx */
   background-color: #e5e5e5;
-  border-radius: 3rpx;
+  border-radius: 4rpx;
   overflow: hidden;
+  margin: 0 auto;
 }
 
 .progress-fill {
   width: 70%;
   height: 100%;
   background-color: #2bad81;
-  border-radius: 3rpx;
+  border-radius: 4rpx;
 }
 
 /* 九宫格功能区 */
 .grid-section {
-  padding: 30rpx;
+  padding: 30rpx 20rpx;
   background-color: #f0f0f0;
 }
 
 .grid-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20rpx;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24rpx;
+  max-width: 600rpx;
+  margin: 0 auto;
 }
 
 .grid-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 50rpx 30rpx;
-  background-color: #ffffff;
-  border-radius: 30rpx;
-  border: 1rpx solid #e5e5e5;
+  justify-content: center;
+  padding: 60rpx 40rpx;
+  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+  border-radius: 24rpx;
+  border: 1rpx solid #e8e8e8;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.grid-item:active {
+  transform: translateY(-4rpx);
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.12);
 }
 
 .grid-icon {
-  width: 50rpx;
-  height: 50rpx;
-  margin-bottom: 15rpx;
+  width: 80rpx;
+  height: 80rpx;
+  margin-bottom: 20rpx;
+  transition: transform 0.3s ease;
+}
+
+.grid-item:active .grid-icon {
+  transform: scale(1.1);
 }
 
 .grid-text {
-  font-size: 24rpx;
+  font-size: 28rpx;
   color: #333;
   text-align: center;
+  font-weight: 600;
 }
 
 

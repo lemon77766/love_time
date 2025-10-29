@@ -19,6 +19,10 @@ class Http {
       // 构建完整的请求URL
       const url = config.baseURL + options.url;
       
+      console.log(`\n=== HTTP ${options.method || 'GET'} 请求 ===`);
+      console.log('请求URL:', url);
+      console.log('请求数据:', options.data);
+      
       // 请求配置
       const requestOptions = {
         url: url,
@@ -32,30 +36,40 @@ class Http {
         },
         timeout: options.timeout || config.timeout,
         success: (res) => {
-          console.log('请求成功:', url, res);
+          console.log('✅ 请求成功，响应状态码:', res.statusCode);
+          console.log('响应数据:', res.data);
           
           // 根据状态码处理
           if (res.statusCode === 200) {
             // 检查业务状态
             if (res.data.success) {
+              console.log('✅ 业务请求成功，返回数据:', res.data.data);
               resolve(res.data.data);
             } else {
+              console.error('❌ 业务错误:', res.data.message);
               reject(new Error(res.data.message || '请求失败'));
             }
           } else if (res.statusCode === 401) {
             // token过期或未登录
+            console.error('❌ 401 未授权');
             this.handleUnauthorized();
             reject(new Error('登录已过期，请重新登录'));
           } else {
+            console.error('❌ HTTP错误:', res.statusCode);
             reject(new Error(`请求失败: ${res.statusCode}`));
           }
         },
         fail: (err) => {
-          console.error('请求失败:', url, err);
+          console.error('❌ 请求失败:', url);
+          console.error('错误详情:', err);
           
           // 开发环境提示
           if (process.env.NODE_ENV === 'development') {
-            console.warn('开发模式：后端接口未就绪');
+            console.warn('⚠️ 开发模式：后端接口未就绪或网络错误');
+            console.warn('⚠️ 请检查：');
+            console.warn('  1. 后端服务是否已启动');
+            console.warn('  2. 请求地址是否正确');
+            console.warn('  3. 网络是否连通');
           }
           
           reject(err);

@@ -35,14 +35,6 @@
         <text class="btn-text">微信授权登录</text>
       </button>
 
-      <!-- 进入按钮 -->
-      <button 
-        v-else 
-        class="enter-btn" 
-        @click="enterApp"
-      >
-        <text class="btn-text">进入甜蜜时光</text>
-      </button>
 
       <!-- 提示信息 -->
       <view class="tips">
@@ -81,8 +73,15 @@ export default {
       try {
         const loginInfo = uni.getStorageSync('login_info');
         if (loginInfo && loginInfo.isLoggedIn) {
+          console.log('检测到已登录，自动跳转到首页');
           this.isLoggedIn = true;
           this.userInfo = loginInfo.userInfo || {};
+          // ✅ 立即跳转到首页，不显示登录页面
+          setTimeout(() => {
+            uni.reLaunch({
+              url: '/pages/index/index'
+            });
+          }, 300);
         }
       } catch (e) {
         console.error('检查登录状态失败', e);
@@ -92,8 +91,8 @@ export default {
     /**
      * 微信授权登录主流程
      * 流程说明：
-     * 1. 调用 wx.login 获取临时登录凭证 code
-     * 2. 调用 uni.getUserProfile 获取用户信息（昵称、头像）
+     * 1. 调用 uni.getUserProfile 获取用户信息（昵称、头像）- 必须由用户点击直接触发
+     * 2. 调用 wx.login 获取临时登录凭证 code
      * 3. 将 code 和用户信息发送到后端服务器
      * 4. 后端验证后返回 session_key 和 openid
      * 5. 前端保存登录状态和用户信息
@@ -102,13 +101,13 @@ export default {
       this.isLoading = true;
 
       try {
-        // 步骤1：调用 wx.login 获取 code
-        const loginCode = await this.getWxLoginCode();
-        console.log('获取到登录凭证 code:', loginCode);
-
-        // 步骤2：获取用户信息
+        // 步骤1：先获取用户信息（必须由用户点击直接触发，不能延迟）
         const userProfile = await this.getUserProfile();
         console.log('获取到用户信息:', userProfile);
+
+        // 步骤2：获取登录凭证code（可以在任何时机调用）
+        const loginCode = await this.getWxLoginCode();
+        console.log('获取到登录凭证 code:', loginCode);
         
         // 步骤3：将 code 和用户信息发送到后端
         const loginResult = await this.sendLoginToBackend(loginCode, userProfile);
@@ -225,16 +224,7 @@ export default {
         const result = await wxLogin(code, userInfo);
         return result;
       } catch (error) {
-        // 开发阶段：如果后端未就绪，返回模拟数据
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('开发模式：使用模拟数据，后端接口未就绪');
-          console.warn('后端接口地址应为：', config.baseURL + config.API.LOGIN.WECHAT);
-          return {
-            token: 'mock_token_' + Date.now(),
-            openid: 'mock_openid',
-            session_key: 'mock_session_key'
-          };
-        }
+        // 直接抛出错误，不返回模拟数据
         throw error;
       }
     },
