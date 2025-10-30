@@ -23,12 +23,6 @@ const pages = [
     }
   },
   {
-    path: "pages/hudong/index",
-    style: {
-      navigationBarTitleText: "情侣互动"
-    }
-  },
-  {
     path: "pages/jiyi/index",
     style: {
       navigationBarTitleText: "共同记忆"
@@ -50,26 +44,20 @@ const tabBar = {
     {
       pagePath: "pages/index/index",
       text: "恋爱时光轴",
-      iconPath: "/static/love.png",
-      selectedIconPath: "/static/love.png"
-    },
-    {
-      pagePath: "pages/hudong/index",
-      text: "情侣互动",
-      iconPath: "/static/hudong.png",
-      selectedIconPath: "/static/hudong.png"
+      iconPath: "static/love.png",
+      selectedIconPath: "static/love.png"
     },
     {
       pagePath: "pages/jiyi/index",
       text: "共同记忆",
-      iconPath: "/static/remerber.png",
-      selectedIconPath: "/static/remerber.png"
+      iconPath: "static/remerber.png",
+      selectedIconPath: "static/remerber.png"
     },
     {
       pagePath: "pages/we/index",
       text: "我们",
-      iconPath: "/static/we.png",
-      selectedIconPath: "/static/we.png"
+      iconPath: "static/we.png",
+      selectedIconPath: "static/we.png"
     }
   ]
 };

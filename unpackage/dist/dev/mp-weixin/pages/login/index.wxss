@@ -145,7 +145,7 @@
 }
 
 /* 登录按钮 */
-.login-btn.data-v-d08ef7d4, .enter-btn.data-v-d08ef7d4 {
+.login-btn.data-v-d08ef7d4, .enter-btn.data-v-d08ef7d4, .guest-btn.data-v-d08ef7d4 {
   width: 100%;
   background: #2bad81;
   border-radius: 48rpx;
@@ -155,19 +155,25 @@
   justify-content: center;
   gap: 12rpx;
   box-shadow: 0 8rpx 20rpx rgba(43, 173, 129, 0.25);
-  margin-bottom: 30rpx;
+  margin-bottom: 20rpx;
   border: none;
   color: #ffffff;
 }
-.login-btn.data-v-d08ef7d4::after, .enter-btn.data-v-d08ef7d4::after {
+.login-btn.data-v-d08ef7d4::after, .enter-btn.data-v-d08ef7d4::after, .guest-btn.data-v-d08ef7d4::after {
   border: none;
 }
-.login-btn.data-v-d08ef7d4:active, .enter-btn.data-v-d08ef7d4:active {
+.login-btn.data-v-d08ef7d4:active, .enter-btn.data-v-d08ef7d4:active, .guest-btn.data-v-d08ef7d4:active {
   opacity: 0.85;
 }
 .enter-btn.data-v-d08ef7d4 {
   background: #2bad81;
   box-shadow: 0 8rpx 20rpx rgba(43, 173, 129, 0.25);
+}
+
+/* 游客登录按钮样式 */
+.guest-btn.data-v-d08ef7d4 {
+  background: #ff9800;
+  box-shadow: 0 8rpx 20rpx rgba(255, 152, 0, 0.25);
 }
 .btn-icon.data-v-d08ef7d4 {
   font-size: 32rpx;

@@ -35,6 +35,16 @@
         <text class="btn-text">微信授权登录</text>
       </button>
 
+      <!-- 游客登录按钮 -->
+      <button 
+        v-if="!isLoggedIn" 
+        class="guest-btn" 
+        @click="handleGuestLogin"
+      >
+        <text class="btn-icon">👤</text>
+        <text class="btn-text">游客登录</text>
+      </button>
+
       <!-- 头像获取按钮（新增） -->
       <button
         v-if="needAvatar"
@@ -175,6 +185,52 @@ export default {
         }
       } catch (e) {
         console.error('检查登录状态失败', e);
+      }
+    },
+
+    /**
+     * 游客登录处理
+     * 无需授权，直接使用默认用户信息进入应用
+     */
+    handleGuestLogin() {
+      // 创建游客用户信息
+      const guestUserInfo = {
+        nickName: '游客用户',
+        avatarUrl: '/static/zhuye/smile.png',
+        displayName: '游客用户',
+        displayAvatar: '/static/zhuye/smile.png',
+        isGuest: true
+      };
+
+      // 保存游客登录信息
+      const loginInfo = {
+        isLoggedIn: true,
+        userInfo: guestUserInfo,
+        isGuest: true, // 标记为游客登录
+        loginTime: new Date().toISOString()
+      };
+      
+      try {
+        uni.setStorageSync('login_info', loginInfo);
+        
+        // 提示登录成功
+        uni.showToast({
+          title: '游客登录成功',
+          icon: 'success',
+          duration: 1500
+        });
+
+        // 延迟跳转到首页
+        setTimeout(() => {
+          this.enterApp();
+        }, 1500);
+        
+      } catch (error) {
+        console.error('游客登录失败', error);
+        uni.showToast({
+          title: '登录失败，请重试',
+          icon: 'none'
+        });
       }
     },
 
@@ -342,7 +398,7 @@ export default {
           duration: 2000
         });
       }
-    }
+    },
 
     /**
      * 调用微信 wx.login 接口获取临时登录凭证 code
@@ -636,7 +692,7 @@ export default {
 }
 
 /* 登录按钮 */
-.login-btn, .enter-btn {
+.login-btn, .enter-btn, .guest-btn {
   width: 100%;
   background: #2bad81;
   border-radius: 48rpx;
@@ -646,22 +702,28 @@ export default {
   justify-content: center;
   gap: 12rpx;
   box-shadow: 0 8rpx 20rpx rgba(43, 173, 129, 0.25);
-  margin-bottom: 30rpx;
+  margin-bottom: 20rpx;
   border: none;
   color: #ffffff;
 }
 
-.login-btn::after, .enter-btn::after {
+.login-btn::after, .enter-btn::after, .guest-btn::after {
   border: none;
 }
 
-.login-btn:active, .enter-btn:active {
+.login-btn:active, .enter-btn:active, .guest-btn:active {
   opacity: 0.85;
 }
 
 .enter-btn {
   background: #2bad81;
   box-shadow: 0 8rpx 20rpx rgba(43, 173, 129, 0.25);
+}
+
+/* 游客登录按钮样式 */
+.guest-btn {
+  background: #ff9800;
+  box-shadow: 0 8rpx 20rpx rgba(255, 152, 0, 0.25);
 }
 
 .btn-icon {

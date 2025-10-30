@@ -1,5 +1,14 @@
 "use strict";
 const common_vendor = require("../common/vendor.js");
+function isLoggedIn() {
+  try {
+    const loginInfo = common_vendor.index.getStorageSync("login_info");
+    return loginInfo && loginInfo.isLoggedIn === true;
+  } catch (e) {
+    common_vendor.index.__f__("error", "at utils/auth.js:14", "检查登录状态失败", e);
+    return false;
+  }
+}
 function logout() {
   return new Promise((resolve) => {
     try {
@@ -26,5 +35,6 @@ function logout() {
     }
   });
 }
+exports.isLoggedIn = isLoggedIn;
 exports.logout = logout;
 //# sourceMappingURL=../../.sourcemap/mp-weixin/utils/auth.js.map

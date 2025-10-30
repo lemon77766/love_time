@@ -79,9 +79,9 @@
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
-      { "pagePath": "pages/index/index", "text": "主页", "iconPath": "/static/love.png", "selectedIconPath": "/static/love.png" },
-      { "pagePath": "pages/jiyi/index", "text": "记忆", "iconPath": "/static/remerber.png", "selectedIconPath": "/static/remerber.png" },
-      { "pagePath": "pages/we/index", "text": "我们", "iconPath": "/static/we.png", "selectedIconPath": "/static/we.png" }
+      { "pagePath": "pages/index/index", "text": "主页", "iconPath": "static/love.png", "selectedIconPath": "static/love.png" },
+      { "pagePath": "pages/jiyi/index", "text": "记忆", "iconPath": "static/remerber.png", "selectedIconPath": "static/remerber.png" },
+      { "pagePath": "pages/we/index", "text": "我们", "iconPath": "static/we.png", "selectedIconPath": "static/we.png" }
     ]
   },
   "globalStyle": {
