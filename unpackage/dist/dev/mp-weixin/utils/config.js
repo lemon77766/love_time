@@ -46,6 +46,21 @@ const config = {
       // 获取信件详情
       DELETE: "/api/letter/delete"
       // 删除信件
+    },
+    // 问答相关
+    QNA: {
+      LIST: "/api/qna/questions",
+      // 获取问题列表
+      SUBMIT: "/api/qna/answer/submit",
+      // 提交答案
+      HISTORY: "/api/qna/history",
+      // 获取历史记录
+      PARTNER_ANSWER: "/api/qna/partner",
+      // 获取对方答案
+      ADD_QUESTION: "/api/qna/question/add",
+      // 添加自定义问题
+      DELETE_QUESTION: "/api/qna/question/delete"
+      // 删除自定义问题
     }
   }
 };

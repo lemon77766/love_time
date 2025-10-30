@@ -102,10 +102,20 @@
 </template>
 
 <script>
+import { 
+  getQuestions, 
+  submitAnswer, 
+  getHistory, 
+  addCustomQuestion, 
+  deleteCustomQuestion 
+} from '@/api/qna.js';
+
 export default {
-  onLoad(options) {
-    this.loadHistory();
-    this.loadCustomQuestions();
+  async onLoad(options) {
+    // 从后端加载问题列表和历史记录
+    await this.loadQuestionsFromServer();
+    await this.loadHistoryFromServer();
+    
     // 加载完历史后，找到第一个未回答的问题
     const qid = Number(options && options.qid);
     if (qid) {
@@ -160,11 +170,10 @@ export default {
     }
   },
   mounted() {
-    this.loadHistory();
-    this.loadCustomQuestions();
+    // onLoad 中已经加载，无需重复加载
   },
   methods: {
-    submitAnswer() {
+    async submitAnswer() {
       if (!this.myAnswer) {
         uni.showToast({ title: '请填写你的答案', icon: 'none' });
         return;
@@ -179,25 +188,48 @@ export default {
         uni.showToast({ title: '该问题已经回答过了', icon: 'none' });
         return;
       }
-      // 模拟获取对方答案（真实项目可改为请求服务端）
-      this.partnerAnswer = this.generatePartnerAnswer(this.currentQuestion.id);
-      const now = Date.now();
-      const record = {
-        questionId: this.currentQuestion.id,
-        question: this.currentQuestion.text,
-        myAnswer: this.myAnswer,
-        partnerAnswer: this.partnerAnswer,
-        time: new Date().toLocaleString(),
-        ts: now
-      };
-      this.history.unshift(record);
-      this.saveHistory();
-      uni.showToast({ title: '已提交', icon: 'success' });
       
-      // 提交后自动跳到下一题
-      setTimeout(() => {
-        this.nextQuestion();
-      }, 1500);
+      try {
+        uni.showLoading({ title: '提交中...' });
+        
+        // 调用后端API提交答案
+        const res = await submitAnswer({
+          questionId: this.currentQuestion.id,
+          answer: this.myAnswer,
+          questionText: this.currentQuestion.text
+        });
+        
+        if (res.success) {
+          // 如果对方已回答，显示对方答案
+          if (res.data.hasPartnerAnswered) {
+            this.partnerAnswer = res.data.partnerAnswer;
+          }
+          
+          // 添加到本地历史记录
+          const record = {
+            id: res.data.answerId,
+            questionId: this.currentQuestion.id,
+            question: this.currentQuestion.text,
+            myAnswer: this.myAnswer,
+            partnerAnswer: res.data.partnerAnswer || '',
+            time: new Date().toLocaleString(),
+            createdAt: new Date().toISOString()
+          };
+          this.history.unshift(record);
+          
+          uni.showToast({ title: '提交成功', icon: 'success' });
+          
+          // 提交后自动跳到下一题
+          setTimeout(() => {
+            this.nextQuestion();
+          }, 1500);
+        }
+      } catch (e) {
+        console.error('提交答案失败', e);
+        uni.showToast({ title: '提交失败，请重试', icon: 'none' });
+      } finally {
+        uni.hideLoading();
+      }
     },
     nextQuestion() {
       this.partnerAnswer = '';
@@ -223,68 +255,105 @@ export default {
       this.saveHistory();
       uni.showToast({ title: '记录已清空', icon: 'none' });
     },
-    loadHistory() {
+    // 从后端加载历史记录
+    async loadHistoryFromServer() {
       try {
-        const data = uni.getStorageSync('qna_history');
-        this.history = Array.isArray(data) ? data : [];
-      } catch (e) { this.history = []; }
+        const res = await getHistory({ page: 1, pageSize: 100 });
+        if (res.success) {
+          this.history = res.data.list || [];
+        }
+      } catch (e) {
+        console.error('加载历史记录失败', e);
+        // 如果后端请求失败，尝试从本地存储加载
+        try {
+          const data = uni.getStorageSync('qna_history');
+          this.history = Array.isArray(data) ? data : [];
+        } catch (e2) { 
+          this.history = []; 
+        }
+      }
     },
-    saveHistory() {
+    // 从后端加载问题列表
+    async loadQuestionsFromServer() {
       try {
-        uni.setStorageSync('qna_history', this.history);
-      } catch (e) {}
+        uni.showLoading({ title: '加载中...' });
+        const res = await getQuestions();
+        if (res.success) {
+          this.defaultQuestions = res.data.defaultQuestions || [];
+          this.customQuestions = res.data.customQuestions || [];
+        }
+      } catch (e) {
+        console.error('加载问题失败', e);
+        // 如果后端请求失败，使用预设问题和本地自定义问题
+        uni.showToast({ title: '加载问题失败，使用本地数据', icon: 'none' });
+        try {
+          const data = uni.getStorageSync('qna_custom_questions');
+          this.customQuestions = Array.isArray(data) ? data : [];
+        } catch (e2) { 
+          this.customQuestions = []; 
+        }
+      } finally {
+        uni.hideLoading();
+      }
     },
-    generatePartnerAnswer(id) {
-      const presets = {
-        1: '那家有你最爱奶茶的小广场～',
-        2: '当然是你拿手的番茄牛腩！',
-        3: '一起散步、看电影、做饭都很好',
-        4: '海边日出+山间露营的组合',
-        5: '你偷偷准备的生日惊喜那天'
-      };
-      return presets[id] || '我也在认真思考这个问题～';
-    },
-    addCustomQuestion() {
+
+    // 添加自定义问题
+    async addCustomQuestion() {
       if (!this.newQuestion || !this.newQuestion.trim()) {
         uni.showToast({ title: '请输入问题内容', icon: 'none' });
         return;
       }
-      const newId = Date.now();
-      this.customQuestions.push({
-        id: newId,
-        text: this.newQuestion.trim(),
-        isDefault: false
-      });
-      this.saveCustomQuestions();
-      this.newQuestion = '';
-      uni.showToast({ title: '问题添加成功', icon: 'success' });
+      
+      try {
+        uni.showLoading({ title: '添加中...' });
+        
+        // 调用后端API添加问题
+        const res = await addCustomQuestion(this.newQuestion.trim());
+        
+        if (res.success) {
+          // 将新问题添加到列表
+          this.customQuestions.push(res.data);
+          this.newQuestion = '';
+          uni.showToast({ title: '问题添加成功', icon: 'success' });
+        }
+      } catch (e) {
+        console.error('添加问题失败', e);
+        uni.showToast({ title: '添加失败，请重试', icon: 'none' });
+      } finally {
+        uni.hideLoading();
+      }
     },
-    deleteCustomQuestion(index) {
+
+    async deleteCustomQuestion(index) {
+      const question = this.customQuestions[index];
+      
       uni.showModal({
         title: '确认删除',
         content: '确定要删除这个问题吗？',
-        success: (res) => {
-          if (res.confirm) {
-            this.customQuestions.splice(index, 1);
-            this.saveCustomQuestions();
-            uni.showToast({ title: '已删除', icon: 'success' });
+        success: async (modalRes) => {
+          if (modalRes.confirm) {
+            try {
+              uni.showLoading({ title: '删除中...' });
+              
+              // 调用后端API删除问题
+              const res = await deleteCustomQuestion(question.id);
+              
+              if (res.success) {
+                // 从列表中移除
+                this.customQuestions.splice(index, 1);
+                uni.showToast({ title: '已删除', icon: 'success' });
+              }
+            } catch (e) {
+              console.error('删除问题失败', e);
+              uni.showToast({ title: '删除失败，请重试', icon: 'none' });
+            } finally {
+              uni.hideLoading();
+            }
           }
         }
       });
     },
-    loadCustomQuestions() {
-      try {
-        const data = uni.getStorageSync('qna_custom_questions');
-        this.customQuestions = Array.isArray(data) ? data : [];
-      } catch (e) { 
-        this.customQuestions = []; 
-      }
-    },
-    saveCustomQuestions() {
-      try {
-        uni.setStorageSync('qna_custom_questions', this.customQuestions);
-      } catch (e) {}
-    },
+
     closeCustomModal() {
       this.showCustomModal = false;
       this.newQuestion = '';

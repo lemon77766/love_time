@@ -52,16 +52,42 @@ export function saveLoginInfo(userInfo) {
 
 /**
  * 退出登录
- * @returns {boolean} 是否退出成功
+ * @returns {Promise<boolean>} 是否退出成功
  */
 export function logout() {
-  try {
-    uni.removeStorageSync('login_info');
-    return true;
-  } catch (e) {
-    console.error('退出登录失败', e);
-    return false;
-  }
+  return new Promise((resolve) => {
+    try {
+      // 清除本地存储
+      uni.removeStorageSync('login_info');
+      
+      // 显示退出成功提示
+      uni.showToast({
+        title: '已退出登录',
+        icon: 'success',
+        duration: 1500
+      });
+      
+      // 延迟跳转到登录页
+      setTimeout(() => {
+        uni.reLaunch({
+          url: '/pages/login/index'
+        });
+      }, 1500);
+      
+      resolve(true);
+    } catch (e) {
+      console.error('退出登录失败', e);
+      
+      // 显示错误提示
+      uni.showToast({
+        title: '退出失败，请重试',
+        icon: 'none',
+        duration: 2000
+      });
+      
+      resolve(false);
+    }
+  });
 }
 
 /**

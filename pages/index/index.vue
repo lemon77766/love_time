@@ -20,9 +20,10 @@
     <view class="couple-section">
       <view class="couple-content">
         <view class="boy">
-          <image class="boy-avatar" src="/static/zhuye/lanmei_boy.png" />
-          
-
+          <!-- 显示静态头像 -->
+          <image class="boy-avatar" src="/static/zhuye/lanmei_boy.png" mode="aspectFill" />
+          <!-- 显示静态昵称 -->
+          <text class="boy-name">蓝梅</text>
         </view>
         <view class="anniversary">
           <text class="anniversary-text">结婚十周年 还有2年10月...</text>
@@ -32,7 +33,7 @@
         </view>
         <view class="girl">
           <image class="girl-avatar" src="/static/zhuye/orange_smile.png" />
-
+          <text class="girl-name">甜蜜</text>
         </view>
       </view>
     </view>
@@ -72,10 +73,10 @@ export default {
   },
   onLoad() {
     this.updateDateTime();
-    // 每秒更新一次时间（可选：如果只需要日期不变，可以去掉定时器）
+    // 每分钟更新一次时间
     this.timer = setInterval(() => {
       this.updateDateTime();
-    }, 60000); // 每分钟更新一次
+    }, 60000);
   },
   onUnload() {
     // 页面卸载时清除定时器

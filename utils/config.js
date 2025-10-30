@@ -1,51 +1,42 @@
-/**
- * API 配置文件
- * 用于统一管理后端接口地址
- */
-
-// 后端服务器地址配置
-const CONFIG = {
-  // 开发环境
-  development: {
-    baseURL: 'http://192.168.54.229:8080/lovetime',  // 后端服务器地址
-    timeout: 10000
-  },
-  // 生产环境
-  production: {
-    baseURL: 'https://your-backend-domain.com',  // 正式服务器地址
-    timeout: 10000
-  }
-};
-
-// 获取当前环境配置
-const ENV = process.env.NODE_ENV || 'development';
-const currentConfig = CONFIG[ENV];
-
-// 导出配置
-export default {
-  // 基础URL
-  baseURL: currentConfig.baseURL,
-  // 请求超时时间
-  timeout: currentConfig.timeout,
-  
-  // API 接口路径
+// 开发环境配置
+const devConfig = {
+  baseURL: 'http://192.168.54.229:8080/lovetime',
+  timeout: 10000,  // 普通请求超时时间
+  uploadTimeout: 30000,  // 上传请求超时时间
   API: {
-    // 登录相关
     LOGIN: {
-      WECHAT: '/api/login/wechat',        // 微信登录
-      LOGOUT: '/api/login/logout'          // 退出登录
+      WECHAT: '/api/login/wechat',
+      LOGOUT: '/api/login/logout'
     },
-    // 用户相关
     USER: {
-      INFO: '/api/user/info',              // 获取用户信息
-      UPDATE: '/api/user/update'           // 更新用户信息
+      INFO: '/api/user/info',
+      AVATAR_UPLOAD: '/api/user/avatar/upload',
+      UPDATE: '/api/user/update'
     },
-    // 信件相关
     LETTER: {
-      CREATE: '/api/letter/create',        // 创建信件
-      LIST: '/api/letter/list',            // 获取信件列表
-      DETAIL: '/api/letter/detail',        // 获取信件详情
-      DELETE: '/api/letter/delete'         // 删除信件
+      LIST: '/api/letter/list',
+      DETAIL: '/api/letter/detail',
+      CREATE: '/api/letter/create',
+      UPDATE: '/api/letter/update',
+      DELETE: '/api/letter/delete'
+    },
+    QA: {
+      LIST: '/api/qa/list',
+      DETAIL: '/api/qa/detail',
+      CREATE: '/api/qa/create',
+      UPDATE: '/api/qa/update',
+      DELETE: '/api/qa/delete'
     }
   }
-};
+}
+
+// 生产环境配置
+const prodConfig = {
+  baseURL: 'https://api.lovetime.com',
+  timeout: 10000,  // 普通请求超时时间
+  uploadTimeout: 30000,  // 上传请求超时时间
+  API: devConfig.API  // 使用相同的API路径配置
+}
+
+// 根据环境导出配置
+export default process.env.NODE_ENV === 'development' ? devConfig : prodConfig

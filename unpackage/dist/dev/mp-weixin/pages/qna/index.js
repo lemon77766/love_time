@@ -1,9 +1,10 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
+const api_qna = require("../../api/qna.js");
 const _sfc_main = {
-  onLoad(options) {
-    this.loadHistory();
-    this.loadCustomQuestions();
+  async onLoad(options) {
+    await this.loadQuestionsFromServer();
+    await this.loadHistoryFromServer();
     const qid = Number(options && options.qid);
     if (qid) {
       const idx = this.unansweredQuestions.findIndex((q) => q.id === qid);
@@ -55,11 +56,9 @@ const _sfc_main = {
     }
   },
   mounted() {
-    this.loadHistory();
-    this.loadCustomQuestions();
   },
   methods: {
-    submitAnswer() {
+    async submitAnswer() {
       if (!this.myAnswer) {
         common_vendor.index.showToast({ title: "请填写你的答案", icon: "none" });
         return;
@@ -73,22 +72,38 @@ const _sfc_main = {
         common_vendor.index.showToast({ title: "该问题已经回答过了", icon: "none" });
         return;
       }
-      this.partnerAnswer = this.generatePartnerAnswer(this.currentQuestion.id);
-      const now = Date.now();
-      const record = {
-        questionId: this.currentQuestion.id,
-        question: this.currentQuestion.text,
-        myAnswer: this.myAnswer,
-        partnerAnswer: this.partnerAnswer,
-        time: (/* @__PURE__ */ new Date()).toLocaleString(),
-        ts: now
-      };
-      this.history.unshift(record);
-      this.saveHistory();
-      common_vendor.index.showToast({ title: "已提交", icon: "success" });
-      setTimeout(() => {
-        this.nextQuestion();
-      }, 1500);
+      try {
+        common_vendor.index.showLoading({ title: "提交中..." });
+        const res = await api_qna.submitAnswer({
+          questionId: this.currentQuestion.id,
+          answer: this.myAnswer,
+          questionText: this.currentQuestion.text
+        });
+        if (res.success) {
+          if (res.data.hasPartnerAnswered) {
+            this.partnerAnswer = res.data.partnerAnswer;
+          }
+          const record = {
+            id: res.data.answerId,
+            questionId: this.currentQuestion.id,
+            question: this.currentQuestion.text,
+            myAnswer: this.myAnswer,
+            partnerAnswer: res.data.partnerAnswer || "",
+            time: (/* @__PURE__ */ new Date()).toLocaleString(),
+            createdAt: (/* @__PURE__ */ new Date()).toISOString()
+          };
+          this.history.unshift(record);
+          common_vendor.index.showToast({ title: "提交成功", icon: "success" });
+          setTimeout(() => {
+            this.nextQuestion();
+          }, 1500);
+        }
+      } catch (e) {
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:228", "提交答案失败", e);
+        common_vendor.index.showToast({ title: "提交失败，请重试", icon: "none" });
+      } finally {
+        common_vendor.index.hideLoading();
+      }
     },
     nextQuestion() {
       this.partnerAnswer = "";
@@ -113,71 +128,89 @@ const _sfc_main = {
       this.saveHistory();
       common_vendor.index.showToast({ title: "记录已清空", icon: "none" });
     },
-    loadHistory() {
+    // 从后端加载历史记录
+    async loadHistoryFromServer() {
       try {
-        const data = common_vendor.index.getStorageSync("qna_history");
-        this.history = Array.isArray(data) ? data : [];
+        const res = await api_qna.getHistory({ page: 1, pageSize: 100 });
+        if (res.success) {
+          this.history = res.data.list || [];
+        }
       } catch (e) {
-        this.history = [];
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:266", "加载历史记录失败", e);
+        try {
+          const data = common_vendor.index.getStorageSync("qna_history");
+          this.history = Array.isArray(data) ? data : [];
+        } catch (e2) {
+          this.history = [];
+        }
       }
     },
-    saveHistory() {
+    // 从后端加载问题列表
+    async loadQuestionsFromServer() {
       try {
-        common_vendor.index.setStorageSync("qna_history", this.history);
+        common_vendor.index.showLoading({ title: "加载中..." });
+        const res = await api_qna.getQuestions();
+        if (res.success) {
+          this.defaultQuestions = res.data.defaultQuestions || [];
+          this.customQuestions = res.data.customQuestions || [];
+        }
       } catch (e) {
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:286", "加载问题失败", e);
+        common_vendor.index.showToast({ title: "加载问题失败，使用本地数据", icon: "none" });
+        try {
+          const data = common_vendor.index.getStorageSync("qna_custom_questions");
+          this.customQuestions = Array.isArray(data) ? data : [];
+        } catch (e2) {
+          this.customQuestions = [];
+        }
+      } finally {
+        common_vendor.index.hideLoading();
       }
     },
-    generatePartnerAnswer(id) {
-      const presets = {
-        1: "那家有你最爱奶茶的小广场～",
-        2: "当然是你拿手的番茄牛腩！",
-        3: "一起散步、看电影、做饭都很好",
-        4: "海边日出+山间露营的组合",
-        5: "你偷偷准备的生日惊喜那天"
-      };
-      return presets[id] || "我也在认真思考这个问题～";
-    },
-    addCustomQuestion() {
+    // 添加自定义问题
+    async addCustomQuestion() {
       if (!this.newQuestion || !this.newQuestion.trim()) {
         common_vendor.index.showToast({ title: "请输入问题内容", icon: "none" });
         return;
       }
-      const newId = Date.now();
-      this.customQuestions.push({
-        id: newId,
-        text: this.newQuestion.trim(),
-        isDefault: false
-      });
-      this.saveCustomQuestions();
-      this.newQuestion = "";
-      common_vendor.index.showToast({ title: "问题添加成功", icon: "success" });
+      try {
+        common_vendor.index.showLoading({ title: "添加中..." });
+        const res = await api_qna.addCustomQuestion(this.newQuestion.trim());
+        if (res.success) {
+          this.customQuestions.push(res.data);
+          this.newQuestion = "";
+          common_vendor.index.showToast({ title: "问题添加成功", icon: "success" });
+        }
+      } catch (e) {
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:320", "添加问题失败", e);
+        common_vendor.index.showToast({ title: "添加失败，请重试", icon: "none" });
+      } finally {
+        common_vendor.index.hideLoading();
+      }
     },
-    deleteCustomQuestion(index) {
+    async deleteCustomQuestion(index) {
+      const question = this.customQuestions[index];
       common_vendor.index.showModal({
         title: "确认删除",
         content: "确定要删除这个问题吗？",
-        success: (res) => {
-          if (res.confirm) {
-            this.customQuestions.splice(index, 1);
-            this.saveCustomQuestions();
-            common_vendor.index.showToast({ title: "已删除", icon: "success" });
+        success: async (modalRes) => {
+          if (modalRes.confirm) {
+            try {
+              common_vendor.index.showLoading({ title: "删除中..." });
+              const res = await api_qna.deleteCustomQuestion(question.id);
+              if (res.success) {
+                this.customQuestions.splice(index, 1);
+                common_vendor.index.showToast({ title: "已删除", icon: "success" });
+              }
+            } catch (e) {
+              common_vendor.index.__f__("error", "at pages/qna/index.vue:347", "删除问题失败", e);
+              common_vendor.index.showToast({ title: "删除失败，请重试", icon: "none" });
+            } finally {
+              common_vendor.index.hideLoading();
+            }
           }
         }
       });
-    },
-    loadCustomQuestions() {
-      try {
-        const data = common_vendor.index.getStorageSync("qna_custom_questions");
-        this.customQuestions = Array.isArray(data) ? data : [];
-      } catch (e) {
-        this.customQuestions = [];
-      }
-    },
-    saveCustomQuestions() {
-      try {
-        common_vendor.index.setStorageSync("qna_custom_questions", this.customQuestions);
-      } catch (e) {
-      }
     },
     closeCustomModal() {
       this.showCustomModal = false;

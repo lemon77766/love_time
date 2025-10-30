@@ -1,156 +1,153 @@
-/**
- * HTTP 请求封装工具
- * 统一处理请求、响应、错误
- */
+import config from './config'
+import { isLoggedIn, logout } from './auth'
 
-import config from './config.js';
+// 默认请求配置
+const defaultOptions = {
+  timeout: config.timeout,
+  retryCount: 0,  // 默认不重试
+  retryDelay: 1000,  // 重试间隔1秒
+}
 
-class Http {
-  /**
-   * 发送HTTP请求
-   * @param {Object} options - 请求配置
-   * @returns {Promise} 返回Promise对象
-   */
-  request(options = {}) {
-    return new Promise((resolve, reject) => {
-      // 获取存储的登录信息
-      const loginInfo = uni.getStorageSync('login_info') || {};
-      
-      // 构建完整的请求URL
-      const url = config.baseURL + options.url;
-      
-      console.log(`\n=== HTTP ${options.method || 'GET'} 请求 ===`);
-      console.log('请求URL:', url);
-      console.log('请求数据:', options.data);
-      
-      // 请求配置
-      const requestOptions = {
-        url: url,
-        method: options.method || 'GET',
-        data: options.data || {},
-        header: {
-          'content-type': 'application/json',
-          // 如果已登录，携带token
-          'Authorization': loginInfo.token ? `Bearer ${loginInfo.token}` : '',
-          ...options.header
-        },
-        timeout: options.timeout || config.timeout,
-        success: (res) => {
-          console.log('✅ 请求成功，响应状态码:', res.statusCode);
-          console.log('响应数据:', res.data);
-          
-          // 根据状态码处理
-          if (res.statusCode === 200) {
-            // 检查业务状态
-            if (res.data.success) {
-              console.log('✅ 业务请求成功，返回数据:', res.data.data);
-              resolve(res.data.data);
-            } else {
-              console.error('❌ 业务错误:', res.data.message);
-              reject(new Error(res.data.message || '请求失败'));
-            }
-          } else if (res.statusCode === 401) {
-            // token过期或未登录
-            console.error('❌ 401 未授权');
-            this.handleUnauthorized();
-            reject(new Error('登录已过期，请重新登录'));
-          } else {
-            console.error('❌ HTTP错误:', res.statusCode);
-            reject(new Error(`请求失败: ${res.statusCode}`));
-          }
-        },
-        fail: (err) => {
-          console.error('❌ 请求失败:', url);
-          console.error('错误详情:', err);
-          
-          // 开发环境提示
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('⚠️ 开发模式：后端接口未就绪或网络错误');
-            console.warn('⚠️ 请检查：');
-            console.warn('  1. 后端服务是否已启动');
-            console.warn('  2. 请求地址是否正确');
-            console.warn('  3. 网络是否连通');
-          }
-          
-          reject(err);
-        }
-      };
-      
-      // 发送请求
-      uni.request(requestOptions);
-    });
+// 处理请求错误
+function handleRequestError(error, options = {}) {
+  console.error('请求错误:', error)
+  
+  // 开发环境下显示详细错误信息
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('⚠️ 开发模式：后端接口未就绪或网络错误')
+    console.warn('⚠️ 请检查：')
+    console.warn('  1. 后端服务是否已启动')
+    console.warn('  2. 请求地址是否正确')
+    console.warn('  3. 网络是否连通')
   }
   
-  /**
-   * GET 请求
-   */
-  get(url, data = {}, options = {}) {
-    return this.request({
-      url,
-      method: 'GET',
-      data,
-      ...options
-    });
+  // 401错误处理
+  if (error.statusCode === 401) {
+    handleUnauthorized()
+    return
   }
   
-  /**
-   * POST 请求
-   */
-  post(url, data = {}, options = {}) {
-    return this.request({
-      url,
-      method: 'POST',
-      data,
-      ...options
-    });
+  // 超时错误特殊处理
+  if (error.errMsg && error.errMsg.includes('timeout')) {
+    if (options.retryCount > 0) {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          console.log(`请求超时，${options.retryDelay/1000}秒后重试，剩余重试次数：${options.retryCount-1}`)
+          options.retryCount--
+          request(options).then(resolve).catch(reject)
+        }, options.retryDelay)
+      })
+    }
   }
   
-  /**
-   * PUT 请求
-   */
-  put(url, data = {}, options = {}) {
-    return this.request({
-      url,
-      method: 'PUT',
-      data,
-      ...options
-    });
-  }
-  
-  /**
-   * DELETE 请求
-   */
-  delete(url, data = {}, options = {}) {
-    return this.request({
-      url,
-      method: 'DELETE',
-      data,
-      ...options
-    });
-  }
-  
-  /**
-   * 处理未授权（401）
-   */
-  handleUnauthorized() {
-    // 清除登录信息
-    uni.removeStorageSync('login_info');
-    
-    // 提示用户
+  return Promise.reject(error)
+}
+
+// 处理未授权情况
+function handleUnauthorized() {
+  if (isLoggedIn()) {
     uni.showToast({
-      title: '登录已过期',
+      title: '登录已过期，请重新登录',
       icon: 'none',
       duration: 2000
-    });
-    
-    // 跳转到登录页
-    setTimeout(() => {
-      uni.reLaunch({
-        url: '/pages/login/index'
-      });
-    }, 2000);
+    })
+    logout()
   }
 }
 
-// 导出单例
-export default new Http();
+// 基础请求方法
+function request(options) {
+  // 合并默认配置
+  options = { ...defaultOptions, ...options }
+  
+  // 处理请求URL
+  if (!options.url.startsWith('http')) {
+    options.url = config.baseURL + options.url
+  }
+  
+  // 添加token
+  const token = uni.getStorageSync('login_info')?.token
+  if (token) {
+    options.header = {
+      ...options.header,
+      'Authorization': `Bearer ${token}`
+    }
+  }
+  
+  return new Promise((resolve, reject) => {
+    uni.request({
+      ...options,
+      success: (res) => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(res.data)
+        } else {
+          reject(res)
+        }
+      },
+      fail: (error) => {
+        handleRequestError(error, options)
+          .then(resolve)
+          .catch(reject)
+      }
+    })
+  })
+}
+
+// 文件上传方法
+function upload(options) {
+  // 合并默认配置
+  options = {
+    ...defaultOptions,
+    timeout: config.uploadTimeout || 30000,  // 上传默认30秒超时
+    header: {
+      'content-type': 'multipart/form-data'
+    },
+    ...options
+  }
+  
+  // 处理请求URL
+  if (!options.url.startsWith('http')) {
+    options.url = config.baseURL + options.url
+  }
+  
+  // 添加token
+  const token = uni.getStorageSync('login_info')?.token
+  if (token) {
+    options.header['Authorization'] = `Bearer ${token}`
+  }
+  
+  return new Promise((resolve, reject) => {
+    uni.uploadFile({
+      ...options,
+      success: (uploadRes) => {
+        try {
+          const result = JSON.parse(uploadRes.data)
+          if (result.success) {
+            resolve(result.data)
+          } else {
+            reject(new Error(result.message || '上传失败'))
+          }
+        } catch (e) {
+          reject(new Error('解析上传响应失败'))
+        }
+      },
+      fail: (error) => {
+        handleRequestError(error, options)
+          .then(resolve)
+          .catch(reject)
+      }
+    })
+  })
+}
+
+// HTTP方法封装
+const http = {
+  request,
+  upload,
+  get: (url, data, options = {}) => request({ ...options, url, data, method: 'GET' }),
+  post: (url, data, options = {}) => request({ ...options, url, data, method: 'POST' }),
+  put: (url, data, options = {}) => request({ ...options, url, data, method: 'PUT' }),
+  delete: (url, data, options = {}) => request({ ...options, url, data, method: 'DELETE' })
+}
+
+export default http

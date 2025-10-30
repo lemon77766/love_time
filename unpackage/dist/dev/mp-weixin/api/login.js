@@ -1,4 +1,5 @@
 "use strict";
+require("../common/vendor.js");
 const utils_http = require("../utils/http.js");
 const utils_config = require("../utils/config.js");
 function wxLogin(code, userInfo) {

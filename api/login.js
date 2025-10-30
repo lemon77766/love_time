@@ -44,19 +44,27 @@ export function wxLogin(code, userInfo) {
 /**
  * 退出登录
  * @returns {Promise<Object>} 返回退出结果
- * 
- * 后端接口要求：
- * - 请求方法：POST
- * - 请求地址：/api/login/logout
- * - 请求头：需携带 Authorization token
- * - 返回数据：
- *   {
- *     success: true,
- *     message: "退出成功"
- *   }
  */
 export function logout() {
-  return http.post(config.API.LOGIN.LOGOUT);
+  return new Promise((resolve, reject) => {
+    // 先清除本地存储
+    try {
+      uni.removeStorageSync('login_info');
+    } catch (e) {
+      console.error('清除本地登录信息失败', e);
+    }
+
+    // 尝试调用后端登出接口
+    http.post(config.API.LOGIN.LOGOUT)
+      .then(() => {
+        resolve({ success: true, message: '退出成功' });
+      })
+      .catch((error) => {
+        console.warn('后端登出接口调用失败，但本地登录状态已清除', error);
+        // 即使后端请求失败，也认为登出成功（因为本地状态已清除）
+        resolve({ success: true, message: '退出成功' });
+      });
+  });
 }
 
 /**
