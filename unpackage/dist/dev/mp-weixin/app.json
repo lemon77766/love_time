@@ -11,7 +11,9 @@
     "pages/heartwall/create",
     "pages/xinxiang/index",
     "pages/xinxiang/create",
-    "pages/xinxiang/history"
+    "pages/xinxiang/history",
+    "pages/profile/index",
+    "pages/trajectory/index"
   ],
   "window": {
     "navigationBarTextStyle": "black",
@@ -20,7 +22,7 @@
   },
   "tabBar": {
     "color": "#000000",
-    "selectedColor": "#2bad81",
+    "selectedColor": "#ff8fb3",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
@@ -31,10 +33,10 @@
         "selectedIconPath": "static/love.png"
       },
       {
-        "pagePath": "pages/jiyi/index",
-        "text": "记忆",
-        "iconPath": "static/remerber.png",
-        "selectedIconPath": "static/remerber.png"
+        "pagePath": "pages/trajectory/index",
+        "text": "轨迹",
+        "iconPath": "static/trajectory.png",
+        "selectedIconPath": "static/trajectory.png"
       },
       {
         "pagePath": "pages/we/index",

@@ -264,7 +264,7 @@ export default {
 <style>
 .hundred-page { 
   min-height: 100vh; 
-  background: linear-gradient(to bottom, #e8f0e3 0%, #f5f5f0 100%);
+  background: linear-gradient(to bottom, #f5e6f0 0%, #fdf2f8 100%);
   padding-bottom: 120rpx;
 }
 
@@ -306,7 +306,7 @@ export default {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #a8d5a3 0%, #7bc96f 100%);
+  background: linear-gradient(90deg, #ffb3c6 0%, #ff8fb3 100%);
   border-radius: 6rpx;
   transition: width 0.3s ease;
 }
@@ -320,12 +320,12 @@ export default {
 .filter-dropdown {
   padding: 8rpx 16rpx;
   background: #ffffff;
-  border: 2rpx solid #a8d5a3;
+  border: 2rpx solid #ffb3c6;
   border-radius: 20rpx;
   font-size: 24rpx;
   color: #5a5a5a;
   font-weight: 600;
-  box-shadow: 0 2rpx 8rpx rgba(168, 213, 163, 0.2);
+  box-shadow: 0 2rpx 8rpx rgba(224, 181, 216, 0.2);
   display: flex;
   align-items: center;
   gap: 8rpx;
@@ -339,7 +339,7 @@ export default {
 
 .dropdown-icon {
   font-size: 20rpx;
-  color: #a8d5a3;
+  color: #ffb3c6;
   transition: transform 0.3s ease;
 }
 
@@ -354,7 +354,7 @@ export default {
   overflow: hidden;
   z-index: 10;
   min-width: 160rpx;
-  border: 2rpx solid #a8d5a3;
+  border: 2rpx solid #ffb3c6;
 }
 
 .dropdown-item {
@@ -371,11 +371,11 @@ export default {
 }
 
 .dropdown-item:active {
-  background: #f5f9f3;
+  background: #fdf2f8;
 }
 
 .dropdown-item.active {
-  background: #e8f5e3;
+  background: #f5e6f0;
 }
 
 .item-label {
@@ -384,13 +384,13 @@ export default {
 }
 
 .dropdown-item.active .item-label {
-  color: #2bad81;
+  color: #ff8fb3;
   font-weight: 600;
 }
 
 .check-icon {
   font-size: 28rpx;
-  color: #2bad81;
+  color: #ff8fb3;
   font-weight: bold;
 }
 
@@ -431,7 +431,7 @@ export default {
 }
 
 .favorite-icon .favorite-active {
-  color: #2bad81;
+  color: #ff8fb3;
   transform: scale(1.1);
 }
 
@@ -547,9 +547,9 @@ export default {
   border: none;
 }
 
-.btn.primary { 
-  background: #2bad81; 
-  color: #fff; 
+.btn.primary {
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  color: #fff;
 }
 
 .btn.secondary { 

@@ -94,7 +94,7 @@
 .app-name.data-v-d08ef7d4 {
   font-size: 48rpx;
   font-weight: 700;
-  color: #2bad81;
+  color: #ff8fb3;
   margin-bottom: 16rpx;
 }
 .app-slogan.data-v-d08ef7d4 {
@@ -147,14 +147,14 @@
 /* 登录按钮 */
 .login-btn.data-v-d08ef7d4, .enter-btn.data-v-d08ef7d4, .guest-btn.data-v-d08ef7d4 {
   width: 100%;
-  background: #2bad81;
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
   border-radius: 48rpx;
   padding: 28rpx 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12rpx;
-  box-shadow: 0 8rpx 20rpx rgba(43, 173, 129, 0.25);
+  box-shadow: 0 8rpx 20rpx rgba(255, 143, 179, 0.35);
   margin-bottom: 20rpx;
   border: none;
   color: #ffffff;
@@ -166,8 +166,8 @@
   opacity: 0.85;
 }
 .enter-btn.data-v-d08ef7d4 {
-  background: #2bad81;
-  box-shadow: 0 8rpx 20rpx rgba(43, 173, 129, 0.25);
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  box-shadow: 0 8rpx 20rpx rgba(255, 143, 179, 0.35);
 }
 
 /* 游客登录按钮样式 */
@@ -203,7 +203,7 @@
 }
 .link-text.data-v-d08ef7d4 {
   font-size: 22rpx;
-  color: #2bad81;
+  color: #ff8fb3;
 }
 
 /* 资料确认伹媗 */
@@ -322,8 +322,8 @@
   position: relative;
 }
 .option-radio.active.data-v-d08ef7d4 {
-  border-color: #2bad81;
-  background: #2bad81;
+  border-color: #ff8fb3;
+  background: #ff8fb3;
 }
 .option-radio.active.data-v-d08ef7d4::after {
   content: "";
@@ -361,8 +361,8 @@
   position: relative;
 }
 .checkbox.checked.data-v-d08ef7d4 {
-  background: #2bad81;
-  border-color: #2bad81;
+  background: #ff8fb3;
+  border-color: #ff8fb3;
 }
 .checkbox.checked.data-v-d08ef7d4::after {
   content: "";
@@ -437,13 +437,13 @@
 .btn-confirm.data-v-d08ef7d4 {
   flex: 1;
   padding: 16rpx;
-  background: #2bad81;
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
   border-radius: 24rpx;
   border: none;
   font-size: 28rpx;
   color: #fff;
   font-weight: 600;
-  box-shadow: 0 4rpx 12rpx rgba(43, 173, 129, 0.3);
+  box-shadow: 0 4rpx 12rpx rgba(255, 143, 179, 0.4);
 }
 .btn-confirm.data-v-d08ef7d4:active {
   opacity: 0.9;

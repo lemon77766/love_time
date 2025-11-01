@@ -149,7 +149,7 @@
             @changing="onOpacityChanging"
             min="0" 
             max="100"
-            activeColor="#2bad81"
+            activeColor="#d483b8"
             block-size="20"
           />
           <text class="control-value">{{ opacity }}%</text>
@@ -165,7 +165,7 @@
             @changing="onScaleChanging"
             min="50" 
             max="200"
-            activeColor="#2bad81"
+            activeColor="#d483b8"
             block-size="20"
           />
           <text class="control-value">{{ imageScale }}%</text>
@@ -301,7 +301,7 @@
               @changing="onOpacityChanging"
               min="0" 
               max="100"
-              activeColor="#2bad81"
+              activeColor="#d483b8"
               block-size="20"
             />
             <text class="control-value">{{ opacity }}%</text>
@@ -316,7 +316,7 @@
               @changing="onScaleChanging"
               min="50" 
               max="200"
-              activeColor="#2bad81"
+              activeColor="#d483b8"
               block-size="20"
             />
             <text class="control-value">{{ imageScale }}%</text>
@@ -401,7 +401,7 @@
             @changing="onOpacityChanging"
             min="0" 
             max="100"
-            activeColor="#2bad81"
+            activeColor="#d483b8"
             block-size="20"
           />
           <text class="control-value">{{ opacity }}%</text>
@@ -417,7 +417,7 @@
             @changing="onScaleChanging"
             min="50" 
             max="200"
-            activeColor="#2bad81"
+            activeColor="#d483b8"
             block-size="20"
           />
           <text class="control-value">{{ imageScale }}%</text>
@@ -810,7 +810,7 @@ export default {
 }
 
 .step.active .step-number {
-  background: #2bad81;
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
   color: #ffffff;
 }
 
@@ -820,7 +820,7 @@ export default {
 }
 
 .step.active .step-text {
-  color: #2bad81;
+  color: #ff8fb3;
   font-weight: 600;
 }
 
@@ -865,8 +865,8 @@ export default {
 }
 
 .style-item.selected {
-  border-color: #2bad81;
-  box-shadow: 0 4rpx 12rpx rgba(43, 173, 129, 0.3);
+  border-color: #ff8fb3;
+  box-shadow: 0 4rpx 12rpx rgba(255, 143, 179, 0.4);
 }
 
 .style-image {
@@ -881,7 +881,7 @@ export default {
   width: 40rpx;
   height: 40rpx;
   border-radius: 50%;
-  background: #2bad81;
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -995,7 +995,7 @@ export default {
   text-align: center;
   padding: 16rpx;
   background: #f5f5f5;
-  color: #2bad81;
+  color: #ff8fb3;
   font-size: 24rpx;
 }
 
@@ -1057,14 +1057,14 @@ export default {
   height: 100%;
   border: 3rpx solid #2bad81;
   box-sizing: border-box;
-  background: rgba(43, 173, 129, 0.1);
+  background: rgba(255, 143, 179, 0.15);
 }
 
 .crop-corner {
   position: absolute;
   width: 20rpx;
   height: 20rpx;
-  background: #2bad81;
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
   border: 2rpx solid #ffffff;
   border-radius: 50%;
 }
@@ -1089,7 +1089,7 @@ export default {
   right: -10rpx;
   width: 30rpx;
   height: 30rpx;
-  background: #2bad81;
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
   cursor: se-resize;
 }
 
@@ -1099,7 +1099,7 @@ export default {
   left: 50%;
   transform: translateX(-50%);
   font-size: 22rpx;
-  color: #2bad81;
+  color: #ff8fb3;
   white-space: nowrap;
   background: rgba(255, 255, 255, 0.9);
   padding: 4rpx 12rpx;
@@ -1128,7 +1128,7 @@ export default {
 
 .opacity-control .control-value {
   font-size: 28rpx;
-  color: #2bad81;
+  color: #ff8fb3;
   font-weight: 700;
   width: 80rpx;
   text-align: right;
@@ -1148,7 +1148,7 @@ export default {
 }
 
 .modal-btn.cancel {
-  background: #2bad81;
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
   color: #ffffff;
 }
 
@@ -1208,7 +1208,7 @@ export default {
 .next-btn {
   width: 100%;
   padding: 24rpx;
-  background: #2bad81;
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
   color: #ffffff;
   border-radius: 16rpx;
   font-size: 28rpx;
@@ -1238,12 +1238,12 @@ export default {
 }
 
 .preview-btn {
-  background: linear-gradient(135deg, #2bad81 0%, #25a172 100%);
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
   color: #ffffff;
 }
 
 .submit-btn {
-  background: #2bad81;
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
   color: #ffffff;
 }
 
@@ -1253,7 +1253,7 @@ export default {
 }
 
 .preview-modal-btn.close {
-  background: #2bad81;
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
   color: #ffffff;
 }
 
@@ -1401,7 +1401,7 @@ export default {
 }
 
 .preview-modal-btn.confirm {
-  background: #2bad81;
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
   color: #ffffff;
 }
 </style>

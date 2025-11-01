@@ -14,6 +14,8 @@ if (!Math) {
   "./pages/xinxiang/index.js";
   "./pages/xinxiang/create.js";
   "./pages/xinxiang/history.js";
+  "./pages/profile/index.js";
+  "./pages/trajectory/index.js";
 }
 const pages = [
   {

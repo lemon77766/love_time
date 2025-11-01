@@ -86,7 +86,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     b: common_vendor.t($data.currentYearMonth),
     c: common_vendor.t($data.currentWeek),
     d: common_assets._imports_0$1,
-    e: common_assets._imports_0$2,
+    e: common_assets._imports_1$1,
     f: common_assets._imports_2,
     g: common_vendor.f($data.gridItems, (item, index, i0) => {
       return {

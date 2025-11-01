@@ -165,11 +165,11 @@ export default {
   margin-left: 20rpx;
 }
 
-/* 日期数字：大号字体、绿色、加粗 */
+/* 日期数字：大号字体、粉紫色、加粗 */
 .date-number {
   font-size: 96rpx;
   font-weight: bold;
-  color: #2ecc71;
+  color: #ffb3c6;
 }
 
 /* 日期文字与表情的容器：纵向排列 */
@@ -237,7 +237,7 @@ export default {
 
 .green-date {
   font-size: 48rpx;
-  color: #2bad81;
+  color: #ff8fb3;
   font-weight: bold;
 }
 
@@ -310,7 +310,7 @@ export default {
 .progress-fill {
   width: 70%;
   height: 100%;
-  background-color: #2bad81;
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
   border-radius: 4rpx;
 }
 

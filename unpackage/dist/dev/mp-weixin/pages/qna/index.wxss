@@ -27,7 +27,7 @@
 }
 .btn { padding: 16rpx 26rpx; border-radius: 14rpx; font-size: 26rpx;
 }
-.btn.primary { background: #2bad81; color: #ffffff;
+.btn.primary { background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%); color: #ffffff;
 }
 .btn.secondary { background: #f0f0f0; color: #333;
 }
@@ -37,7 +37,7 @@
 }
 .p-text { margin-top: 8rpx; font-size: 28rpx; color: #2b2b2b;
 }
-.floating { position: fixed; right: 24rpx; bottom: 120rpx; background: #2bad81; color: #ffffff; border-radius: 999rpx; padding: 16rpx 20rpx; display: flex; align-items: center; gap: 10rpx; box-shadow: 0 10rpx 24rpx rgba(43,173,129,0.35); z-index: 99;
+.floating { position: fixed; right: 24rpx; bottom: 120rpx; background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%); color: #ffffff; border-radius: 999rpx; padding: 16rpx 20rpx; display: flex; align-items: center; gap: 10rpx; box-shadow: 0 10rpx 24rpx rgba(255,143,179,0.4); z-index: 99;
 }
 .custom-floating { bottom: 200rpx;
 } /* 自定义问题按钮在历史按钮上面 */
@@ -79,9 +79,9 @@
 }
 .question-item { display: flex; align-items: flex-start; padding: 14rpx 12rpx; background: #f7f7f9; border-radius: 12rpx; margin-bottom: 8rpx;
 }
-.question-item.custom { background: linear-gradient(135deg, #e8f5f1 0%, #f0f9f6 100%);
-} /* 改为淡绿色渐变 */
-.q-num { font-size: 24rpx; color: #2bad81; font-weight: 600; margin-right: 8rpx; flex-shrink: 0;
+.question-item.custom { background: linear-gradient(135deg, #f5e6f0 0%, #fdf2f8 100%);
+} /* 改为淡粉紫色渐变 */
+.q-num { font-size: 24rpx; color: #ff8fb3; font-weight: 600; margin-right: 8rpx; flex-shrink: 0;
 }
 .q-content { flex: 1; font-size: 26rpx; color: #2b2b2b; word-break: break-all;
 }

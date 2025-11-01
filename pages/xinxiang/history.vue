@@ -227,7 +227,7 @@ export default {
   position: absolute;
   top: 16rpx;
   right: 16rpx;
-  background: rgba(43, 173, 129, 0.9);
+  background: rgba(255, 143, 179, 0.9);
   padding: 8rpx 16rpx;
   border-radius: 8rpx;
 }
@@ -291,7 +291,7 @@ export default {
 }
 
 .action-btn.view {
-  color: #2bad81;
+  color: #ff8fb3;
   border-right: 1rpx solid #f0f0f0;
 }
 
@@ -325,7 +325,7 @@ export default {
 
 .write-btn {
   padding: 20rpx 60rpx;
-  background: #2bad81;
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
   color: #ffffff;
   border-radius: 48rpx;
   font-size: 28rpx;
@@ -482,7 +482,7 @@ export default {
 }
 
 .detail-modal-btn.close {
-  background: #2bad81;
+  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
   color: #ffffff;
 }
 </style>

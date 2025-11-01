@@ -71,16 +71,28 @@
       "style": {
         "navigationBarTitleText": "信件记录"
       }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "个人资料"
+      }
+    },
+    {
+      "path": "pages/trajectory/index",
+      "style": {
+        "navigationBarTitleText": "恋爱轨迹"
+      }
     }
   ],
   "tabBar": {
     "color": "#000000",
-    "selectedColor": "#2bad81",
+    "selectedColor": "#ff8fb3",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
       { "pagePath": "pages/index/index", "text": "主页", "iconPath": "static/love.png", "selectedIconPath": "static/love.png" },
-      { "pagePath": "pages/jiyi/index", "text": "记忆", "iconPath": "static/remerber.png", "selectedIconPath": "static/remerber.png" },
+      { "pagePath": "pages/trajectory/index", "text": "轨迹", "iconPath": "static/trajectory.png", "selectedIconPath": "static/trajectory.png" },
       { "pagePath": "pages/we/index", "text": "我们", "iconPath": "static/we.png", "selectedIconPath": "static/we.png" }
     ]
   },

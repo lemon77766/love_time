@@ -5,21 +5,8 @@
   padding-bottom: 32rpx;
 }
 
-/* 顶部栏 */
-.topbar {
-  position: relative;
-  height: 96rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ffffff;
-}
-.topbar-title {
-  font-size: 32rpx;
-  color: #2b2b2b;
-  font-weight: 600;
-}
-.topbar-actions {
+/* 功能按钮 */
+.profile-actions {
   position: absolute;
   right: 24rpx;
   top: 50%;
@@ -31,8 +18,8 @@
   width: 64rpx;
   height: 64rpx;
   border-radius: 32rpx;
-  background: #f4f7f5;
-  color: #2bad81;
+  background: #fdf2f8;
+  color: #ff8fb3;
   font-size: 28rpx;
   display: flex;
   align-items: center;
@@ -57,7 +44,7 @@
   width: 240rpx;
   height: 240rpx;
   border-radius: 120rpx;
-  background: rgba(43,173,129,0.12);
+  background: rgba(255,143,179,0.12);
 }
 .avatar {
   width: 120rpx;
@@ -67,7 +54,7 @@
 }
 .profile-texts { margin-left: 20rpx;
 }
-.hello { font-size: 32rpx; color: #2bad81; font-weight: 700;
+.hello { font-size: 32rpx; color: #ff8fb3; font-weight: 700;
 }
 .sub { margin-top: 6rpx; font-size: 24rpx; color: #7a7a7a;
 }
@@ -91,7 +78,7 @@
 }
 .stat-row { display: flex; align-items: center; gap: 8rpx; margin-top: 6rpx;
 }
-.stat-icon { font-size: 24rpx; color: #2bad81;
+.stat-icon { font-size: 24rpx; color: #ff8fb3;
 }
 .stat-label { font-size: 24rpx; color: #666;
 }
@@ -120,7 +107,7 @@
 }
 .menu-icon {
   width: 40rpx; height: 40rpx; border-radius: 20rpx;
-  background: #f4f7f5; color: #2bad81; font-size: 24rpx;
+  background: #fdf2f8; color: #ff8fb3; font-size: 24rpx;
   display: flex; align-items: center; justify-content: center;
 }
 .menu-text { font-size: 28rpx; color: #333;

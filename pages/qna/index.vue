@@ -112,6 +112,22 @@ import {
 
 export default {
   async onLoad(options) {
+    // 检查登录状态和token
+    const loginInfo = uni.getStorageSync('login_info');
+    if (!loginInfo || !loginInfo.token) {
+      uni.showModal({
+        title: '需要登录',
+        content: '甜蜜问答功能需要登录后才能使用，请先登录',
+        showCancel: false,
+        success: () => {
+          uni.reLaunch({
+            url: '/pages/login/index'
+          });
+        }
+      });
+      return;
+    }
+    
     // 从后端加载问题列表和历史记录
     await this.loadQuestionsFromServer();
     await this.loadHistoryFromServer();
@@ -154,12 +170,57 @@ export default {
   },
   computed: {
     questions() {
-      return [...this.defaultQuestions, ...this.customQuestions];
+      // 过滤掉无效的问题对象，确保每个问题都有 id 和 text
+      const validDefaultQuestions = (this.defaultQuestions || []).filter(q => q && q.id != null);
+      const validCustomQuestions = (this.customQuestions || []).filter(q => q && q.id != null);
+      return [...validDefaultQuestions, ...validCustomQuestions];
     },
     // 计算未回答的问题列表
     unansweredQuestions() {
-      const answeredIds = this.history.map(h => h.questionId);
-      return this.questions.filter(q => !answeredIds.includes(q.id));
+      // 获取已回答的问题ID列表（确保类型一致）
+      const answeredIds = this.history
+        .map(h => {
+          // 兼容不同的字段名
+          const qid = h.questionId || h.question_id || h.id;
+          // 统一转换为数字类型进行比较
+          return qid != null ? Number(qid) : null;
+        })
+        .filter(id => id != null);
+      
+      // 过滤出未回答的问题（添加安全检查）
+      const unanswered = this.questions.filter(q => {
+        // 安全检查：确保 q 存在且有 id 属性
+        if (!q || q.id === undefined || q.id === null) {
+          console.warn('⚠️ 发现无效的问题对象:', q);
+          return false;
+        }
+        const questionId = Number(q.id);
+        // 检查转换后的ID是否有效
+        if (isNaN(questionId)) {
+          console.warn('⚠️ 问题ID无效:', q.id);
+          return false;
+        }
+        const isAnswered = answeredIds.includes(questionId);
+        return !isAnswered && q.isActive !== false; // 过滤掉已禁用的问题
+      });
+      
+      // 开发环境下输出调试信息
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 未回答问题计算:', {
+          totalQuestions: this.questions.length,
+          answeredIds: answeredIds,
+          unansweredCount: unanswered.length,
+          answeredCount: answeredIds.length,
+          historyCount: this.history.length,
+          questions: this.questions.map(q => ({ id: q.id, text: q.text })),
+          history: this.history.map(h => ({ 
+            questionId: h.questionId || h.question_id,
+            question: h.question || h.questionText
+          }))
+        });
+      }
+      
+      return unanswered;
     },
     currentQuestion() {
       // 从未回答的问题中获取当前问题
@@ -173,6 +234,14 @@ export default {
     // onLoad 中已经加载，无需重复加载
   },
   methods: {
+    // 保存历史记录到本地存储
+    saveHistory() {
+      try {
+        uni.setStorageSync('qna_history', this.history);
+      } catch (e) {
+        console.error('保存历史记录失败', e);
+      }
+    },
     async submitAnswer() {
       if (!this.myAnswer) {
         uni.showToast({ title: '请填写你的答案', icon: 'none' });
@@ -199,23 +268,29 @@ export default {
           questionText: this.currentQuestion.text
         });
         
-        if (res.success) {
-          // 如果对方已回答，显示对方答案
-          if (res.data.hasPartnerAnswered) {
-            this.partnerAnswer = res.data.partnerAnswer;
+        console.log('📥 提交答案响应:', res);
+        
+        if (res && res.success) {
+          // 兼容不同的响应格式
+          const responseData = res.data || res;
+          
+          // 如果对方已回答，显示对方答案（兼容 hasPartnerAnswer 和 hasPartnerAnswered 两种字段名）
+          if (responseData && (responseData.hasPartnerAnswered || responseData.hasPartnerAnswer)) {
+            this.partnerAnswer = responseData.partnerAnswer || '';
           }
           
           // 添加到本地历史记录
           const record = {
-            id: res.data.answerId,
+            id: responseData?.answerId || res?.answerId || responseData?.id || Date.now(),
             questionId: this.currentQuestion.id,
             question: this.currentQuestion.text,
             myAnswer: this.myAnswer,
-            partnerAnswer: res.data.partnerAnswer || '',
+            partnerAnswer: responseData?.partnerAnswer || '',
             time: new Date().toLocaleString(),
             createdAt: new Date().toISOString()
           };
           this.history.unshift(record);
+          this.saveHistory();
           
           uni.showToast({ title: '提交成功', icon: 'success' });
           
@@ -223,11 +298,96 @@ export default {
           setTimeout(() => {
             this.nextQuestion();
           }, 1500);
+        } else {
+          // 即使响应格式不符合预期，也保存到本地
+          console.warn('⚠️ 响应格式不符合预期:', res);
+          const record = {
+            id: Date.now(),
+            questionId: this.currentQuestion.id,
+            question: this.currentQuestion.text,
+            myAnswer: this.myAnswer,
+            partnerAnswer: '',
+            time: new Date().toLocaleString(),
+            createdAt: new Date().toISOString()
+          };
+          this.history.unshift(record);
+          this.saveHistory();
+          uni.showToast({ title: '提交成功（已保存到本地）', icon: 'success' });
+          
+          setTimeout(() => {
+            this.nextQuestion();
+          }, 1500);
         }
       } catch (e) {
         console.error('提交答案失败', e);
-        uni.showToast({ title: '提交失败，请重试', icon: 'none' });
+        console.error('错误详情:', {
+          statusCode: e.statusCode,
+          message: e.message,
+          data: e.data,
+          url: e.url || '未知'
+        });
+        
+        // 401错误特殊处理
+        if (e.statusCode === 401) {
+          uni.hideLoading();
+          uni.showModal({
+            title: '登录已过期',
+            content: '您的登录已过期，请重新登录',
+            showCancel: false,
+            success: () => {
+              uni.reLaunch({
+                url: '/pages/login/index'
+              });
+            }
+          });
+          return;
+        }
+        
+        // 404错误：后端接口未实现
+        if (e.statusCode === 404) {
+          uni.hideLoading();
+          console.warn('⚠️ 后端接口未实现: POST /api/qna/answer/submit');
+          console.warn('💡 提示: 请联系后端开发人员实现该接口，或检查接口路径是否正确');
+          
+          // 临时方案：保存到本地，等后端接口就绪后再同步
+          uni.showModal({
+            title: '接口未实现',
+            content: '提交答案接口暂未实现，已保存到本地。请联系后端开发人员实现接口：POST /api/qna/answer/submit',
+            showCancel: false,
+            confirmText: '知道了',
+            success: () => {
+              // 本地保存答案记录（临时方案）
+              const record = {
+                id: Date.now(), // 临时ID
+                questionId: this.currentQuestion.id,
+                question: this.currentQuestion.text,
+                myAnswer: this.myAnswer,
+                partnerAnswer: '',
+                time: new Date().toLocaleString(),
+                createdAt: new Date().toISOString(),
+                _pendingSync: true // 标记为待同步
+              };
+              this.history.unshift(record);
+              this.saveHistory();
+              uni.showToast({ title: '已保存到本地', icon: 'none' });
+              
+              // 提交后自动跳到下一题
+              setTimeout(() => {
+                this.nextQuestion();
+              }, 1500);
+            }
+          });
+          return;
+        }
+        
+        uni.hideLoading();
+        uni.showToast({ 
+          title: `提交失败: ${e.statusCode || '网络错误'}`, 
+          icon: 'none',
+          duration: 3000
+        });
       } finally {
+        // 确保loading关闭
         uni.hideLoading();
       }
     },
@@ -245,6 +405,7 @@ export default {
       }
     },
     openHistory() {
+      
       uni.navigateTo({ url: '/pages/qna/history' });
     },
     closeHistory() {
@@ -259,11 +420,92 @@ export default {
     async loadHistoryFromServer() {
       try {
         const res = await getHistory({ page: 1, pageSize: 100 });
-        if (res.success) {
-          this.history = res.data.list || [];
+        console.log('📥 历史记录响应:', res);
+        
+        let historyList = [];
+        
+        // 处理不同的响应格式（按优先级顺序）
+        if (res && res.success && Array.isArray(res.history)) {
+          // 格式: { success: true, history: [...], message: "获取成功", totalCount: 5 }
+          historyList = res.history;
+        } else if (res && res.success && Array.isArray(res.answers)) {
+          // 格式: { success: true, answers: [...], message: "获取成功", totalCount: 0 }
+          historyList = res.answers;
+        } else if (res && res.success && res.data && res.data.list) {
+          // 格式: { success: true, data: { list: [...] } }
+          historyList = Array.isArray(res.data.list) ? res.data.list : [];
+        } else if (res && res.success && res.data && Array.isArray(res.data)) {
+          // 格式: { success: true, data: [...] } （直接是数组）
+          historyList = res.data;
+        } else if (res && res.list) {
+          // 格式: { list: [...] } （直接返回数据）
+          historyList = Array.isArray(res.list) ? res.list : [];
+        } else if (Array.isArray(res)) {
+          // 格式: [...] （直接返回数组）
+          historyList = res;
+        } else {
+          console.warn('⚠️ 历史记录响应格式不符合预期:', res);
+          historyList = [];
         }
+        
+        // 标准化历史记录格式，确保字段名一致
+        this.history = historyList.map(item => {
+          // 兼容多种字段名和格式
+          const id = item.id || item.answerId;
+          const questionId = item.questionId || item.question_id;
+          
+          // 优先使用后端返回的 question，如果没有则从问题列表中查找
+          let question = item.question || item.questionText || item.question_text;
+          if (!question && questionId != null) {
+            // 从问题列表中根据 questionId 查找对应的 question 文本
+            const allQuestions = [...(this.defaultQuestions || []), ...(this.customQuestions || [])];
+            const foundQuestion = allQuestions.find(q => q && q.id != null && Number(q.id) === Number(questionId));
+            if (foundQuestion && foundQuestion.text) {
+              question = foundQuestion.text;
+            }
+          }
+          
+          // 兼容 answer、myAnswer、my_answer 等多种字段名
+          const myAnswer = item.myAnswer || item.answer || item.my_answer;
+          const partnerAnswer = item.partnerAnswer || item.partner_answer || '';
+          // 兼容多种时间字段：answeredAt、createdAt、created_at、time、updatedAt
+          const time = item.time || item.answeredAt || item.createdAt || item.created_at || item.updatedAt || new Date().toLocaleString();
+          const createdAt = item.createdAt || item.created_at || item.answeredAt || item.updatedAt || new Date().toISOString();
+          
+          return {
+            id,
+            questionId,
+            question: question || `问题ID: ${questionId}`, // 如果仍然找不到，显示ID作为备用
+            myAnswer,
+            partnerAnswer,
+            time,
+            createdAt,
+            // 保留原始数据中的其他字段（如 questionCategory、answeredAt 等）
+            questionCategory: item.questionCategory || item.category,
+            answeredAt: item.answeredAt,
+            updatedAt: item.updatedAt,
+            ...item
+          };
+        });
+        
+        console.log('✅ 历史记录加载成功:', {
+          count: this.history.length,
+          totalCount: res?.totalCount,
+          sample: this.history.slice(0, 3)
+        });
       } catch (e) {
         console.error('加载历史记录失败', e);
+        console.error('错误详情:', {
+          message: e.message,
+          statusCode: e.statusCode,
+          data: e.data
+        });
+        
+        // 401错误特殊处理（但不弹出提示，因为已经在上面的加载问题中处理了）
+        if (e.statusCode === 401) {
+          return;
+        }
+        
         // 如果后端请求失败，尝试从本地存储加载
         try {
           const data = uni.getStorageSync('qna_history');
@@ -278,12 +520,110 @@ export default {
       try {
         uni.showLoading({ title: '加载中...' });
         const res = await getQuestions();
-        if (res.success) {
-          this.defaultQuestions = res.data.defaultQuestions || [];
-          this.customQuestions = res.data.customQuestions || [];
+        console.log('📥 问题列表响应:', res);
+        
+        // 处理后端返回的格式: { success: true, questions: Array, message: "获取成功" }
+        if (res && res.success && Array.isArray(res.questions)) {
+          // 将问题按 category 分类，并转换字段名
+          const presetQuestions = [];
+          const customQuestions = [];
+          
+          res.questions.forEach(q => {
+            // 跳过无效的问题对象
+            if (!q || q.id === undefined || q.id === null) {
+              console.warn('⚠️ 跳过无效的问题对象:', q);
+              return;
+            }
+            
+            // 转换字段：questionText -> text，保留其他字段
+            const question = {
+              id: q.id,
+              text: q.questionText || q.text || '', // 兼容两种字段名，确保有默认值
+              category: q.category || 'preset',
+              isActive: q.isActive !== false, // 默认为 true
+              orderIndex: q.orderIndex ?? 999,
+              createdBy: q.createdBy,
+              // 保留其他可能存在的字段
+              ...q
+            };
+            
+            // 移除原始的 questionText，避免混乱
+            if (question.questionText) {
+              delete question.questionText;
+            }
+            
+            // 按 category 分类
+            if (q.category === 'preset') {
+              presetQuestions.push(question);
+            } else if (q.category === 'custom') {
+              customQuestions.push(question);
+            }
+          });
+          
+          // 预设问题按 orderIndex 排序
+          presetQuestions.sort((a, b) => {
+            const orderA = a.orderIndex ?? 999;
+            const orderB = b.orderIndex ?? 999;
+            return orderA - orderB;
+          });
+          
+          this.defaultQuestions = presetQuestions;
+          this.customQuestions = customQuestions;
+          
+          console.log('✅ 问题列表加载成功:', {
+            preset: presetQuestions.length,
+            custom: customQuestions.length,
+            total: presetQuestions.length + customQuestions.length
+          });
+        } else if (res && res.success && res.data) {
+          // 兼容旧格式: { success: true, data: { defaultQuestions: [...], customQuestions: [...] } }
+          this.defaultQuestions = Array.isArray(res.data.defaultQuestions) 
+            ? res.data.defaultQuestions
+                .filter(q => q && q.id != null) // 过滤无效数据
+                .map(q => ({
+                  id: q.id,
+                  text: q.questionText || q.text || '',
+                  ...q
+                }))
+            : [];
+          this.customQuestions = Array.isArray(res.data.customQuestions) 
+            ? res.data.customQuestions
+                .filter(q => q && q.id != null) // 过滤无效数据
+                .map(q => ({
+                  id: q.id,
+                  text: q.questionText || q.text || '',
+                  ...q
+                }))
+            : [];
+        } else {
+          console.warn('⚠️ 问题列表响应格式不符合预期:', res);
+          this.defaultQuestions = [];
+          this.customQuestions = [];
         }
       } catch (e) {
         console.error('加载问题失败', e);
+        console.error('错误详情:', {
+          message: e.message,
+          statusCode: e.statusCode,
+          data: e.data
+        });
+        
+        // 401错误特殊处理
+        if (e.statusCode === 401) {
+          uni.hideLoading();
+          uni.showModal({
+            title: '登录已过期',
+            content: '您的登录已过期，请重新登录',
+            showCancel: false,
+            success: () => {
+              uni.reLaunch({
+                url: '/pages/login/index'
+              });
+            }
+          });
+          return;
+        }
+        
         // 如果后端请求失败，使用预设问题和本地自定义问题
         uni.showToast({ title: '加载问题失败，使用本地数据', icon: 'none' });
         try {
@@ -311,13 +651,64 @@ export default {
         const res = await addCustomQuestion(this.newQuestion.trim());
         
         if (res.success) {
+          // 格式化新问题，确保包含所有必需字段
+          const newQuestionData = res.data || {};
+          const formattedQuestion = {
+            id: newQuestionData.id,
+            text: newQuestionData.text || newQuestionData.questionText || this.newQuestion.trim(),
+            category: 'custom',
+            isActive: true,
+            orderIndex: 999,
+            createdBy: newQuestionData.userId || newQuestionData.createdBy,
+            createdAt: newQuestionData.createdAt,
+            // 保留其他字段
+            ...newQuestionData
+          };
+          
           // 将新问题添加到列表
-          this.customQuestions.push(res.data);
+          this.customQuestions.push(formattedQuestion);
           this.newQuestion = '';
+          
+          // 关闭弹窗，让用户看到主页面
+          this.showCustomModal = false;
+          
+          // 自动切换到新添加的问题（如果它是未回答的问题）
+          // 使用 setTimeout 确保响应式更新已完成（uni-app 中使用 setTimeout 更可靠）
+          setTimeout(() => {
+            const newQuestionIndex = this.unansweredQuestions.findIndex(
+              q => q.id === formattedQuestion.id
+            );
+            if (newQuestionIndex >= 0) {
+              // 找到新问题在未回答列表中的位置，切换过去
+              this.qIndex = newQuestionIndex;
+              // 清空当前的答案输入，准备回答新问题
+              this.myAnswer = '';
+              this.partnerAnswer = '';
+              
+              console.log('✅ 已切换到新添加的问题:', formattedQuestion);
+            }
+          }, 100);
+          
           uni.showToast({ title: '问题添加成功', icon: 'success' });
         }
       } catch (e) {
         console.error('添加问题失败', e);
+        
+        // 401错误特殊处理
+        if (e.statusCode === 401) {
+          uni.showModal({
+            title: '登录已过期',
+            content: '您的登录已过期，请重新登录',
+            showCancel: false,
+            success: () => {
+              uni.reLaunch({
+                url: '/pages/login/index'
+              });
+            }
+          });
+          return;
+        }
+        
         uni.showToast({ title: '添加失败，请重试', icon: 'none' });
       } finally {
         uni.hideLoading();
@@ -345,6 +736,22 @@ export default {
               }
             } catch (e) {
               console.error('删除问题失败', e);
+              
+              // 401错误特殊处理
+              if (e.statusCode === 401) {
+                uni.showModal({
+                  title: '登录已过期',
+                  content: '您的登录已过期，请重新登录',
+                  showCancel: false,
+                  success: () => {
+                    uni.reLaunch({
+                      url: '/pages/login/index'
+                    });
+                  }
+                });
+                return;
+              }
+              
               uni.showToast({ title: '删除失败，请重试', icon: 'none' });
             } finally {
               uni.hideLoading();
@@ -379,14 +786,14 @@ export default {
 .a-input { margin-top: 12rpx; min-height: 100rpx; border: 1rpx solid #e6e6e6; border-radius: 16rpx; padding: 16rpx; font-size: 26rpx; }
 .actions { margin-top: 16rpx; display: flex; gap: 12rpx; }
 .btn { padding: 16rpx 26rpx; border-radius: 14rpx; font-size: 26rpx; }
-.btn.primary { background: #2bad81; color: #ffffff; }
+.btn.primary { background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%); color: #ffffff; }
 .btn.secondary { background: #f0f0f0; color: #333; }
 
 .partner-card { margin: 16rpx 24rpx; background: #ffffff; border-radius: 24rpx; padding: 24rpx; box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.06); }
 .p-label { font-size: 24rpx; color: #9aa0a6; }
 .p-text { margin-top: 8rpx; font-size: 28rpx; color: #2b2b2b; }
 
-.floating { position: fixed; right: 24rpx; bottom: 120rpx; background: #2bad81; color: #ffffff; border-radius: 999rpx; padding: 16rpx 20rpx; display: flex; align-items: center; gap: 10rpx; box-shadow: 0 10rpx 24rpx rgba(43,173,129,0.35); z-index: 99; }
+.floating { position: fixed; right: 24rpx; bottom: 120rpx; background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%); color: #ffffff; border-radius: 999rpx; padding: 16rpx 20rpx; display: flex; align-items: center; gap: 10rpx; box-shadow: 0 10rpx 24rpx rgba(255,143,179,0.4); z-index: 99; }
 .custom-floating { bottom: 200rpx; } /* 自定义问题按钮在历史按钮上面 */
 .float-icon { font-size: 26rpx; }
 .float-text { font-size: 24rpx; }
@@ -410,8 +817,8 @@ export default {
 .question-list { flex: 1; overflow-y: auto; }
 .section-title { font-size: 24rpx; color: #9aa0a6; margin-bottom: 12rpx; padding-left: 4rpx; }
 .question-item { display: flex; align-items: flex-start; padding: 14rpx 12rpx; background: #f7f7f9; border-radius: 12rpx; margin-bottom: 8rpx; }
-.question-item.custom { background: linear-gradient(135deg, #e8f5f1 0%, #f0f9f6 100%); } /* 改为淡绿色渐变 */
-.q-num { font-size: 24rpx; color: #2bad81; font-weight: 600; margin-right: 8rpx; flex-shrink: 0; }
+.question-item.custom { background: linear-gradient(135deg, #f5e6f0 0%, #fdf2f8 100%); } /* 改为淡粉紫色渐变 */
+.q-num { font-size: 24rpx; color: #ff8fb3; font-weight: 600; margin-right: 8rpx; flex-shrink: 0; }
 .q-content { flex: 1; font-size: 26rpx; color: #2b2b2b; word-break: break-all; }
 .q-delete { font-size: 24rpx; color: #ff6b6b; margin-left: 12rpx; flex-shrink: 0; padding: 4rpx 8rpx; }
 

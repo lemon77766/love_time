@@ -229,7 +229,7 @@ export default {
 /* 已删除 .hover-hint 样式 */
 .select-hint {
   position: absolute; left: 50%; bottom: 24rpx; transform: translateX(-50%);
-  background: rgba(43,173,129,0.95); color: #ffffff; border-radius: 999rpx;
+  background: rgba(255,143,179,0.95); color: #ffffff; border-radius: 999rpx;
   padding: 12rpx 24rpx; font-size: 24rpx; box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.08);
 }
 .temp-dot { position: absolute; width: 18rpx; height: 18rpx; border-radius: 9rpx; background: #ff6b6b; box-shadow: 0 4rpx 10rpx rgba(0,0,0,0.12); }
@@ -351,7 +351,7 @@ export default {
   padding: 16rpx 28rpx;
   box-shadow: 0 6rpx 16rpx rgba(0,0,0,0.08);
 }
-.add-icon { font-size: 32rpx; color: #2ecc71; font-weight: 700; }
+.add-icon { font-size: 32rpx; color: #ffb3c6; font-weight: 700; }
 .add-text { font-size: 26rpx; color: #2b2b2b; }
 
 /* 弹窗样式 */
@@ -440,7 +440,7 @@ export default {
 .modal-desc { margin-top: 16rpx; font-size: 26rpx; color: #555; line-height: 1.6; }
 .modal-actions { margin-top: 60rpx; display: flex; justify-content: flex-end; gap: 16rpx; }
 .btn { padding: 16rpx 26rpx; border-radius: 12rpx; font-size: 26rpx; border: none; }
-.btn.primary { background: #2ecc71; color: #ffffff; }
+.btn.primary { background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%); color: #ffffff; }
 .btn.secondary { background: #f0f0f0; color: #333; }
 
 /* 表单样式 */

@@ -16,7 +16,7 @@ const _sfc_main = {
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return {
-    a: common_assets._imports_0$5,
+    a: common_assets._imports_0$4,
     b: common_vendor.o((...args) => $options.openHistory && $options.openHistory(...args)),
     c: common_vendor.o((...args) => $options.createLetter && $options.createLetter(...args))
   };

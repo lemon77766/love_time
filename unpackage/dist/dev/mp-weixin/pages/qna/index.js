@@ -3,6 +3,20 @@ const common_vendor = require("../../common/vendor.js");
 const api_qna = require("../../api/qna.js");
 const _sfc_main = {
   async onLoad(options) {
+    const loginInfo = common_vendor.index.getStorageSync("login_info");
+    if (!loginInfo || !loginInfo.token) {
+      common_vendor.index.showModal({
+        title: "需要登录",
+        content: "甜蜜问答功能需要登录后才能使用，请先登录",
+        showCancel: false,
+        success: () => {
+          common_vendor.index.reLaunch({
+            url: "/pages/login/index"
+          });
+        }
+      });
+      return;
+    }
     await this.loadQuestionsFromServer();
     await this.loadHistoryFromServer();
     const qid = Number(options && options.qid);
@@ -41,12 +55,44 @@ const _sfc_main = {
   },
   computed: {
     questions() {
-      return [...this.defaultQuestions, ...this.customQuestions];
+      const validDefaultQuestions = (this.defaultQuestions || []).filter((q) => q && q.id != null);
+      const validCustomQuestions = (this.customQuestions || []).filter((q) => q && q.id != null);
+      return [...validDefaultQuestions, ...validCustomQuestions];
     },
     // 计算未回答的问题列表
     unansweredQuestions() {
-      const answeredIds = this.history.map((h) => h.questionId);
-      return this.questions.filter((q) => !answeredIds.includes(q.id));
+      const answeredIds = this.history.map((h) => {
+        const qid = h.questionId || h.question_id || h.id;
+        return qid != null ? Number(qid) : null;
+      }).filter((id) => id != null);
+      const unanswered = this.questions.filter((q) => {
+        if (!q || q.id === void 0 || q.id === null) {
+          common_vendor.index.__f__("warn", "at pages/qna/index.vue:194", "⚠️ 发现无效的问题对象:", q);
+          return false;
+        }
+        const questionId = Number(q.id);
+        if (isNaN(questionId)) {
+          common_vendor.index.__f__("warn", "at pages/qna/index.vue:200", "⚠️ 问题ID无效:", q.id);
+          return false;
+        }
+        const isAnswered = answeredIds.includes(questionId);
+        return !isAnswered && q.isActive !== false;
+      });
+      {
+        common_vendor.index.__f__("log", "at pages/qna/index.vue:209", "🔍 未回答问题计算:", {
+          totalQuestions: this.questions.length,
+          answeredIds,
+          unansweredCount: unanswered.length,
+          answeredCount: answeredIds.length,
+          historyCount: this.history.length,
+          questions: this.questions.map((q) => ({ id: q.id, text: q.text })),
+          history: this.history.map((h) => ({
+            questionId: h.questionId || h.question_id,
+            question: h.question || h.questionText
+          }))
+        });
+      }
+      return unanswered;
     },
     currentQuestion() {
       if (this.unansweredQuestions.length === 0) {
@@ -58,6 +104,14 @@ const _sfc_main = {
   mounted() {
   },
   methods: {
+    // 保存历史记录到本地存储
+    saveHistory() {
+      try {
+        common_vendor.index.setStorageSync("qna_history", this.history);
+      } catch (e) {
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:242", "保存历史记录失败", e);
+      }
+    },
     async submitAnswer() {
       if (!this.myAnswer) {
         common_vendor.index.showToast({ title: "请填写你的答案", icon: "none" });
@@ -79,28 +133,105 @@ const _sfc_main = {
           answer: this.myAnswer,
           questionText: this.currentQuestion.text
         });
-        if (res.success) {
-          if (res.data.hasPartnerAnswered) {
-            this.partnerAnswer = res.data.partnerAnswer;
+        common_vendor.index.__f__("log", "at pages/qna/index.vue:271", "📥 提交答案响应:", res);
+        if (res && res.success) {
+          const responseData = res.data || res;
+          if (responseData && (responseData.hasPartnerAnswered || responseData.hasPartnerAnswer)) {
+            this.partnerAnswer = responseData.partnerAnswer || "";
           }
           const record = {
-            id: res.data.answerId,
+            id: (responseData == null ? void 0 : responseData.answerId) || (res == null ? void 0 : res.answerId) || (responseData == null ? void 0 : responseData.id) || Date.now(),
             questionId: this.currentQuestion.id,
             question: this.currentQuestion.text,
             myAnswer: this.myAnswer,
-            partnerAnswer: res.data.partnerAnswer || "",
+            partnerAnswer: (responseData == null ? void 0 : responseData.partnerAnswer) || "",
             time: (/* @__PURE__ */ new Date()).toLocaleString(),
             createdAt: (/* @__PURE__ */ new Date()).toISOString()
           };
           this.history.unshift(record);
+          this.saveHistory();
           common_vendor.index.showToast({ title: "提交成功", icon: "success" });
+          setTimeout(() => {
+            this.nextQuestion();
+          }, 1500);
+        } else {
+          common_vendor.index.__f__("warn", "at pages/qna/index.vue:303", "⚠️ 响应格式不符合预期:", res);
+          const record = {
+            id: Date.now(),
+            questionId: this.currentQuestion.id,
+            question: this.currentQuestion.text,
+            myAnswer: this.myAnswer,
+            partnerAnswer: "",
+            time: (/* @__PURE__ */ new Date()).toLocaleString(),
+            createdAt: (/* @__PURE__ */ new Date()).toISOString()
+          };
+          this.history.unshift(record);
+          this.saveHistory();
+          common_vendor.index.showToast({ title: "提交成功（已保存到本地）", icon: "success" });
           setTimeout(() => {
             this.nextQuestion();
           }, 1500);
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/qna/index.vue:228", "提交答案失败", e);
-        common_vendor.index.showToast({ title: "提交失败，请重试", icon: "none" });
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:322", "提交答案失败", e);
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:323", "错误详情:", {
+          statusCode: e.statusCode,
+          message: e.message,
+          data: e.data,
+          url: e.url || "未知"
+        });
+        if (e.statusCode === 401) {
+          common_vendor.index.hideLoading();
+          common_vendor.index.showModal({
+            title: "登录已过期",
+            content: "您的登录已过期，请重新登录",
+            showCancel: false,
+            success: () => {
+              common_vendor.index.reLaunch({
+                url: "/pages/login/index"
+              });
+            }
+          });
+          return;
+        }
+        if (e.statusCode === 404) {
+          common_vendor.index.hideLoading();
+          common_vendor.index.__f__("warn", "at pages/qna/index.vue:349", "⚠️ 后端接口未实现: POST /api/qna/answer/submit");
+          common_vendor.index.__f__("warn", "at pages/qna/index.vue:350", "💡 提示: 请联系后端开发人员实现该接口，或检查接口路径是否正确");
+          common_vendor.index.showModal({
+            title: "接口未实现",
+            content: "提交答案接口暂未实现，已保存到本地。请联系后端开发人员实现接口：POST /api/qna/answer/submit",
+            showCancel: false,
+            confirmText: "知道了",
+            success: () => {
+              const record = {
+                id: Date.now(),
+                // 临时ID
+                questionId: this.currentQuestion.id,
+                question: this.currentQuestion.text,
+                myAnswer: this.myAnswer,
+                partnerAnswer: "",
+                time: (/* @__PURE__ */ new Date()).toLocaleString(),
+                createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+                _pendingSync: true
+                // 标记为待同步
+              };
+              this.history.unshift(record);
+              this.saveHistory();
+              common_vendor.index.showToast({ title: "已保存到本地", icon: "none" });
+              setTimeout(() => {
+                this.nextQuestion();
+              }, 1500);
+            }
+          });
+          return;
+        }
+        common_vendor.index.hideLoading();
+        common_vendor.index.showToast({
+          title: `提交失败: ${e.statusCode || "网络错误"}`,
+          icon: "none",
+          duration: 3e3
+        });
       } finally {
         common_vendor.index.hideLoading();
       }
@@ -132,11 +263,70 @@ const _sfc_main = {
     async loadHistoryFromServer() {
       try {
         const res = await api_qna.getHistory({ page: 1, pageSize: 100 });
-        if (res.success) {
-          this.history = res.data.list || [];
+        common_vendor.index.__f__("log", "at pages/qna/index.vue:423", "📥 历史记录响应:", res);
+        let historyList = [];
+        if (res && res.success && Array.isArray(res.history)) {
+          historyList = res.history;
+        } else if (res && res.success && Array.isArray(res.answers)) {
+          historyList = res.answers;
+        } else if (res && res.success && res.data && res.data.list) {
+          historyList = Array.isArray(res.data.list) ? res.data.list : [];
+        } else if (res && res.success && res.data && Array.isArray(res.data)) {
+          historyList = res.data;
+        } else if (res && res.list) {
+          historyList = Array.isArray(res.list) ? res.list : [];
+        } else if (Array.isArray(res)) {
+          historyList = res;
+        } else {
+          common_vendor.index.__f__("warn", "at pages/qna/index.vue:447", "⚠️ 历史记录响应格式不符合预期:", res);
+          historyList = [];
         }
+        this.history = historyList.map((item) => {
+          const id = item.id || item.answerId;
+          const questionId = item.questionId || item.question_id;
+          let question = item.question || item.questionText || item.question_text;
+          if (!question && questionId != null) {
+            const allQuestions = [...this.defaultQuestions || [], ...this.customQuestions || []];
+            const foundQuestion = allQuestions.find((q) => q && q.id != null && Number(q.id) === Number(questionId));
+            if (foundQuestion && foundQuestion.text) {
+              question = foundQuestion.text;
+            }
+          }
+          const myAnswer = item.myAnswer || item.answer || item.my_answer;
+          const partnerAnswer = item.partnerAnswer || item.partner_answer || "";
+          const time = item.time || item.answeredAt || item.createdAt || item.created_at || item.updatedAt || (/* @__PURE__ */ new Date()).toLocaleString();
+          const createdAt = item.createdAt || item.created_at || item.answeredAt || item.updatedAt || (/* @__PURE__ */ new Date()).toISOString();
+          return {
+            id,
+            questionId,
+            question: question || `问题ID: ${questionId}`,
+            // 如果仍然找不到，显示ID作为备用
+            myAnswer,
+            partnerAnswer,
+            time,
+            createdAt,
+            // 保留原始数据中的其他字段（如 questionCategory、answeredAt 等）
+            questionCategory: item.questionCategory || item.category,
+            answeredAt: item.answeredAt,
+            updatedAt: item.updatedAt,
+            ...item
+          };
+        });
+        common_vendor.index.__f__("log", "at pages/qna/index.vue:491", "✅ 历史记录加载成功:", {
+          count: this.history.length,
+          totalCount: res == null ? void 0 : res.totalCount,
+          sample: this.history.slice(0, 3)
+        });
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/qna/index.vue:266", "加载历史记录失败", e);
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:497", "加载历史记录失败", e);
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:498", "错误详情:", {
+          message: e.message,
+          statusCode: e.statusCode,
+          data: e.data
+        });
+        if (e.statusCode === 401) {
+          return;
+        }
         try {
           const data = common_vendor.index.getStorageSync("qna_history");
           this.history = Array.isArray(data) ? data : [];
@@ -150,12 +340,85 @@ const _sfc_main = {
       try {
         common_vendor.index.showLoading({ title: "加载中..." });
         const res = await api_qna.getQuestions();
-        if (res.success) {
-          this.defaultQuestions = res.data.defaultQuestions || [];
-          this.customQuestions = res.data.customQuestions || [];
+        common_vendor.index.__f__("log", "at pages/qna/index.vue:523", "📥 问题列表响应:", res);
+        if (res && res.success && Array.isArray(res.questions)) {
+          const presetQuestions = [];
+          const customQuestions = [];
+          res.questions.forEach((q) => {
+            if (!q || q.id === void 0 || q.id === null) {
+              common_vendor.index.__f__("warn", "at pages/qna/index.vue:534", "⚠️ 跳过无效的问题对象:", q);
+              return;
+            }
+            const question = {
+              id: q.id,
+              text: q.questionText || q.text || "",
+              // 兼容两种字段名，确保有默认值
+              category: q.category || "preset",
+              isActive: q.isActive !== false,
+              // 默认为 true
+              orderIndex: q.orderIndex ?? 999,
+              createdBy: q.createdBy,
+              // 保留其他可能存在的字段
+              ...q
+            };
+            if (question.questionText) {
+              delete question.questionText;
+            }
+            if (q.category === "preset") {
+              presetQuestions.push(question);
+            } else if (q.category === "custom") {
+              customQuestions.push(question);
+            }
+          });
+          presetQuestions.sort((a, b) => {
+            const orderA = a.orderIndex ?? 999;
+            const orderB = b.orderIndex ?? 999;
+            return orderA - orderB;
+          });
+          this.defaultQuestions = presetQuestions;
+          this.customQuestions = customQuestions;
+          common_vendor.index.__f__("log", "at pages/qna/index.vue:573", "✅ 问题列表加载成功:", {
+            preset: presetQuestions.length,
+            custom: customQuestions.length,
+            total: presetQuestions.length + customQuestions.length
+          });
+        } else if (res && res.success && res.data) {
+          this.defaultQuestions = Array.isArray(res.data.defaultQuestions) ? res.data.defaultQuestions.filter((q) => q && q.id != null).map((q) => ({
+            id: q.id,
+            text: q.questionText || q.text || "",
+            ...q
+          })) : [];
+          this.customQuestions = Array.isArray(res.data.customQuestions) ? res.data.customQuestions.filter((q) => q && q.id != null).map((q) => ({
+            id: q.id,
+            text: q.questionText || q.text || "",
+            ...q
+          })) : [];
+        } else {
+          common_vendor.index.__f__("warn", "at pages/qna/index.vue:599", "⚠️ 问题列表响应格式不符合预期:", res);
+          this.defaultQuestions = [];
+          this.customQuestions = [];
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/qna/index.vue:286", "加载问题失败", e);
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:604", "加载问题失败", e);
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:605", "错误详情:", {
+          message: e.message,
+          statusCode: e.statusCode,
+          data: e.data
+        });
+        if (e.statusCode === 401) {
+          common_vendor.index.hideLoading();
+          common_vendor.index.showModal({
+            title: "登录已过期",
+            content: "您的登录已过期，请重新登录",
+            showCancel: false,
+            success: () => {
+              common_vendor.index.reLaunch({
+                url: "/pages/login/index"
+              });
+            }
+          });
+          return;
+        }
         common_vendor.index.showToast({ title: "加载问题失败，使用本地数据", icon: "none" });
         try {
           const data = common_vendor.index.getStorageSync("qna_custom_questions");
@@ -177,12 +440,49 @@ const _sfc_main = {
         common_vendor.index.showLoading({ title: "添加中..." });
         const res = await api_qna.addCustomQuestion(this.newQuestion.trim());
         if (res.success) {
-          this.customQuestions.push(res.data);
+          const newQuestionData = res.data || {};
+          const formattedQuestion = {
+            id: newQuestionData.id,
+            text: newQuestionData.text || newQuestionData.questionText || this.newQuestion.trim(),
+            category: "custom",
+            isActive: true,
+            orderIndex: 999,
+            createdBy: newQuestionData.userId || newQuestionData.createdBy,
+            createdAt: newQuestionData.createdAt,
+            // 保留其他字段
+            ...newQuestionData
+          };
+          this.customQuestions.push(formattedQuestion);
           this.newQuestion = "";
+          this.showCustomModal = false;
+          setTimeout(() => {
+            const newQuestionIndex = this.unansweredQuestions.findIndex(
+              (q) => q.id === formattedQuestion.id
+            );
+            if (newQuestionIndex >= 0) {
+              this.qIndex = newQuestionIndex;
+              this.myAnswer = "";
+              this.partnerAnswer = "";
+              common_vendor.index.__f__("log", "at pages/qna/index.vue:688", "✅ 已切换到新添加的问题:", formattedQuestion);
+            }
+          }, 100);
           common_vendor.index.showToast({ title: "问题添加成功", icon: "success" });
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/qna/index.vue:320", "添加问题失败", e);
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:695", "添加问题失败", e);
+        if (e.statusCode === 401) {
+          common_vendor.index.showModal({
+            title: "登录已过期",
+            content: "您的登录已过期，请重新登录",
+            showCancel: false,
+            success: () => {
+              common_vendor.index.reLaunch({
+                url: "/pages/login/index"
+              });
+            }
+          });
+          return;
+        }
         common_vendor.index.showToast({ title: "添加失败，请重试", icon: "none" });
       } finally {
         common_vendor.index.hideLoading();
@@ -203,7 +503,20 @@ const _sfc_main = {
                 common_vendor.index.showToast({ title: "已删除", icon: "success" });
               }
             } catch (e) {
-              common_vendor.index.__f__("error", "at pages/qna/index.vue:347", "删除问题失败", e);
+              common_vendor.index.__f__("error", "at pages/qna/index.vue:738", "删除问题失败", e);
+              if (e.statusCode === 401) {
+                common_vendor.index.showModal({
+                  title: "登录已过期",
+                  content: "您的登录已过期，请重新登录",
+                  showCancel: false,
+                  success: () => {
+                    common_vendor.index.reLaunch({
+                      url: "/pages/login/index"
+                    });
+                  }
+                });
+                return;
+              }
               common_vendor.index.showToast({ title: "删除失败，请重试", icon: "none" });
             } finally {
               common_vendor.index.hideLoading();

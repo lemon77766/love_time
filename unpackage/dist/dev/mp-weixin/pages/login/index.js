@@ -1,6 +1,6 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
-const api_login = require("../../api/login.js");
+const utils_http = require("../../utils/http.js");
 const utils_config = require("../../utils/config.js");
 const common_assets = require("../../common/assets.js");
 const _sfc_main = {
@@ -8,23 +8,9 @@ const _sfc_main = {
     return {
       isLoggedIn: false,
       isLoading: false,
-      showProfileModal: false,
-      // 控制丢丢丢是否显示
-      needAvatar: false,
-      // 新增：是否需要获取头像
       userInfo: {
         nickName: "",
         avatarUrl: ""
-      },
-      profileData: {
-        avatarType: "wechat",
-        // 'wechat' 或 'custom'
-        useWechatNickname: true,
-        // 是否使用微信昵称
-        customNickname: "",
-        // 自定义昵称
-        customAvatarUrl: ""
-        // 自定义头像 URL
       }
     };
   },
@@ -37,7 +23,7 @@ const _sfc_main = {
       try {
         const loginInfo = common_vendor.index.getStorageSync("login_info");
         if (loginInfo && loginInfo.isLoggedIn) {
-          common_vendor.index.__f__("log", "at pages/login/index.vue:176", "检测到已登录，自动跳转到首页");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:88", "检测到已登录，自动跳转到首页");
           this.isLoggedIn = true;
           this.userInfo = loginInfo.userInfo || {};
           setTimeout(() => {
@@ -47,7 +33,7 @@ const _sfc_main = {
           }, 300);
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:187", "检查登录状态失败", e);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:99", "检查登录状态失败", e);
       }
     },
     /**
@@ -80,7 +66,7 @@ const _sfc_main = {
           this.enterApp();
         }, 1500);
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:229", "游客登录失败", error);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:141", "游客登录失败", error);
         common_vendor.index.showToast({
           title: "登录失败，请重试",
           icon: "none"
@@ -92,9 +78,9 @@ const _sfc_main = {
      * 流程说明：
      * 1. 调用 uni.getUserProfile 获取用户信息（昵称、头像）- 必须由用户点击直接触发
      * 2. 调用 wx.login 获取临时登录凭证 code
-     * 3. 将 code 和用户信息发送到后端服务器
-     * 4. 后端验证后返回 session_key 和 openid
-     * 5. 前端保存登录状态和用户信息
+     * 3. 尝试调用后端登录API，如果失败则使用模拟登录
+     * 4. 前端保存登录状态和用户信息
+     * 5. 直接跳转到首页
      */
     async handleWxLogin() {
       this.isLoading = true;
@@ -102,115 +88,87 @@ const _sfc_main = {
         const userProfile = await common_vendor.index.getUserProfile({
           desc: "用于完善用户资料"
         });
-        this.needAvatar = true;
-        const loginCode = await this.getWxLoginCode();
-        this.userInfo = {
-          nickName: userProfile.userInfo.nickName,
-          avatarUrl: ""
-          // 头像URL将在用户选择后更新
-        };
-        common_vendor.index.showToast({
-          title: "请选择您的头像",
-          icon: "none",
-          duration: 2e3
-        });
-      } catch (e) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:275", "登录失败", e);
-        common_vendor.index.showToast({
-          title: e.errMsg || "登录失败，请重试",
-          icon: "none"
-        });
-        this.isLoading = false;
-      }
-    },
-    // 新增：处理头像选择回调
-    async onChooseAvatar(e) {
-      try {
-        const { avatarUrl } = e.detail;
-        common_vendor.index.showLoading({
-          title: "处理头像中...",
-          mask: true
-        });
-        const compressedImage = await this.compressImage(avatarUrl);
-        const uploadResult = await http.upload({
-          url: utils_config.config.API.USER.AVATAR_UPLOAD,
-          filePath: compressedImage,
-          name: "avatar",
-          formData: {
-            type: "avatar"
-          }
-        });
-        this.userInfo.avatarUrl = uploadResult.url || avatarUrl;
-        this.needAvatar = false;
-        await this.continueLogin();
-      } catch (error) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:316", "处理头像选择失败", error);
-        if (error.errMsg && error.errMsg.includes("fail")) {
-          common_vendor.index.__f__("warn", "at pages/login/index.vue:320", "上传失败，使用本地头像继续");
-          this.userInfo.avatarUrl = e.detail.avatarUrl;
-          this.needAvatar = false;
-          await this.continueLogin();
-        } else {
+        const code = await this.getWxLoginCode();
+        let loginResult;
+        try {
+          loginResult = await utils_http.http.post(utils_config.config.API.LOGIN.WECHAT, {
+            code,
+            nickName: userProfile.userInfo.nickName,
+            avatarUrl: userProfile.userInfo.avatarUrl
+          });
+        } catch (apiError) {
+          common_vendor.index.__f__("warn", "at pages/login/index.vue:178", "后端API调用失败，使用模拟登录", apiError);
+          loginResult = {
+            token: "mock_token_" + Date.now(),
+            openid: "mock_openid_" + Date.now(),
+            session_key: "mock_session_" + Date.now(),
+            success: true
+          };
           common_vendor.index.showToast({
-            title: "头像处理失败，请重试",
+            title: "后端服务未就绪，使用模拟登录",
             icon: "none",
             duration: 2e3
           });
         }
-      } finally {
-        common_vendor.index.hideLoading();
-      }
-    },
-    // 压缩图片方法
-    async compressImage(tempFilePath) {
-      return new Promise((resolve, reject) => {
-        common_vendor.index.compressImage({
-          src: tempFilePath,
-          quality: 80,
-          success: (res) => {
-            resolve(res.tempFilePath);
-          },
-          fail: (error) => {
-            common_vendor.index.__f__("warn", "at pages/login/index.vue:348", "图片压缩失败，使用原图", error);
-            resolve(tempFilePath);
-          }
-        });
-      });
-    },
-    // 继续登录流程方法
-    async continueLogin() {
-      try {
-        const loginCode = await this.getWxLoginCode();
-        const loginResult = await http.post(utils_config.config.API.LOGIN.WECHAT, {
-          code: loginCode,
-          nickName: this.userInfo.nickName,
-          avatarUrl: this.userInfo.avatarUrl
-        }, { retryCount: 3 });
+        const responseData = loginResult.data || loginResult;
+        const token = responseData.token || loginResult.token || "";
+        const openid = responseData.openid || loginResult.openid || "";
+        const sessionKey = responseData.session_key || loginResult.session_key || "";
+        const isSuccess = loginResult.success !== false;
         const loginInfo = {
           isLoggedIn: true,
-          userInfo: this.userInfo,
-          token: loginResult.token || "",
-          openid: loginResult.openid || "",
-          sessionKey: loginResult.session_key || "",
-          loginTime: (/* @__PURE__ */ new Date()).toISOString()
+          token,
+          openid,
+          sessionKey,
+          userInfo: {
+            nickName: userProfile.userInfo.nickName,
+            avatarUrl: userProfile.userInfo.avatarUrl,
+            displayName: userProfile.userInfo.nickName,
+            displayAvatar: userProfile.userInfo.avatarUrl
+          },
+          loginTime: (/* @__PURE__ */ new Date()).toISOString(),
+          isMock: !isSuccess
+          // 标记是否为模拟登录
         };
+        if (true) {
+          common_vendor.index.__f__("log", "at pages/login/index.vue:220", "登录响应数据:", loginResult);
+          common_vendor.index.__f__("log", "at pages/login/index.vue:221", "提取的Token:", token ? `已找到，长度: ${token.length}` : "未找到");
+          if (!token) {
+            common_vendor.index.__f__("error", "at pages/login/index.vue:223", "❌ Token提取失败！响应结构:", JSON.stringify(loginResult, null, 2));
+          }
+        }
         common_vendor.index.setStorageSync("login_info", loginInfo);
+        this.userInfo = loginInfo.userInfo;
         this.isLoggedIn = true;
+        const savedLoginInfo = common_vendor.index.getStorageSync("login_info");
+        if (true) {
+          common_vendor.index.__f__("log", "at pages/login/index.vue:234", "保存后的登录信息:", savedLoginInfo);
+          common_vendor.index.__f__("log", "at pages/login/index.vue:235", "保存后的Token:", (savedLoginInfo == null ? void 0 : savedLoginInfo.token) ? `✅ 已保存，长度: ${savedLoginInfo.token.length}` : "❌ 未保存");
+        }
+        if (!token || !token.trim()) {
+          common_vendor.index.__f__("error", "at pages/login/index.vue:240", "⚠️ 警告：Token为空，登录可能失败！");
+          common_vendor.index.showModal({
+            title: "登录警告",
+            content: "未获取到有效的登录凭证，部分功能可能无法使用。请检查后端服务是否正常。",
+            showCancel: false
+          });
+        }
         common_vendor.index.showToast({
           title: "登录成功",
           icon: "success",
           duration: 1500
         });
         setTimeout(() => {
-          this.showProfileModal = true;
+          this.enterApp();
         }, 1500);
-      } catch (error) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:394", "登录失败", error);
+      } catch (e) {
+        common_vendor.index.__f__("error", "at pages/login/index.vue:261", "微信登录失败", e);
         common_vendor.index.showToast({
-          title: "登录失败，请重试",
-          icon: "none",
-          duration: 2e3
+          title: e.errMsg || "登录失败，请重试",
+          icon: "none"
         });
+      } finally {
+        this.isLoading = false;
       }
     },
     /**
@@ -259,7 +217,7 @@ const _sfc_main = {
      */
     async sendLoginToBackend(code, userInfo) {
       try {
-        const result = await api_login.wxLogin(code, userInfo);
+        const result = await wxLogin(code, userInfo);
         return result;
       } catch (error) {
         throw error;
@@ -270,66 +228,6 @@ const _sfc_main = {
       common_vendor.index.reLaunch({
         url: "/pages/index/index"
       });
-    },
-    // ========== 资料确认相关方法 ==========
-    // 选择微信头像
-    selectWechatAvatar() {
-      this.profileData.avatarType = "wechat";
-    },
-    // 上传自定义头像
-    uploadCustomAvatar() {
-      common_vendor.index.chooseImage({
-        count: 1,
-        sizeType: ["compressed"],
-        sourceType: ["album", "camera"],
-        success: (res) => {
-          const tempFilePath = res.tempFilePaths[0];
-          this.profileData.customAvatarUrl = tempFilePath;
-          this.profileData.avatarType = "custom";
-        },
-        fail: (err) => {
-          common_vendor.index.__f__("error", "at pages/login/index.vue:503", "选择图片失败", err);
-        }
-      });
-    },
-    // 切换是否使用微信昵称
-    toggleUseWechatNickname() {
-      this.profileData.useWechatNickname = !this.profileData.useWechatNickname;
-    },
-    // 抽屼设置
-    skipSetup() {
-      this.showProfileModal = false;
-      this.enterApp();
-    },
-    // 完成设置
-    confirmProfile() {
-      if (!this.profileData.useWechatNickname && !this.profileData.customNickname.trim()) {
-        common_vendor.index.showToast({
-          title: "请输入昵称",
-          icon: "none"
-        });
-        return;
-      }
-      const displayName = this.profileData.useWechatNickname ? this.userInfo.nickName : this.profileData.customNickname;
-      const displayAvatar = this.profileData.avatarType === "wechat" ? this.userInfo.avatarUrl : this.profileData.customAvatarUrl;
-      const loginInfo = common_vendor.index.getStorageSync("login_info") || {};
-      loginInfo.userInfo = {
-        ...loginInfo.userInfo,
-        displayName,
-        // 小程序中使用的昵称
-        displayAvatar,
-        // 小程序中使用的头像
-        originalNickName: this.userInfo.nickName,
-        // 原始微信昵称
-        originalAvatarUrl: this.userInfo.avatarUrl
-        // 原始微信头像
-      };
-      common_vendor.index.setStorageSync("login_info", loginInfo);
-      this.showProfileModal = false;
-      this.enterApp();
-    },
-    // 关闭modal
-    closeModal() {
     }
   }
 };
@@ -350,34 +248,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     i: !$data.isLoggedIn
   }, !$data.isLoggedIn ? {
     j: common_vendor.o((...args) => $options.handleGuestLogin && $options.handleGuestLogin(...args))
-  } : {}, {
-    k: $data.needAvatar
-  }, $data.needAvatar ? {
-    l: common_vendor.o((...args) => $options.onChooseAvatar && $options.onChooseAvatar(...args))
-  } : {}, {
-    m: $data.showProfileModal
-  }, $data.showProfileModal ? common_vendor.e({
-    n: common_vendor.o((...args) => $options.closeModal && $options.closeModal(...args)),
-    o: $data.userInfo.avatarUrl,
-    p: $data.profileData.avatarType === "wechat" ? 1 : "",
-    q: common_vendor.o((...args) => $options.selectWechatAvatar && $options.selectWechatAvatar(...args)),
-    r: $data.profileData.avatarType === "custom" ? 1 : "",
-    s: common_vendor.o((...args) => $options.uploadCustomAvatar && $options.uploadCustomAvatar(...args)),
-    t: $data.profileData.useWechatNickname ? 1 : "",
-    v: common_vendor.t($data.userInfo.nickName),
-    w: common_vendor.o((...args) => $options.toggleUseWechatNickname && $options.toggleUseWechatNickname(...args)),
-    x: !$data.profileData.useWechatNickname
-  }, !$data.profileData.useWechatNickname ? {
-    y: $data.profileData.customNickname,
-    z: common_vendor.o(($event) => $data.profileData.customNickname = $event.detail.value),
-    A: common_vendor.t($data.profileData.customNickname.length)
-  } : {}, {
-    B: common_vendor.o((...args) => $options.skipSetup && $options.skipSetup(...args)),
-    C: common_vendor.o((...args) => $options.confirmProfile && $options.confirmProfile(...args)),
-    D: common_vendor.o(() => {
-    }),
-    E: common_vendor.o((...args) => $options.closeModal && $options.closeModal(...args))
-  }) : {});
+  } : {});
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-d08ef7d4"]]);
 wx.createPage(MiniProgramPage);
