@@ -1,207 +1,269 @@
 
+/* 自定义导航栏样式 */
+.custom-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background-color: #F8F0FC;
+  overflow: hidden;
+}
+.navbar-gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200%;
+  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+}
+.status-bar {
+  width: 100%;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+.navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30rpx;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+.navbar-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.title-text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #6B5B95;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.navbar-right {
+  width: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.navbar-icon {
+  font-size: 44rpx;
+  color: #333333;
+}
 .container {
-  background-color: #f0f0f0;
+  background-color: #F8F0FC;
   min-height: 100vh;
   padding-bottom: 120rpx;
 }
-
-/* 日期区域背景样式 */
-.date-section {
-  background-color: #f0f0f0;
-  padding: 3rpx;
-  border-radius: 15rpx;
+.content-area {
+  padding: 30rpx 24rpx;
 }
 
-/* 时间样式容器 */
-.time-container {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-  font-family: "Microsoft YaHei", sans-serif;
-  background-color: #f0f0f0;
-  padding: 3rpx;
-  border-radius: 15rpx;
-  margin-left: 20rpx;
-}
-
-/* 日期数字：大号字体、粉紫色、加粗 */
-.date-number {
-  font-size: 96rpx;
-  font-weight: bold;
-  color: #ffb3c6;
-}
-
-/* 日期文字与表情的容器：纵向排列 */
-.date-info {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-/* 日期文字：调小字体 */
-.date-text {
-  font-size: 5rpx;
-  color: #333;
-  line-height: 1.5;
-}
-
-/* 星期文字：更大更粗 */
-.week-text {
-  font-size: 40rpx;
-  color: #333;
-  line-height: 1.5;
-  font-weight: 700;
-}
-
-/* 表情图标：调大 */
-.emoji {
-  width: 250rpx;
-  height: 250rpx;
-  margin-top: 10rpx;
-}
-
-/* 通知栏样式 */
-.notification {
-  display: flex;
-  align-items: center;
-  padding: 20rpx 30rpx;
-  background-color: #f8f9fa;
-  border-bottom: 1rpx solid #e5e5e5;
-}
-.sun-icon {
-  width: 32rpx;
-  height: 32rpx;
-  margin-right: 15rpx;
-}
-.notification-text {
-  font-size: 28rpx;
-  color: #666;
-}
-
-/* 日期和头像区域 */
-.date-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 3rpx;
-  background-color: #f0f0f0;
-}
-.date-text {
-  font-size: 36rpx;
-  color: #333;
-}
-.green-date {
-  font-size: 48rpx;
-  color: #ff8fb3;
-  font-weight: bold;
-}
-.avatar {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 40rpx;
-  background-color: #ffd700;
-}
-
-/* 情侣信息区域 */
-.couple-section {
-  margin: 30rpx 16rpx;    /* 增大外边距 */
-  padding: 40rpx 30rpx;   /* 增大内边距 */
+/* 卡片通用样式 */
+.card {
   background-color: #ffffff;
-  border-radius: 32rpx;
+  border-radius: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
   overflow: hidden;
-  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.couple-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #ffffff;
-  border-radius: 20rpx;
-  padding: 30rpx;    /* 增大内边距 */
+.story-card {
+  cursor: pointer;
 }
-.boy, .girl {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.story-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
-.boy-avatar, .girl-avatar {
-  width: 140rpx;    /* 从100rpx增大到140rpx */
-  height: 140rpx;
-  border-radius: 70rpx;
-  margin-bottom: 16rpx;    /* 增大间距 */
+.card-header {
+  padding: 32rpx 30rpx 24rpx;
 }
-.boy-name, .girl-name {
-  font-size: 24rpx;
-  color: #333;
-}
-.anniversary {
-  text-align: center;
-  flex: 1;
-}
-.anniversary-text {
-  font-size: 28rpx;    /* 从24rpx增大到28rpx */
-  color: #333;
-  margin-bottom: 16rpx;    /* 增大间距 */
-  display: block;
+.card-title {
+  font-size: 34rpx;
   font-weight: 600;
+  color: #6B5B95;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
-.progress-bar {
-  width: 220rpx;    /* 从180rpx增大到220rpx */
-  height: 8rpx;    /* 从6rpx增大到8rpx */
-  background-color: #e5e5e5;
-  border-radius: 4rpx;
-  overflow: hidden;
-  margin: 0 auto;
-}
-.progress-fill {
-  width: 70%;
-  height: 100%;
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
-  border-radius: 4rpx;
+.card-body {
+  padding: 0 30rpx 32rpx;
 }
 
-/* 九宫格功能区 */
-.grid-section {
-  padding: 30rpx 20rpx;
-  background-color: #f0f0f0;
+/* 我们的纪念日卡片 */
+.anniversary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+.anniversary-name {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #6B5B95;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.anniversary-info {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.clock-icon {
+  font-size: 30rpx;
+}
+.countdown-text {
+  font-size: 26rpx;
+  color: #9B8FB8;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.anniversary-date {
+  font-size: 24rpx;
+  color: #9B8FB8;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+/* 心语心愿卡片 */
+.wish-body {
+  padding-top: 8rpx;
+}
+.wish-text {
+  font-size: 26rpx;
+  color: #9B8FB8;
+  line-height: 1.9;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+/* 功能卡片网格 */
+.grid-body {
+  padding: 20rpx 30rpx 32rpx;
 }
 .grid-container {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 24rpx;
-  max-width: 600rpx;
-  margin: 0 auto;
 }
 .grid-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60rpx 40rpx;
-  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
-  border-radius: 24rpx;
-  border: 1rpx solid #e8e8e8;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  padding: 40rpx 20rpx 32rpx;
+  background-color: #FFFFFF;
+  border-radius: 20rpx;
+  border: 1rpx solid #F3E8FF;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 .grid-item:active {
-  transform: translateY(-4rpx);
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.12);
+  transform: scale(0.96);
+  background-color: #F8F0FC;
+}
+.grid-icon-wrapper {
+  margin-bottom: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .grid-icon {
   width: 80rpx;
   height: 80rpx;
-  margin-bottom: 20rpx;
-  transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  position: relative;
 }
-.grid-item:active .grid-icon {
-  transform: scale(1.1);
+
+/* 心形图标 */
+.heart-icon-purple {
+  color: #DCC7E1;
+  font-size: 52rpx;
+  filter: drop-shadow(0 2rpx 4rpx rgba(220, 199, 225, 0.3));
+}
+
+/* 图片图标 */
+.grid-icon-image {
+  width: 80rpx;
+  height: 80rpx;
+  display: block;
+}
+
+/* 列表图标（两个重叠矩形） */
+.list-icon {
+  position: relative;
+  width: 64rpx;
+  height: 64rpx;
+}
+.list-item-small {
+  position: absolute;
+  top: 6rpx;
+  left: 10rpx;
+  width: 48rpx;
+  height: 34rpx;
+  background: #DCC7E1;
+  border-radius: 4rpx;
+  box-shadow: 0 2rpx 4rpx rgba(220, 199, 225, 0.25);
+  z-index: 2;
+}
+.list-item-large {
+  position: absolute;
+  top: 18rpx;
+  left: 0;
+  width: 54rpx;
+  height: 38rpx;
+  background: #D8B4FE;
+  border-radius: 4rpx;
+  box-shadow: 0 2rpx 4rpx rgba(216, 180, 254, 0.25);
+  z-index: 1;
+}
+
+/* 纸张图标（右上角折叠） */
+.paper-icon {
+  position: relative;
+  width: 64rpx;
+  height: 64rpx;
+}
+.paper-body {
+  position: absolute;
+  top: 4rpx;
+  left: 4rpx;
+  width: 54rpx;
+  height: 56rpx;
+  background: #D8B4FE;
+  border-radius: 2rpx;
+  box-shadow: 0 2rpx 4rpx rgba(216, 180, 254, 0.25);
+}
+.paper-fold {
+  position: absolute;
+  top: 4rpx;
+  right: 4rpx;
+  width: 18rpx;
+  height: 18rpx;
+  background: #DCC7E1;
+  border-radius: 0 2rpx 0 12rpx;
+  box-shadow: -1rpx 1rpx 3rpx rgba(220, 199, 225, 0.3);
+  -webkit-clip-path: polygon(0 0, 100% 0, 100% 100%);
+          clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+
+/* 信封图标 */
+.envelope-icon {
+  color: #DCC7E1;
+  font-size: 52rpx;
+  filter: drop-shadow(0 2rpx 4rpx rgba(220, 199, 225, 0.3));
 }
 .grid-text {
-  font-size: 28rpx;
-  color: #333;
+  font-size: 26rpx;
+  color: #9B8FB8;
+  font-weight: 400;
   text-align: center;
-  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 

@@ -134,7 +134,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     l: common_vendor.o((...args) => $options.onRiverClick && $options.onRiverClick(...args)),
     m: $data.showDetail
   }, $data.showDetail ? common_vendor.e({
-    n: common_assets._imports_1$2,
+    n: common_assets._imports_1$1,
     o: common_vendor.t($data.currentStage.title),
     p: common_vendor.t($data.currentStage.date),
     q: $data.currentStage.description

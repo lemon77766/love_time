@@ -25,6 +25,10 @@
 </template>
 
 <script>
+import { createProject, updateProject, uploadPhoto, getProjectDetail, getProjectPhotos, clearProjectPhotos, updatePhoto } from '@/api/heartwall.js';
+import http from '@/utils/http.js';
+import config from '@/utils/config.js';
+
 export default {
   data() {
     return {
@@ -41,7 +45,9 @@ export default {
         0,0,0,0,0,0,0,0,0
       ],
       images: [],
-      editingIndex: null  // 正在编辑的项目索引，null 表示创建新项目
+      editingProjectId: null,  // 正在编辑的项目ID，null 表示创建新项目
+      saving: false,  // 保存中状态
+      photoMap: {}  // 存储positionIndex到photoId的映射 { positionIndex: photoId }
     };
   },
   computed: {
@@ -64,20 +70,24 @@ export default {
       return this.totalSlots - this.filledCount;
     }
   },
-  mounted() {
+  async mounted() {
     // 检查是否在编辑现有项目
     try {
-      const editingIndex = uni.getStorageSync('heartwall_editing_index');
-      if (editingIndex !== null && editingIndex !== undefined && editingIndex !== '') {
-        this.editingIndex = Number(editingIndex);
-      }
-      
-      // 加载图片数据
+      const editingProjectId = uni.getStorageSync('heartwall_editing_projectId');
+      if (editingProjectId) {
+        this.editingProjectId = editingProjectId;
+        // 从后端加载项目数据
+        await this.loadProjectFromBackend(editingProjectId);
+      } else {
+        // 如果没有项目ID，尝试从本地缓存加载（兼容旧数据）
       const cached = uni.getStorageSync('heartwall_grid_images');
       if (Array.isArray(cached)) {
         this.images = cached;
       }
-    } catch (e) {}
+      }
+    } catch (e) {
+      console.error('加载项目数据失败:', e);
+    }
   },
   methods: {
     goBack() {
@@ -143,31 +153,254 @@ export default {
     },
     
     // 清空所有照片
-    clearAllImages() {
+    async clearAllImages() {
       uni.showModal({
         title: '确认清空',
-        content: '确定要清空所有照片吗？',
-        success: (res) => {
+        content: '确定要清空所有照片吗？清空后无法恢复。',
+        success: async (res) => {
           if (res.confirm) {
-            this.images = [];
-            this.persist();
+            try {
+              // 如果有项目ID，调用后端接口清空
+              if (this.editingProjectId) {
+                uni.showLoading({ title: '清空中...', mask: true });
+                console.log('🗑️ [爱心墙创建页] 开始清空项目照片，项目ID:', this.editingProjectId);
+                
+                await clearProjectPhotos(this.editingProjectId);
+                
+                console.log('✅ [爱心墙创建页] 项目照片清空成功');
+                uni.hideLoading();
+              }
+              
+              // 清空前端数据
+              this.images = [];
+              this.photoMap = {};
+              this.persist();
+              
             uni.showToast({ title: '已清空', icon: 'success' });
+            } catch (error) {
+              console.error('❌ [爱心墙创建页] 清空项目照片失败:', error);
+              uni.hideLoading();
+              
+              // 即使后端清空失败，也清空前端数据
+              this.images = [];
+              this.persist();
+              
+              uni.showToast({ 
+                title: error.message || '清空失败，已清空本地数据', 
+                icon: 'none',
+                duration: 2000
+              });
+            }
           }
         }
       });
     },
     async onPickSingle(idx) {
       if (!this.heartMask[idx]) return;
+      
       try {
-        const res = await uni.chooseImage({ count: 1 });
-        if (res && res.tempFilePaths && res.tempFilePaths[0]) {
-          this.$set(this.images, idx, res.tempFilePaths[0]);
-          this.persist();
+        // 选择新图片
+        const res = await uni.chooseImage({ 
+          count: 1,
+          sizeType: ['compressed'],
+          sourceType: ['album', 'camera']
+        });
+        
+        if (!res || !res.tempFilePaths || !res.tempFilePaths[0]) {
+          return;
         }
-      } catch (e) {}
+        
+        const newImagePath = res.tempFilePaths[0];
+        const isExistingPhoto = this.images[idx] && this.editingProjectId;
+        const photoId = this.photoMap[idx];
+        
+        // 如果已有项目且有photoId，说明是替换已有照片
+        if (isExistingPhoto && photoId) {
+          uni.showLoading({ title: '替换中...', mask: true });
+          
+          try {
+            console.log(`🔄 [爱心墙创建页] 开始替换位置 ${idx} 的照片，photoId: ${photoId}`);
+            
+            // 1. 上传新图片到服务器
+            console.log('📤 [爱心墙创建页] 上传新图片到服务器...');
+            const photoUrl = await this.uploadImageToServer(newImagePath);
+            console.log('✅ [爱心墙创建页] 新图片上传成功，URL:', photoUrl);
+            
+            // 2. 更新后端照片信息
+            const updateData = {
+              photoUrl: photoUrl,
+              thumbnailUrl: photoUrl,
+              positionIndex: idx
+            };
+            
+            console.log('📝 [爱心墙创建页] 更新后端照片信息...');
+            await updatePhoto(photoId, updateData);
+            console.log('✅ [爱心墙创建页] 后端照片更新成功');
+            
+            // 3. 更新前端显示
+            this.$set(this.images, idx, photoUrl);
+            this.persist();
+            
+            uni.hideLoading();
+            uni.showToast({ 
+              title: '替换成功', 
+              icon: 'success',
+              duration: 1500
+            });
+          } catch (error) {
+            console.error('❌ [爱心墙创建页] 替换照片失败:', error);
+            uni.hideLoading();
+            uni.showToast({ 
+              title: error.message || '替换失败，请重试', 
+              icon: 'none',
+              duration: 2000
+            });
+          }
+        } else {
+          // 新添加照片（项目未创建或该位置没有照片）
+          // 暂时只更新前端显示，保存项目时会统一上传
+          this.$set(this.images, idx, newImagePath);
+          this.persist();
+          
+          uni.showToast({ 
+            title: '已添加照片', 
+            icon: 'success',
+            duration: 1000
+          });
+        }
+      } catch (e) {
+        console.error('❌ [爱心墙创建页] 选择图片失败:', e);
+        uni.showToast({ 
+          title: '选择图片失败', 
+          icon: 'none'
+        });
+      }
     },
     onInvite() {
       uni.showToast({ title: '邀请功能待接入后端', icon: 'none' });
+    },
+    
+    // 加载项目数据（从后端）
+    async loadProjectFromBackend(projectId) {
+      try {
+        console.log('📡 [爱心墙创建页] 开始从后端加载项目详情 ID:', projectId);
+        
+        // 获取项目详情
+        const projectResponse = await getProjectDetail(projectId);
+        console.log('📡 [爱心墙创建页] 项目详情:', projectResponse);
+        
+        // 获取项目照片列表
+        const photosResponse = await getProjectPhotos(projectId, { page: 1, pageSize: 100 });
+        console.log('📡 [爱心墙创建页] 项目照片:', photosResponse);
+        
+        // 处理照片数据
+        let photosData = [];
+        if (photosResponse && photosResponse.data) {
+          photosData = Array.isArray(photosResponse.data) ? photosResponse.data : (photosResponse.data.photos || []);
+        } else if (Array.isArray(photosResponse)) {
+          photosData = photosResponse;
+        } else if (photosResponse && photosResponse.photos) {
+          photosData = photosResponse.photos;
+        }
+        
+        // 将照片按位置索引填充到images数组，同时保存photoId映射
+        this.images = [];
+        this.photoMap = {};
+        photosData.forEach(photo => {
+          const positionIndex = photo.positionIndex || photo.position_index || 0;
+          const photoId = photo.photoId || photo.photo_id || photo.id;
+          if (positionIndex >= 0 && positionIndex < this.heartMask.length) {
+            // 优先使用photoUrl，如果没有则使用thumbnailUrl
+            this.$set(this.images, positionIndex, photo.photoUrl || photo.photo_url || photo.thumbnailUrl || photo.thumbnail_url || '');
+            // 保存photoId映射
+            if (photoId) {
+              this.$set(this.photoMap, positionIndex, photoId);
+            }
+          }
+        });
+        
+        console.log(`✅ [爱心墙创建页] 成功加载 ${photosData.length} 张照片`);
+        console.log('📷 [爱心墙创建页] 照片ID映射:', this.photoMap);
+      } catch (error) {
+        console.error('❌ [爱心墙创建页] 加载项目数据失败:', error);
+        uni.showToast({ 
+          title: '加载项目失败', 
+          icon: 'none',
+          duration: 2000
+        });
+      }
+    },
+    
+    // 压缩图片
+    compressImage(tempFilePath) {
+      return new Promise((resolve, reject) => {
+        uni.compressImage({
+          src: tempFilePath,
+          quality: 80,
+          success: (res) => {
+            console.log('✅ [爱心墙创建页] 图片压缩成功，新路径:', res.tempFilePath);
+            resolve(res.tempFilePath);
+          },
+          fail: (error) => {
+            console.warn('⚠️ [爱心墙创建页] 图片压缩失败，使用原图', error);
+            resolve(tempFilePath);
+          }
+        });
+      });
+    },
+    
+    // 上传单张图片到服务器获取URL
+    async uploadImageToServer(filePath) {
+      try {
+        console.log('📤 [爱心墙创建页] 开始上传图片到服务器，原始路径:', filePath);
+        
+        // 验证文件路径：如果已经是URL，不应该上传
+        if (filePath && (filePath.startsWith('http://') || filePath.startsWith('https://'))) {
+          console.warn('⚠️ [爱心墙创建页] 文件路径已经是URL格式，跳过上传:', filePath);
+          return filePath;
+        }
+        
+        // 处理异常路径格式：http://tmp/... 转换为 /tmp/...
+        let validFilePath = filePath;
+        if (filePath && filePath.startsWith('http://tmp/')) {
+          validFilePath = filePath.replace('http://tmp/', '/tmp/');
+          console.log('🔧 [爱心墙创建页] 修复路径格式:', filePath, '->', validFilePath);
+        }
+        
+        // 先压缩图片（压缩会返回新的临时文件路径，可能有助于解决路径问题）
+        console.log('🔄 [爱心墙创建页] 压缩图片中...');
+        const compressedPath = await this.compressImage(validFilePath);
+        console.log('✅ [爱心墙创建页] 图片压缩完成，使用路径:', compressedPath);
+        
+        // 尝试使用用户头像上传接口作为通用图片上传接口
+        // 如果后端有专门的爱心墙图片上传接口，可以在这里替换
+        const uploadUrl = config.API.USER.AVATAR_UPLOAD;
+        
+        console.log('📤 [爱心墙创建页] 开始上传文件，路径:', compressedPath);
+        const result = await http.upload({
+          url: uploadUrl,
+          filePath: compressedPath,
+          name: 'avatar',  // 头像上传接口期望的字段名
+          formData: { type: 'heart-wall-photo' }
+        });
+        
+        console.log('✅ [爱心墙创建页] 图片上传成功，返回URL:', result);
+        
+        // 返回图片URL，根据后端返回格式调整
+        const imageUrl = result.url || result.photoUrl || result.photo_url || result.data?.url || filePath;
+        console.log('🖼️ [爱心墙创建页] 获取到图片URL:', imageUrl);
+        return imageUrl;
+      } catch (error) {
+        console.error('❌ [爱心墙创建页] 图片上传失败:', error);
+        console.error('🔴 错误详情:', {
+          message: error.message,
+          filePath: filePath,
+          stack: error.stack
+        });
+        // 上传失败时，如果后端支持直接传文件路径，可以尝试直接使用
+        // 否则抛出错误让上层处理
+        throw error;
+      }
     },
     
     // 保存项目到列表页
@@ -177,69 +410,209 @@ export default {
         return;
       }
 
-      // 弹出输入框，让用户输入创建人名称
+      if (this.saving) {
+        uni.showToast({ title: '保存中，请稍候...', icon: 'none' });
+        return;
+      }
+
+      // 弹出输入框，让用户输入项目名称和描述
       uni.showModal({
-        title: this.editingIndex !== null ? '保存修改' : '保存项目',
-        content: '请输入创建人名称',
+        title: this.editingProjectId ? '保存修改' : '保存项目',
+        content: '请输入项目名称',
         editable: true,
-        placeholderText: '输入你的名字',
-        success: (res) => {
+        placeholderText: '输入项目名称',
+        success: async (res) => {
           if (res.confirm) {
-            const creator = res.content || '匿名用户';
-            this.saveProjectData(creator);
+            const projectName = res.content || '我的爱心墙';
+            await this.saveProjectData(projectName);
           }
         }
       });
     },
     
-    // 保存项目数据
-    saveProjectData(creator) {
-      // 获取第一张照片作为封面
-      let cover = '';
-      for (let i = 0; i < this.heartMask.length; i++) {
-        if (this.heartMask[i] && this.images[i]) {
-          cover = this.images[i];
-          break;
-        }
-      }
+    // 保存项目数据（调用后端API）
+    async saveProjectData(projectName) {
+      this.saving = true;
+      
+      try {
+        uni.showLoading({ title: '保存中...', mask: true });
+        
+        console.log('💾 [爱心墙创建页] 开始保存项目到后端');
 
       // 构建项目数据
       const projectData = {
-        cover: cover,
-        creator: creator,
-        progress: this.filledCount,
-        total: this.totalSlots,
-        createdAt: new Date().toLocaleDateString('zh-CN', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
-        }).replace(/\//g, '-'),
-        images: this.images,
-        heartMask: this.heartMask
-      };
-
-      // 加载现有项目列表
-      try {
-        const projects = uni.getStorageSync('heartwall_projects') || [];
-        const projectsList = Array.isArray(projects) ? projects : [];
+          projectName: projectName,
+          description: `共${this.filledCount}张照片`,
+          isPublic: false,
+          maxPhotos: this.totalSlots
+        };
         
-        if (this.editingIndex !== null && this.editingIndex >= 0) {
-          // 编辑现有项目
-          projectsList[this.editingIndex] = projectData;
+        let projectId;
+        let createResponse = null; // 用于错误调试
+        
+        // 创建或更新项目
+        if (this.editingProjectId) {
+          // 更新现有项目
+          console.log('🔄 [爱心墙创建页] 更新项目 ID:', this.editingProjectId);
+          await updateProject(this.editingProjectId, projectData);
+          projectId = this.editingProjectId;
         } else {
-          // 添加新项目
-          projectsList.unshift(projectData);  // 添加到列表首位
+          // 创建新项目
+          console.log('✨ [爱心墙创建页] 创建新项目');
+          createResponse = await createProject(projectData);
+          console.log('✅ [爱心墙创建页] 项目创建成功:', createResponse);
+          
+          // 获取项目ID - 支持多种响应格式
+          if (createResponse && createResponse.data) {
+            // 格式: { data: { projectId: ..., id: ... } }
+            projectId = createResponse.data.projectId || createResponse.data.id;
+          } else if (createResponse && createResponse.project) {
+            // 格式: { project: { projectId: ..., id: ... } }
+            projectId = createResponse.project.projectId || createResponse.project.id;
+          } else if (createResponse && (createResponse.projectId || createResponse.id)) {
+            // 格式: { projectId: ..., id: ... }
+            projectId = createResponse.projectId || createResponse.id;
+          }
+          
+          console.log('🔍 [爱心墙创建页] 提取的项目ID:', projectId);
+          
+          // 如果创建项目后仍无法获取ID，抛出详细错误
+          if (!projectId) {
+            console.error('❌ [爱心墙创建页] 无法获取项目ID');
+            console.error('📦 [响应数据结构]:', JSON.stringify(createResponse, null, 2));
+            throw new Error('无法获取项目ID，请检查后端返回的数据格式');
+          }
         }
         
-        // 保存到本地存储
-        uni.setStorageSync('heartwall_projects', projectsList);
+        console.log('📝 [爱心墙创建页] 项目ID:', projectId);
         
-        // 清除编辑状态和缓存
-        uni.removeStorageSync('heartwall_editing_index');
-        uni.removeStorageSync('heartwall_grid_images');
+        // 第一步：收集所有需要上传的照片信息
+        const photoTasks = [];
+        for (let i = 0; i < this.heartMask.length; i++) {
+          if (this.heartMask[i] && this.images[i]) {
+            photoTasks.push({
+              positionIndex: i,
+              imagePath: this.images[i]
+            });
+          }
+        }
         
+        console.log(`📋 [爱心墙创建页] 准备上传 ${photoTasks.length} 张照片`);
+        
+        // 第二步：并行上传所有图片到服务器获取URL
+        const photoUploadPromises = photoTasks.map(async (task) => {
+          const { positionIndex, imagePath } = task;
+          
+          // 判断是否是本地临时路径（需要上传）
+          const isLocalPath = !imagePath.startsWith('http://') && 
+                            !imagePath.startsWith('https://') &&
+                            !imagePath.startsWith('data:');
+          
+          if (isLocalPath) {
+            try {
+              console.log(`📤 [爱心墙创建页] 上传图片 ${positionIndex} 到服务器...`);
+              const photoUrl = await this.uploadImageToServer(imagePath);
+              console.log(`✅ [爱心墙创建页] 图片 ${positionIndex} 上传成功`);
+              return {
+                positionIndex,
+                photoUrl,
+                thumbnailUrl: photoUrl
+              };
+            } catch (uploadError) {
+              console.error(`❌ [爱心墙创建页] 图片 ${positionIndex} 上传失败:`, uploadError);
+              // 返回null表示上传失败，后续会跳过
+              return null;
+            }
+          } else {
+            // 已经是URL，直接使用
+            return {
+              positionIndex,
+              photoUrl: imagePath,
+              thumbnailUrl: imagePath
+            };
+          }
+        });
+        
+        // 等待所有图片上传完成
+        const photoUrls = await Promise.all(photoUploadPromises);
+        
+        // 过滤掉上传失败的图片
+        const validPhotos = photoUrls.filter(photo => photo !== null);
+        const failedCount = photoUrls.length - validPhotos.length;
+        
+        if (failedCount > 0) {
+          console.warn(`⚠️ [爱心墙创建页] ${failedCount} 张图片上传失败`);
+          uni.showToast({ 
+            title: `${failedCount} 张照片上传失败，其余照片将继续保存`, 
+            icon: 'none',
+            duration: 3000
+          });
+        }
+        
+        // 第三步：将所有成功的照片信息保存到后端
+        // 需要区分：如果该位置已有photoId，使用updatePhoto更新；否则使用uploadPhoto新增
+        const savePromises = validPhotos.map(photo => {
+          const photoData = {
+            photoUrl: photo.photoUrl,
+            thumbnailUrl: photo.thumbnailUrl,
+            positionIndex: photo.positionIndex
+          };
+          
+          // 检查该位置是否已有photoId（已存在的照片）
+          const existingPhotoId = this.photoMap[photo.positionIndex];
+          
+          if (existingPhotoId) {
+            // 该位置已有照片，使用更新接口
+            console.log(`🔄 [爱心墙创建页] 位置 ${photo.positionIndex} 已有照片(photoId: ${existingPhotoId})，使用更新接口`);
+            return updatePhoto(existingPhotoId, photoData).catch(error => {
+              console.error(`❌ [爱心墙创建页] 照片 ${photo.positionIndex} 更新失败:`, error);
+              return null; // 继续保存其他照片
+            });
+          } else {
+            // 该位置没有照片，使用新增接口
+            console.log(`➕ [爱心墙创建页] 位置 ${photo.positionIndex} 为新照片，使用新增接口`);
+            const createData = {
+              ...photoData,
+              projectId: projectId
+            };
+            return uploadPhoto(createData).catch(error => {
+              console.error(`❌ [爱心墙创建页] 照片 ${photo.positionIndex} 保存失败:`, error);
+              return null; // 继续保存其他照片
+            });
+          }
+        });
+        
+        // 等待所有照片保存完成
+        console.log(`💾 [爱心墙创建页] 开始保存 ${savePromises.length} 张照片信息`);
+        const saveResults = await Promise.all(savePromises);
+        const savedCount = saveResults.filter(r => r !== null).length;
+        
+        console.log(`✅ [爱心墙创建页] 成功保存 ${savedCount}/${validPhotos.length} 张照片`);
+        
+        // 更新photoMap，保存新上传照片的photoId映射
+        saveResults.forEach((result, index) => {
+          if (result && result.data) {
+            const photoId = result.data.photoId || result.data.photo_id || result.data.id;
+            const photo = validPhotos[index];
+            if (photoId && photo) {
+              // 只有新增的照片才需要更新photoMap（已有的照片photoMap已经存在）
+              if (!this.photoMap[photo.positionIndex]) {
+                this.$set(this.photoMap, photo.positionIndex, photoId);
+                console.log(`📷 [爱心墙创建页] 更新照片映射: positionIndex=${photo.positionIndex}, photoId=${photoId}`);
+              } else {
+                console.log(`📷 [爱心墙创建页] 位置 ${photo.positionIndex} 照片已存在(photoId: ${photoId})，无需更新映射`);
+              }
+            }
+          }
+        });
+        
+        // 保存项目ID，以便后续可以继续编辑
+        this.editingProjectId = projectId;
+        uni.setStorageSync('heartwall_editing_projectId', projectId);
+        
+        uni.hideLoading();
         uni.showToast({ 
-          title: this.editingIndex !== null ? '修改成功' : '保存成功', 
+          title: this.editingProjectId ? '修改成功' : '保存成功', 
           icon: 'success',
           duration: 1500
         });
@@ -248,8 +621,16 @@ export default {
         setTimeout(() => {
           uni.navigateBack();
         }, 1500);
-      } catch (e) {
-        uni.showToast({ title: '保存失败，请重试', icon: 'none' });
+      } catch (error) {
+        console.error('❌ [爱心墙创建页] 保存项目失败:', error);
+        uni.hideLoading();
+        uni.showToast({ 
+          title: error.message || '保存失败，请重试', 
+          icon: 'none',
+          duration: 2000
+        });
+      } finally {
+        this.saving = false;
       }
     },
     async onSaveImage() {

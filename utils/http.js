@@ -121,20 +121,66 @@ function request(options) {
     }
   }
   
-  // 开发环境下记录请求信息（特别是一百件事相关API）
-  if (process.env.NODE_ENV === 'development' && isChallengeApi) {
-    console.log('🔗 [HTTP请求] 一百件事API');
-    console.log('📍 完整URL:', options.url);
-    console.log('📋 请求方法:', options.method || 'GET');
+  // 开发环境下记录所有API请求信息
+  // 判断是否在开发环境：uni-app开发工具或本地调试
+  let isDev = false;
+  try {
+    isDev = process.env.NODE_ENV === 'development' || 
+            typeof __wxConfig !== 'undefined' ||  // 微信小程序开发工具
+            (typeof uni !== 'undefined' && uni.getSystemInfoSync && uni.getSystemInfoSync().platform === 'devtools'); // 开发工具环境
+  } catch (e) {
+    // 如果获取系统信息失败，默认判断为开发环境（保守策略，确保日志输出）
+    isDev = process.env.NODE_ENV === 'development' || typeof __wxConfig !== 'undefined';
+  }
+  
+  // 无论是否开发环境，都记录爱心墙相关的请求（便于调试）
+  const urlForCheck = options.url || originalUrl || '';
+  const isHeartWallApi = urlForCheck.includes('/api/heart-wall/') || 
+                         urlForCheck.includes('heart-wall') ||
+                         urlForCheck.includes('heartwall') ||
+                         urlForCheck.toLowerCase().includes('heart_wall');
+  
+  if (isDev || isHeartWallApi) {
+    // 判断API类型（使用完整URL或原始URL进行判断）
+    let apiType = '通用API';
+    if (urlForCheck.includes('/api/challenge/')) {
+      apiType = '一百件事API';
+    } else if (urlForCheck.includes('/api/couple/')) {
+      apiType = '情侣绑定API';
+    } else if (isHeartWallApi) {
+      apiType = '心形墙API';
+    } else if (urlForCheck.includes('/api/qna/')) {
+      apiType = '问答API';
+    } else if (urlForCheck.includes('/api/login/')) {
+      apiType = '登录API';
+    } else if (urlForCheck.includes('/api/user/')) {
+      apiType = '用户API';
+    } else if (urlForCheck.includes('/api/letter/')) {
+      apiType = '情书API';
+    }
+    
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔗 [HTTP请求]', apiType);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📍 [URL]', options.url);
+    console.log('📋 [方法]', options.method || 'GET');
     if (options.data) {
-      console.log('📤 请求参数:', options.data);
+      console.log('📤 [请求参数]', JSON.stringify(options.data, null, 2));
     }
     if (token) {
-      console.log('🔑 认证Token: 已携带');
+      console.log('🔑 [认证] Token已携带 (长度:', token.length, ')');
     } else {
-      console.warn('⚠️ 认证Token: 未携带，可能失败');
+      if (!isLoginApi) {
+        console.warn('⚠️ [认证] Token未携带，请求可能失败');
+      } else {
+        console.log('ℹ️ [认证] 登录接口，无需Token');
+      }
     }
-    console.log('⏰ 请求时间:', new Date().toLocaleString());
+    if (options.header) {
+      console.log('📋 [请求头]', Object.keys(options.header).join(', '));
+    }
+    console.log('⏰ [时间]', new Date().toLocaleString());
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   }
   
   return new Promise((resolve, reject) => {
@@ -142,21 +188,73 @@ function request(options) {
       ...options,
       success: (res) => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
-          // 开发环境下记录响应数据，帮助调试
-          if (process.env.NODE_ENV === 'development') {
-            if (isChallengeApi) {
-              console.log('✅ [HTTP响应] 一百件事API请求成功');
-              console.log('📍 响应URL:', options.url);
-              console.log('📊 状态码:', res.statusCode);
-              console.log('📦 响应数据:', res.data);
-              console.log('⏰ 响应时间:', new Date().toLocaleString());
-            } else {
-              console.log('📥 API响应:', {
-                url: options.url,
-                statusCode: res.statusCode,
-                data: res.data
-              })
+          // 开发环境下记录所有API响应数据，帮助调试
+          let isDev = false;
+          try {
+            isDev = process.env.NODE_ENV === 'development' || 
+                    typeof __wxConfig !== 'undefined' ||
+                    (typeof uni !== 'undefined' && uni.getSystemInfoSync && uni.getSystemInfoSync().platform === 'devtools');
+          } catch (e) {
+            isDev = process.env.NODE_ENV === 'development' || typeof __wxConfig !== 'undefined';
+          }
+          
+          // 无论是否开发环境，都记录爱心墙相关的响应（便于调试）
+          const urlForCheck = options.url || '';
+          const isHeartWallApi = urlForCheck.includes('/api/heart-wall/') || 
+                                 urlForCheck.includes('heart-wall') ||
+                                 urlForCheck.includes('heartwall') ||
+                                 urlForCheck.toLowerCase().includes('heart_wall');
+          
+          if (isDev || isHeartWallApi) {
+            // 判断API类型（使用完整URL进行判断）
+            let apiType = '通用API';
+            if (urlForCheck.includes('/api/challenge/')) {
+              apiType = '一百件事API';
+            } else if (urlForCheck.includes('/api/couple/')) {
+              apiType = '情侣绑定API';
+            } else if (isHeartWallApi) {
+              apiType = '心形墙API';
+            } else if (urlForCheck.includes('/api/qna/')) {
+              apiType = '问答API';
+            } else if (urlForCheck.includes('/api/login/')) {
+              apiType = '登录API';
+            } else if (urlForCheck.includes('/api/user/')) {
+              apiType = '用户API';
+            } else if (urlForCheck.includes('/api/letter/')) {
+              apiType = '情书API';
             }
+            
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log('✅ [HTTP响应]', apiType, '请求成功');
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log('📍 [URL]', options.url);
+            console.log('📊 [状态码]', res.statusCode);
+            console.log('📦 [响应数据]', JSON.stringify(res.data, null, 2));
+            
+            // 统计响应数据信息
+            if (res.data && typeof res.data === 'object') {
+              if (res.data.tasks && Array.isArray(res.data.tasks)) {
+                console.log('📊 [数据统计] 任务数量:', res.data.tasks.length);
+              }
+              if (res.data.projects && Array.isArray(res.data.projects)) {
+                console.log('📊 [数据统计] 项目数量:', res.data.projects.length);
+              }
+              if (res.data.photos && Array.isArray(res.data.photos)) {
+                console.log('📊 [数据统计] 照片数量:', res.data.photos.length);
+              }
+              if (res.data.questions && Array.isArray(res.data.questions)) {
+                console.log('📊 [数据统计] 问题数量:', res.data.questions.length);
+              }
+              if (res.data.success !== undefined) {
+                console.log('✅ [业务状态]', res.data.success ? '成功' : '失败');
+              }
+              if (res.data.message) {
+                console.log('💬 [消息]', res.data.message);
+              }
+            }
+            
+            console.log('⏰ [时间]', new Date().toLocaleString());
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
           }
           
           // 如果后端返回的格式是 { success: false, message: "..." }，应该作为错误处理
@@ -170,16 +268,148 @@ function request(options) {
           
           resolve(res.data)
         } else {
+          // 特殊情况：即使HTTP状态码不是200-299，但如果响应体中 success: true，也应该当作成功处理
+          // 这是因为后端可能在业务成功时返回了错误的状态码（如500）
+          
+          // 先记录详细日志，便于调试
+          const urlForCheck = options.url || '';
+          const isHeartWallApi = urlForCheck.includes('/api/heart-wall/') || 
+                                 urlForCheck.includes('heart-wall') ||
+                                 urlForCheck.includes('heartwall') ||
+                                 urlForCheck.toLowerCase().includes('heart_wall');
+          
+          // 尝试解析响应数据（如果是字符串格式）
+          let responseData = res.data;
+          if (typeof responseData === 'string') {
+            try {
+              responseData = JSON.parse(responseData);
+            } catch (e) {
+              // 解析失败，保持原样
+            }
+          }
+          
+          if (isHeartWallApi || process.env.NODE_ENV === 'development') {
+            console.warn(`⚠️ [HTTP响应] 状态码异常: ${res.statusCode}`);
+            console.warn(`⚠️ [响应数据]`, responseData);
+            console.warn(`⚠️ [响应数据类型]`, typeof responseData);
+            if (responseData && typeof responseData === 'object') {
+              console.warn(`⚠️ [success字段]`, responseData.success);
+              console.warn(`⚠️ [message字段]`, responseData.message);
+              // 如果是心形墙API，也检查photo字段
+              if (isHeartWallApi && responseData.photo) {
+                console.warn(`⚠️ [photo字段存在]`, !!responseData.photo);
+              }
+            }
+          }
+          
+          // 检查响应数据中是否有 success: true
+          // 支持多种格式：
+          // 1. { success: true, ... }
+          // 2. { data: { success: true, ... } }
+          // 3. 对于心形墙API，也检查是否有photo字段（表示成功）
+          let isSuccess = false;
+          if (responseData && typeof responseData === 'object') {
+            if (responseData.success === true) {
+              isSuccess = true;
+            } else if (responseData.data && typeof responseData.data === 'object' && responseData.data.success === true) {
+              isSuccess = true;
+              // 将data提升为顶层
+              responseData = responseData.data;
+            } else if (isHeartWallApi && responseData.photo && typeof responseData.photo === 'object') {
+              // 对于心形墙API，如果返回了photo字段，也认为成功
+              isSuccess = true;
+            }
+          }
+          
+          if (isSuccess) {
+            console.warn(`⚠️ [HTTP响应] 后端返回状态码 ${res.statusCode}，但业务逻辑成功 (success: true)`);
+            console.warn('⚠️ 建议后端修改：成功时应该返回 200 状态码');
+            // 当作成功处理
+            resolve(responseData)
+            return
+          }
+          
+          // 如果检查失败，记录详细信息后reject
+          if (isHeartWallApi || process.env.NODE_ENV === 'development') {
+            console.error(`❌ [HTTP响应] 状态码 ${res.statusCode} 且业务逻辑失败`);
+            if (!responseData || typeof responseData !== 'object') {
+              console.error(`❌ 响应数据不是对象:`, responseData);
+            } else {
+              console.error(`❌ success字段:`, responseData.success);
+              if (isHeartWallApi) {
+                console.error(`❌ photo字段:`, responseData.photo ? '存在' : '不存在');
+              }
+            }
+          }
+          
           reject(res)
         }
       },
       fail: (error) => {
-        // 特别记录一百件事API的错误
-        if (process.env.NODE_ENV === 'development' && isChallengeApi) {
-          console.error('❌ [HTTP错误] 一百件事API请求失败');
-          console.error('📍 请求URL:', options.url);
-          console.error('🔴 错误信息:', error);
-          console.error('⏰ 错误时间:', new Date().toLocaleString());
+        // 开发环境下记录所有API的错误信息
+        let isDev = false;
+        try {
+          isDev = process.env.NODE_ENV === 'development' || 
+                  typeof __wxConfig !== 'undefined' ||
+                  (typeof uni !== 'undefined' && uni.getSystemInfoSync && uni.getSystemInfoSync().platform === 'devtools');
+        } catch (e) {
+          isDev = process.env.NODE_ENV === 'development' || typeof __wxConfig !== 'undefined';
+        }
+        
+        // 无论是否开发环境，都记录爱心墙相关的错误（便于调试）
+        const urlForCheck = options.url || '';
+        const isHeartWallApi = urlForCheck.includes('/api/heart-wall/') || 
+                               urlForCheck.includes('heart-wall') ||
+                               urlForCheck.includes('heartwall') ||
+                               urlForCheck.toLowerCase().includes('heart_wall');
+        
+        if (isDev || isHeartWallApi) {
+          // 判断API类型（使用完整URL进行判断）
+          let apiType = '通用API';
+          if (urlForCheck.includes('/api/challenge/')) {
+            apiType = '一百件事API';
+          } else if (urlForCheck.includes('/api/couple/')) {
+            apiType = '情侣绑定API';
+          } else if (isHeartWallApi) {
+            apiType = '心形墙API';
+          } else if (urlForCheck.includes('/api/qna/')) {
+            apiType = '问答API';
+          } else if (urlForCheck.includes('/api/login/')) {
+            apiType = '登录API';
+          } else if (urlForCheck.includes('/api/user/')) {
+            apiType = '用户API';
+          } else if (urlForCheck.includes('/api/letter/')) {
+            apiType = '情书API';
+          }
+          
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.error('❌ [HTTP错误]', apiType, '请求失败');
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.error('📍 [URL]', options.url);
+          console.error('📋 [方法]', options.method || 'GET');
+          console.error('🔴 [错误详情]', error);
+          console.error('📋 [错误消息]', error.errMsg || error.message || '未知错误');
+          console.error('📊 [状态码]', error.statusCode || '无');
+          
+          // 错误分析
+          if (error.errMsg) {
+            if (error.errMsg.includes('timeout')) {
+              console.error('⏱️ [错误类型] 请求超时');
+            } else if (error.errMsg.includes('fail')) {
+              console.error('🔌 [错误类型] 网络连接失败');
+              console.error('💡 [提示] 请检查：');
+              console.error('   1. 后端服务是否已启动');
+              console.error('   2. 请求地址是否正确:', options.url);
+              console.error('   3. 网络是否连通');
+            } else if (error.errMsg.includes('404')) {
+              console.error('🔍 [错误类型] 接口不存在 (404)');
+            } else if (error.errMsg.includes('401')) {
+              console.error('🔐 [错误类型] 未授权 (401)，可能是Token过期');
+            }
+          }
+          
+          console.error('⏰ [时间]', new Date().toLocaleString());
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         }
         handleRequestError(error, options)
           .then(resolve)

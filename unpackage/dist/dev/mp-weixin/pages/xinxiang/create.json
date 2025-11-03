@@ -1,4 +1,5 @@
 {
   "navigationBarTitleText": "写信",
+  "navigationStyle": "custom",
   "usingComponents": {}
 }

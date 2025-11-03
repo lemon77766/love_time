@@ -205,22 +205,22 @@ export default {
 .topbar { position: relative; height: 96rpx; display: flex; align-items: center; justify-content: center; background: #ffffff; }
 .topbar-title { font-size: 32rpx; color: #2b2b2b; font-weight: 600; }
 .topbar-actions { position: absolute; right: 24rpx; top: 50%; transform: translateY(-50%); display: flex; gap: 12rpx; }
-.icon-btn { width: 64rpx; height: 64rpx; border-radius: 32rpx; background: #f7f7f7; color: #ff8fb3; font-size: 28rpx; display: flex; align-items: center; justify-content: center; }
+.icon-btn { width: 64rpx; height: 64rpx; border-radius: 32rpx; background: #f7f7f7; color: #2bad81; font-size: 28rpx; display: flex; align-items: center; justify-content: center; }
 
 .divider-row { margin: 12rpx 24rpx; display: flex; align-items: center; gap: 16rpx; }
-.divider { flex: 1; height: 2rpx; background: #f5e6f0; }
-.heart { color: #ff8fb3; font-size: 26rpx; }
+.divider { flex: 1; height: 2rpx; background: #e8f5f1; }
+.heart { color: #2bad81; font-size: 26rpx; }
 
 .list { padding: 12rpx 24rpx; }
 .list-item { display: flex; align-items: center; padding: 18rpx 0; border-bottom: 1rpx solid #f5f5f5; }
 .list-item:last-child { border-bottom: none; }
 .left { width: 64rpx; }
-.index { font-size: 30rpx; color: #ff8fb3; font-weight: 700; }
+.index { font-size: 30rpx; color: #2bad81; font-weight: 700; }
 .center { flex: 1; }
 .question { font-size: 28rpx; color: #2b2b2b; }
 .right { width: 60rpx; display: flex; justify-content: flex-end; }
-.status { width: 32rpx; height: 32rpx; border-radius: 16rpx; border: 3rpx solid #ff8fb3; }
-.status.done { background: #ff8fb3; }
+.status { width: 32rpx; height: 32rpx; border-radius: 16rpx; border: 3rpx solid #2bad81; }
+.status.done { background: #2bad81; }
 .status.todo { background: #ffffff; }
 
 .empty { padding: 40rpx; display: flex; justify-content: center; }

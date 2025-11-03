@@ -1,4 +1,5 @@
 {
   "navigationBarTitleText": "一百件小事",
+  "navigationStyle": "custom",
   "usingComponents": {}
 }

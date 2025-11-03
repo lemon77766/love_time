@@ -3,26 +3,47 @@ const common_vendor = require("../../common/vendor.js");
 const _sfc_main = {
   data() {
     return {
+      statusBarHeight: 0,
+      navBarHeight: 44,
+      screenWidth: 375,
       letters: [],
       showDetailModal: false,
       currentLetter: null,
       currentIndex: -1
     };
   },
+  computed: {
+    containerPaddingTop() {
+      const totalHeightPx = this.statusBarHeight + this.navBarHeight;
+      const pxToRpx = 750 / this.screenWidth;
+      const totalHeightRpx = totalHeightPx * pxToRpx;
+      return totalHeightRpx + 20 + "rpx";
+    }
+  },
   onLoad() {
+    this.getSystemInfo();
     this.loadLetters();
   },
   onShow() {
     this.loadLetters();
   },
   methods: {
+    goBack() {
+      common_vendor.index.navigateBack();
+    },
+    getSystemInfo() {
+      const systemInfo = common_vendor.index.getSystemInfoSync();
+      this.statusBarHeight = systemInfo.statusBarHeight || 0;
+      this.screenWidth = systemInfo.windowWidth || 375;
+      this.navBarHeight = 44;
+    },
     // 加载信件列表
     loadLetters() {
       try {
         const letters = common_vendor.index.getStorageSync("xinxiang_letters") || [];
         this.letters = letters;
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/xinxiang/history.vue:124", "加载信件失败", e);
+        common_vendor.index.__f__("error", "at pages/xinxiang/history.vue:168", "加载信件失败", e);
         this.letters = [];
       }
     },
@@ -75,9 +96,12 @@ const _sfc_main = {
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: $data.letters.length > 0
+    a: $data.statusBarHeight + "px",
+    b: common_vendor.o((...args) => $options.goBack && $options.goBack(...args)),
+    c: $data.navBarHeight + "px",
+    d: $data.letters.length > 0
   }, $data.letters.length > 0 ? {
-    b: common_vendor.f($data.letters, (letter, index, i0) => {
+    e: common_vendor.f($data.letters, (letter, index, i0) => {
       return {
         a: $options.getLetterBackground(letter),
         b: 1 - letter.opacity / 100,
@@ -94,27 +118,29 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       };
     })
   } : {
-    c: common_vendor.o((...args) => $options.goWrite && $options.goWrite(...args))
+    f: common_vendor.o((...args) => $options.goWrite && $options.goWrite(...args))
   }, {
-    d: $data.showDetailModal
+    g: $data.showDetailModal
   }, $data.showDetailModal ? common_vendor.e({
-    e: $options.getLetterBackground($data.currentLetter),
-    f: 1 - $data.currentLetter.opacity / 100,
-    g: common_vendor.t($data.currentLetter.title),
-    h: common_vendor.t($data.currentLetter.deliveryDate),
-    i: common_vendor.t($data.currentLetter.content),
-    j: common_vendor.t($data.currentLetter.phone.slice(0, 3)),
-    k: common_vendor.t($data.currentLetter.phone.slice(-4)),
-    l: $data.currentLetter.wechat
+    h: $options.getLetterBackground($data.currentLetter),
+    i: 1 - $data.currentLetter.opacity / 100,
+    j: common_vendor.t($data.currentLetter.title),
+    k: common_vendor.t($data.currentLetter.deliveryDate),
+    l: common_vendor.t($data.currentLetter.content),
+    m: common_vendor.t($data.currentLetter.phone.slice(0, 3)),
+    n: common_vendor.t($data.currentLetter.phone.slice(-4)),
+    o: $data.currentLetter.wechat
   }, $data.currentLetter.wechat ? {
-    m: common_vendor.t($data.currentLetter.wechat)
+    p: common_vendor.t($data.currentLetter.wechat)
   } : {}, {
-    n: common_vendor.t($data.currentLetter.createTime),
-    o: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args)),
-    p: common_vendor.o(() => {
+    q: common_vendor.t($data.currentLetter.createTime),
+    r: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args)),
+    s: common_vendor.o(() => {
     }),
-    q: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args))
-  }) : {});
+    t: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args))
+  }) : {}, {
+    v: $options.containerPaddingTop
+  });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);
 wx.createPage(MiniProgramPage);

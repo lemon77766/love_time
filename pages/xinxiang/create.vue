@@ -1,5 +1,23 @@
 <template>
-  <view class="create-page">
+  <view class="create-page" :style="{ paddingTop: containerPaddingTop }">
+    <!-- 自定义导航栏 -->
+    <view class="custom-navbar">
+      <!-- 渐变背景 -->
+      <view class="navbar-gradient-bg"></view>
+      <!-- 状态栏占位 -->
+      <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
+      <!-- 导航栏内容 -->
+      <view class="navbar-content" :style="{ height: navBarHeight + 'px' }">
+        <view class="navbar-left" @click="goBack">
+          <text class="back-icon">←</text>
+        </view>
+        <view class="navbar-title">
+          <text class="title-text">写信</text>
+        </view>
+        <view class="navbar-right"></view>
+      </view>
+    </view>
+
     <!-- 步骤指示器 -->
     <view class="steps">
       <view class="step" :class="{ active: currentStep === 1 }">
@@ -149,7 +167,7 @@
             @changing="onOpacityChanging"
             min="0" 
             max="100"
-            activeColor="#d483b8"
+            activeColor="#DCC7E1"
             block-size="20"
           />
           <text class="control-value">{{ opacity }}%</text>
@@ -165,7 +183,7 @@
             @changing="onScaleChanging"
             min="50" 
             max="200"
-            activeColor="#d483b8"
+            activeColor="#DCC7E1"
             block-size="20"
           />
           <text class="control-value">{{ imageScale }}%</text>
@@ -301,7 +319,7 @@
               @changing="onOpacityChanging"
               min="0" 
               max="100"
-              activeColor="#d483b8"
+              activeColor="#DCC7E1"
               block-size="20"
             />
             <text class="control-value">{{ opacity }}%</text>
@@ -316,7 +334,7 @@
               @changing="onScaleChanging"
               min="50" 
               max="200"
-              activeColor="#d483b8"
+              activeColor="#DCC7E1"
               block-size="20"
             />
             <text class="control-value">{{ imageScale }}%</text>
@@ -401,7 +419,7 @@
             @changing="onOpacityChanging"
             min="0" 
             max="100"
-            activeColor="#d483b8"
+            activeColor="#DCC7E1"
             block-size="20"
           />
           <text class="control-value">{{ opacity }}%</text>
@@ -417,7 +435,7 @@
             @changing="onScaleChanging"
             min="50" 
             max="200"
-            activeColor="#d483b8"
+            activeColor="#DCC7E1"
             block-size="20"
           />
           <text class="control-value">{{ imageScale }}%</text>
@@ -480,6 +498,9 @@
 export default {
   data() {
     return {
+      statusBarHeight: 0,
+      navBarHeight: 44,
+      screenWidth: 375,
       currentStep: 1,
       selectedStyle: 1,
       isCustomStyle: false,
@@ -513,6 +534,12 @@ export default {
     };
   },
   computed: {
+    containerPaddingTop() {
+      const totalHeightPx = this.statusBarHeight + this.navBarHeight;
+      const pxToRpx = 750 / this.screenWidth;
+      const totalHeightRpx = totalHeightPx * pxToRpx;
+      return totalHeightRpx + 20 + 'rpx';
+    },
     minDate() {
       const today = new Date();
       const year = today.getFullYear();
@@ -528,7 +555,24 @@ export default {
       return `/static/xinxiang/xin${this.selectedStyle}.jpg`;
     }
   },
+  onLoad() {
+    this.getSystemInfo();
+  },
   methods: {
+    goBack() {
+      uni.navigateBack();
+    },
+    getSystemInfo() {
+      const systemInfo = uni.getSystemInfoSync();
+      this.statusBarHeight = systemInfo.statusBarHeight || 0;
+      this.screenWidth = systemInfo.windowWidth || 375;
+      // #ifdef MP-WEIXIN
+      this.navBarHeight = 44;
+      // #endif
+      // #ifdef H5
+      this.navBarHeight = 44;
+      // #endif
+    },
     // 选择预设样式
     selectPresetStyle(index) {
       this.selectedStyle = index;
@@ -773,11 +817,92 @@ export default {
 </script>
 
 <style>
+/* 自定义导航栏样式 */
+.custom-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background-color: #F8F0FC;
+  overflow: hidden;
+}
+
+.navbar-gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200%;
+  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+}
+
+.status-bar {
+  width: 100%;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+.navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30rpx;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+
+.navbar-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.title-text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #6B5B95;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.navbar-left {
+  width: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  font-size: 50rpx;
+  font-weight: 600;
+  color: #6B5B95;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.back-icon:active {
+  opacity: 0.6;
+}
+
+.navbar-right {
+  width: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .create-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: #F8F0FC;
   padding: 24rpx;
   padding-bottom: 120rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 /* 步骤指示器 */
@@ -800,34 +925,37 @@ export default {
   width: 60rpx;
   height: 60rpx;
   border-radius: 50%;
-  background: #e5e5e5;
-  color: #999;
+  background: #F3E8FF;
+  color: #9B8FB8;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 24rpx;
   font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .step.active .step-number {
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #DCC7E1;
   color: #ffffff;
 }
 
 .step-text {
   font-size: 24rpx;
-  color: #999;
+  color: #9B8FB8;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .step.active .step-text {
-  color: #ff8fb3;
+  color: #DCC7E1;
   font-weight: 600;
 }
 
 .step-line {
   width: 120rpx;
   height: 2rpx;
-  background: #e5e5e5;
+  background: #F3E8FF;
   margin: 0 20rpx;
   margin-bottom: 28rpx;
 }
@@ -840,11 +968,12 @@ export default {
 }
 
 .section-title {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #333;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #6B5B95;
   display: block;
   margin-bottom: 24rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 /* 样式网格 */
@@ -865,8 +994,8 @@ export default {
 }
 
 .style-item.selected {
-  border-color: #ff8fb3;
-  box-shadow: 0 4rpx 12rpx rgba(255, 143, 179, 0.4);
+  border-color: #DCC7E1;
+  box-shadow: 0 4rpx 12rpx rgba(220, 199, 225, 0.3);
 }
 
 .style-image {
@@ -881,7 +1010,7 @@ export default {
   width: 40rpx;
   height: 40rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #DCC7E1;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -897,15 +1026,17 @@ export default {
 .custom-btn {
   width: 100%;
   padding: 24rpx;
-  background: linear-gradient(135deg, #f0f0f0 0%, #e5e5e5 100%);
+  background: linear-gradient(135deg, #F8F0FC 0%, #F3E8FF 100%);
   border-radius: 16rpx;
-  border: 2rpx dashed #999;
+  border: 2rpx dashed #D8B4FE;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12rpx;
   font-size: 28rpx;
-  color: #666;
+  color: #6B5B95;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .btn-icon {
@@ -916,7 +1047,7 @@ export default {
   margin-top: 20rpx;
   border-radius: 16rpx;
   overflow: hidden;
-  border: 2rpx solid #2bad81;
+  border: 2rpx solid #DCC7E1;
   cursor: pointer;
 }
 
@@ -945,7 +1076,7 @@ export default {
 /* 裁剪框预览 */
 .crop-preview {
   position: absolute;
-  border: 2rpx solid #2bad81;
+  border: 2rpx solid #DCC7E1;
   box-sizing: border-box;
   pointer-events: none;
 }
@@ -994,9 +1125,11 @@ export default {
   display: block;
   text-align: center;
   padding: 16rpx;
-  background: #f5f5f5;
-  color: #ff8fb3;
+  background: #F8F0FC;
+  color: #DCC7E1;
   font-size: 24rpx;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 /* 透明度调整弹窗 */
@@ -1023,12 +1156,13 @@ export default {
 }
 
 .modal-title {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #333;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #6B5B95;
   display: block;
   text-align: center;
   margin-bottom: 24rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .modal-preview {
@@ -1055,16 +1189,16 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  border: 3rpx solid #2bad81;
+  border: 3rpx solid #DCC7E1;
   box-sizing: border-box;
-  background: rgba(255, 143, 179, 0.15);
+  background: rgba(220, 199, 225, 0.1);
 }
 
 .crop-corner {
   position: absolute;
   width: 20rpx;
   height: 20rpx;
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #DCC7E1;
   border: 2rpx solid #ffffff;
   border-radius: 50%;
 }
@@ -1089,7 +1223,7 @@ export default {
   right: -10rpx;
   width: 30rpx;
   height: 30rpx;
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #DCC7E1;
   cursor: se-resize;
 }
 
@@ -1099,11 +1233,12 @@ export default {
   left: 50%;
   transform: translateX(-50%);
   font-size: 22rpx;
-  color: #ff8fb3;
+  color: #DCC7E1;
   white-space: nowrap;
   background: rgba(255, 255, 255, 0.9);
   padding: 4rpx 12rpx;
   border-radius: 8rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .opacity-control {
@@ -1111,15 +1246,18 @@ export default {
   align-items: center;
   gap: 16rpx;
   padding: 24rpx;
-  background: #f5f5f5;
+  background: #F8F0FC;
   border-radius: 16rpx;
   margin-bottom: 24rpx;
+  border: 1rpx solid #F3E8FF;
 }
 
 .opacity-control .control-label {
   font-size: 26rpx;
-  color: #666;
+  color: #6B5B95;
   width: 100rpx;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .opacity-control .slider {
@@ -1128,10 +1266,11 @@ export default {
 
 .opacity-control .control-value {
   font-size: 28rpx;
-  color: #ff8fb3;
-  font-weight: 700;
+  color: #DCC7E1;
+  font-weight: 600;
   width: 80rpx;
   text-align: right;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .modal-actions {
@@ -1148,8 +1287,9 @@ export default {
 }
 
 .modal-btn.cancel {
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #DCC7E1;
   color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 /* 表单 */
@@ -1172,17 +1312,20 @@ export default {
 
 .form-label {
   font-size: 28rpx;
-  color: #333;
+  color: #6B5B95;
   font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .form-input,
 .picker-display {
   padding: 20rpx;
-  background: #f5f5f5;
+  background: #ffffff;
   border-radius: 12rpx;
   font-size: 26rpx;
-  border: 1rpx solid #e5e5e5;
+  border: 1rpx solid #F3E8FF;
+  color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .picker-display {
@@ -1192,28 +1335,33 @@ export default {
 .form-textarea {
   min-height: 300rpx;
   padding: 20rpx;
-  background: #f5f5f5;
+  background: #ffffff;
   border-radius: 12rpx;
   font-size: 26rpx;
-  border: 1rpx solid #e5e5e5;
+  border: 1rpx solid #F3E8FF;
+  color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .char-count {
   font-size: 22rpx;
-  color: #999;
+  color: #9B8FB8;
   text-align: right;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 /* 按钮 */
 .next-btn {
   width: 100%;
   padding: 24rpx;
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #DCC7E1;
   color: #ffffff;
   border-radius: 16rpx;
   font-size: 28rpx;
   font-weight: 600;
   margin-top: 40rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .action-btns {
@@ -1233,28 +1381,33 @@ export default {
 }
 
 .back-btn {
-  background: #f0f0f0;
-  color: #666;
+  background: #F3E8FF;
+  color: #6B5B95;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .preview-btn {
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #DCC7E1;
   color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #DCC7E1;
   color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .preview-modal-btn.adjust {
-  background: #f0f0f0;
-  color: #666;
+  background: #F3E8FF;
+  color: #6B5B95;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .preview-modal-btn.close {
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #DCC7E1;
   color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 /* 信件预览弹窗 */
@@ -1284,12 +1437,13 @@ export default {
 }
 
 .preview-modal-title {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #333;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #6B5B95;
   display: block;
   text-align: center;
   margin-bottom: 24rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-preview {
@@ -1351,13 +1505,16 @@ export default {
 
 .letter-title {
   font-size: 36rpx;
-  font-weight: 700;
-  color: #333;
+  font-weight: 600;
+  color: #6B5B95;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-date {
   font-size: 24rpx;
-  color: #666;
+  color: #9B8FB8;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-body {
@@ -1369,9 +1526,11 @@ export default {
 .letter-text {
   font-size: 28rpx;
   line-height: 2;
-  color: #333;
+  color: #6B5B95;
   white-space: pre-wrap;
   word-break: break-all;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-footer {
@@ -1383,8 +1542,10 @@ export default {
 
 .letter-sign {
   font-size: 26rpx;
-  color: #666;
+  color: #9B8FB8;
   font-style: italic;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .preview-modal-actions {
@@ -1401,7 +1562,8 @@ export default {
 }
 
 .preview-modal-btn.confirm {
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #DCC7E1;
   color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 </style>

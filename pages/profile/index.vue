@@ -353,8 +353,8 @@ export default {
 }
 
 .checkbox.checked {
-  background: #ff8fb3;
-  border-color: #ff8fb3;
+  background: #2bad81;
+  border-color: #2bad81;
 }
 
 .checkbox.checked::after {
@@ -418,13 +418,13 @@ export default {
   justify-content: center;
   gap: 12rpx;
   padding: 28rpx;
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #2bad81;
   border-radius: 48rpx;
   border: none;
   color: #ffffff;
   font-size: 30rpx;
   font-weight: 600;
-  box-shadow: 0 8rpx 20rpx rgba(255, 143, 179, 0.35);
+  box-shadow: 0 8rpx 20rpx rgba(43, 173, 129, 0.25);
 }
 
 .save-btn:active {

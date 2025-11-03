@@ -34,32 +34,6 @@ function getTasks() {
     throw error;
   });
 }
-function getProgress() {
-  const url = utils_config.config.API.CHALLENGE.PROGRESS;
-  const fullUrl = utils_config.config.baseURL + url;
-  common_vendor.index.__f__("log", "at api/hundred.js:102", "🔗 [一百件事API] 开始请求用户进度");
-  common_vendor.index.__f__("log", "at api/hundred.js:103", "📍 请求地址:", fullUrl);
-  common_vendor.index.__f__("log", "at api/hundred.js:104", "📋 请求方法: GET");
-  common_vendor.index.__f__("log", "at api/hundred.js:105", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
-  return utils_http.http.get(url).then((response) => {
-    common_vendor.index.__f__("log", "at api/hundred.js:108", "✅ [一百件事API] 获取用户进度成功");
-    common_vendor.index.__f__("log", "at api/hundred.js:109", "📦 响应数据:", response);
-    if (response && response.progress) {
-      const progress = response.progress;
-      common_vendor.index.__f__("log", "at api/hundred.js:113", "📊 进度统计:");
-      common_vendor.index.__f__("log", "at api/hundred.js:114", `   - 总任务数: ${progress.totalTasks}`);
-      common_vendor.index.__f__("log", "at api/hundred.js:115", `   - 已完成: ${progress.completedCount}`);
-      common_vendor.index.__f__("log", "at api/hundred.js:116", `   - 已收藏: ${progress.favoritedCount}`);
-      common_vendor.index.__f__("log", "at api/hundred.js:117", `   - 完成率: ${progress.completionRate}%`);
-      common_vendor.index.__f__("log", "at api/hundred.js:118", `   - 最后活跃: ${progress.lastActiveAt || "未知"}`);
-    }
-    return response;
-  }).catch((error) => {
-    common_vendor.index.__f__("error", "at api/hundred.js:123", "❌ [一百件事API] 获取用户进度失败");
-    common_vendor.index.__f__("error", "at api/hundred.js:124", "🔴 错误信息:", error);
-    throw error;
-  });
-}
 function addTask(taskData) {
   const url = utils_config.config.API.CHALLENGE.ADD;
   const fullUrl = utils_config.config.baseURL + url;
@@ -156,6 +130,5 @@ exports.addTask = addTask;
 exports.completeTask = completeTask;
 exports.deleteTask = deleteTask;
 exports.favoriteTask = favoriteTask;
-exports.getProgress = getProgress;
 exports.getTasks = getTasks;
 //# sourceMappingURL=../../.sourcemap/mp-weixin/api/hundred.js.map

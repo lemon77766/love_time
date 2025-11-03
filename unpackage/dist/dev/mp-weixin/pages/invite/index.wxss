@@ -1,0 +1,292 @@
+
+.invite-page {
+  min-height: 100vh;
+  background: #F8F0FC;
+  padding-bottom: 40rpx;
+}
+
+/* 自定义导航栏样式 */
+.custom-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background-color: #F8F0FC;
+  overflow: hidden;
+}
+.navbar-gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200%;
+  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+}
+.status-bar {
+  width: 100%;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+.navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30rpx;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+.navbar-left {
+  width: 80rpx;
+  display: flex;
+  align-items: center;
+}
+.back-icon {
+  font-size: 44rpx;
+  color: #6B5B95;
+  font-weight: 600;
+}
+.navbar-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.title-text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #6B5B95;
+}
+.navbar-right {
+  width: 80rpx;
+}
+.content-area {
+  padding: 30rpx 24rpx;
+}
+
+/* 接受邀请容器 */
+.invite-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60rpx 40rpx;
+}
+.invite-header {
+  text-align: center;
+  margin-bottom: 60rpx;
+}
+.invite-title {
+  display: block;
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #6B5B95;
+  margin-bottom: 20rpx;
+}
+.invite-subtitle {
+  display: block;
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 邀请方信息卡片 */
+.creator-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 60rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.06);
+}
+.creator-avatar {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 80rpx;
+  margin-bottom: 24rpx;
+  border: 4rpx solid #fdf2f8;
+}
+.creator-name {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+.creator-tip {
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* 按钮组 */
+.action-buttons {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+.btn {
+  width: 100%;
+  height: 88rpx;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.accept-btn {
+  background: linear-gradient(135deg, #FF8FB3 0%, #FF6B9D 100%);
+  color: #ffffff;
+}
+.accept-btn[disabled] {
+  background: #ddd;
+  color: #999;
+}
+.cancel-btn {
+  background: #f5f5f5;
+  color: #666;
+}
+.primary-btn {
+  background: linear-gradient(135deg, #FF8FB3 0%, #FF6B9D 100%);
+  color: #ffffff;
+}
+.primary-btn[disabled] {
+  background: #ddd;
+  color: #999;
+}
+.secondary-btn {
+  background: #ffffff;
+  color: #FF8FB3;
+  border: 2rpx solid #FF8FB3;
+}
+.unbind-btn {
+  background: #f5f5f5;
+  color: #999;
+  margin-top: 40rpx;
+}
+.loading-tip {
+  margin-top: 40rpx;
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* 创建邀请容器 */
+.create-container {
+  padding: 40rpx 0;
+}
+.bound-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60rpx 40rpx;
+}
+.bound-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 60rpx;
+}
+.bound-icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+.bound-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #6B5B95;
+}
+.partner-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 40rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.06);
+}
+.partner-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  margin-bottom: 20rpx;
+  border: 4rpx solid #fdf2f8;
+}
+.partner-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+.bound-time {
+  font-size: 24rpx;
+  color: #999;
+}
+.invite-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 邀请码卡片 */
+.invite-code-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  width: 100%;
+  margin-bottom: 40rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.06);
+}
+.code-label {
+  display: block;
+  font-size: 26rpx;
+  color: #999;
+  text-align: center;
+  margin-bottom: 24rpx;
+}
+.code-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24rpx;
+  margin-bottom: 20rpx;
+}
+.code-text {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: #FF8FB3;
+  letter-spacing: 8rpx;
+  font-family: 'Courier New', monospace;
+}
+.copy-btn {
+  padding: 12rpx 32rpx;
+  background: #fdf2f8;
+  color: #FF8FB3;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+  border: none;
+}
+.code-tip {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  text-align: center;
+}
+.share-tip {
+  margin-top: 40rpx;
+  padding: 24rpx;
+  background: #fff9e6;
+  border-radius: 16rpx;
+  width: 100%;
+}
+.tip-text {
+  font-size: 24rpx;
+  color: #ff9500;
+  line-height: 1.6;
+}

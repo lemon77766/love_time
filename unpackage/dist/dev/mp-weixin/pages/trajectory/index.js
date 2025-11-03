@@ -4,6 +4,9 @@ const common_assets = require("../../common/assets.js");
 const _sfc_main = {
   data() {
     return {
+      statusBarHeight: 0,
+      navBarHeight: 54,
+      screenWidth: 375,
       trajectoryPoints: [
         {
           title: "初遇",
@@ -43,7 +46,24 @@ const _sfc_main = {
       }
     };
   },
+  computed: {
+    containerPaddingTop() {
+      const totalHeightPx = this.statusBarHeight + this.navBarHeight;
+      const pxToRpx = 750 / this.screenWidth;
+      const totalHeightRpx = totalHeightPx * pxToRpx;
+      return totalHeightRpx + 20 + "rpx";
+    }
+  },
+  onLoad() {
+    this.getSystemInfo();
+  },
   methods: {
+    getSystemInfo() {
+      const systemInfo = common_vendor.index.getSystemInfoSync();
+      this.statusBarHeight = systemInfo.statusBarHeight || 0;
+      this.screenWidth = systemInfo.windowWidth || 375;
+      this.navBarHeight = 54;
+    },
     showPointDetail(point) {
       this.currentPoint = point;
       this.showDetail = true;
@@ -90,8 +110,10 @@ const _sfc_main = {
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: common_assets._imports_0$5,
-    b: common_vendor.f($data.trajectoryPoints, (point, index, i0) => {
+    a: $data.statusBarHeight + "px",
+    b: $data.navBarHeight + "px",
+    c: common_assets._imports_0$5,
+    d: common_vendor.f($data.trajectoryPoints, (point, index, i0) => {
       return {
         a: common_vendor.t(point.title),
         b: index,
@@ -100,40 +122,42 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         e: common_vendor.o(($event) => $options.showPointDetail(point), index)
       };
     }),
-    c: $data.trajectoryPoints.length > 1
+    e: $data.trajectoryPoints.length > 1
   }, $data.trajectoryPoints.length > 1 ? {} : {}, {
-    d: common_vendor.o((...args) => $options.showAddModal && $options.showAddModal(...args)),
-    e: $data.showDetail
+    f: common_vendor.o((...args) => $options.showAddModal && $options.showAddModal(...args)),
+    g: $data.showDetail
   }, $data.showDetail ? common_vendor.e({
-    f: common_vendor.t($data.currentPoint.title),
-    g: common_vendor.t($data.currentPoint.date),
-    h: $data.currentPoint.image
+    h: common_vendor.t($data.currentPoint.title),
+    i: common_vendor.t($data.currentPoint.date),
+    j: $data.currentPoint.image
   }, $data.currentPoint.image ? {
-    i: $data.currentPoint.image
+    k: $data.currentPoint.image
   } : {}, {
-    j: common_vendor.t($data.currentPoint.description || "暂无描述"),
-    k: common_vendor.o((...args) => $options.hidePointDetail && $options.hidePointDetail(...args)),
-    l: common_vendor.o(() => {
+    l: common_vendor.t($data.currentPoint.description || "暂无描述"),
+    m: common_vendor.o((...args) => $options.hidePointDetail && $options.hidePointDetail(...args)),
+    n: common_vendor.o(() => {
     }),
-    m: common_vendor.o((...args) => $options.hidePointDetail && $options.hidePointDetail(...args))
+    o: common_vendor.o((...args) => $options.hidePointDetail && $options.hidePointDetail(...args))
   }) : {}, {
-    n: $options.showAddModal
+    p: $options.showAddModal
   }, $options.showAddModal ? common_vendor.e({
-    o: $data.newPoint.title,
-    p: common_vendor.o(($event) => $data.newPoint.title = $event.detail.value),
-    q: $data.newPoint.date,
-    r: common_vendor.o(($event) => $data.newPoint.date = $event.detail.value),
-    s: $data.newPoint.description,
-    t: common_vendor.o(($event) => $data.newPoint.description = $event.detail.value),
-    v: common_vendor.o((...args) => $options.selectPosition && $options.selectPosition(...args)),
-    w: $data.newPoint.top !== null
+    q: $data.newPoint.title,
+    r: common_vendor.o(($event) => $data.newPoint.title = $event.detail.value),
+    s: $data.newPoint.date,
+    t: common_vendor.o(($event) => $data.newPoint.date = $event.detail.value),
+    v: $data.newPoint.description,
+    w: common_vendor.o(($event) => $data.newPoint.description = $event.detail.value),
+    x: common_vendor.o((...args) => $options.selectPosition && $options.selectPosition(...args)),
+    y: $data.newPoint.top !== null
   }, $data.newPoint.top !== null ? {} : {}, {
-    x: common_vendor.o((...args) => $options.hideAddModal && $options.hideAddModal(...args)),
-    y: common_vendor.o((...args) => $options.addTrajectoryPoint && $options.addTrajectoryPoint(...args)),
-    z: common_vendor.o(() => {
+    z: common_vendor.o((...args) => $options.hideAddModal && $options.hideAddModal(...args)),
+    A: common_vendor.o((...args) => $options.addTrajectoryPoint && $options.addTrajectoryPoint(...args)),
+    B: common_vendor.o(() => {
     }),
-    A: common_vendor.o((...args) => $options.hideAddModal && $options.hideAddModal(...args))
-  }) : {});
+    C: common_vendor.o((...args) => $options.hideAddModal && $options.hideAddModal(...args))
+  }) : {}, {
+    D: $options.containerPaddingTop
+  });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);
 wx.createPage(MiniProgramPage);

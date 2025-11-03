@@ -1,12 +1,27 @@
 <template>
-  <view class="trajectory-page">
-    <!-- 顶部标题 -->
-    <view class="header">
-      <text class="title">恋爱轨迹</text>
-      <text class="subtitle">记录你们一起走过的点点滴滴</text>
+  <view class="trajectory-page" :style="{ paddingTop: containerPaddingTop }">
+    <!-- 自定义导航栏 -->
+    <view class="custom-navbar">
+      <!-- 渐变背景 -->
+      <view class="navbar-gradient-bg"></view>
+      <!-- 状态栏占位 -->
+      <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
+      <!-- 导航栏内容 -->
+      <view class="navbar-content" :style="{ height: navBarHeight + 'px' }">
+        <view class="navbar-title">
+          <text class="title-text">恋爱轨迹</text>
+        </view>
+      </view>
     </view>
 
-    <!-- 轨迹地图容器 -->
+    <!-- 内容区域 -->
+    <view class="content-area">
+      <!-- 顶部标题 -->
+      <view class="header">
+        <text class="subtitle">记录你们一起走过的点点滴滴</text>
+      </view>
+
+      <!-- 轨迹地图容器 -->
     <view class="map-container">
       <image class="map-bg" src="/static/trajectory/map-bg.jpg" mode="aspectFill" />
       
@@ -80,6 +95,7 @@
         </view>
       </view>
     </view>
+    </view>
   </view>
 </template>
 
@@ -87,6 +103,9 @@
 export default {
   data() {
     return {
+      statusBarHeight: 0,
+      navBarHeight: 54,
+      screenWidth: 375,
       trajectoryPoints: [
         {
           title: "初遇",
@@ -126,7 +145,31 @@ export default {
       }
     };
   },
+  computed: {
+    containerPaddingTop() {
+      // 将px转换为rpx: rpx = px * 750 / screenWidth
+      // 添加20rpx额外间距
+      const totalHeightPx = this.statusBarHeight + this.navBarHeight;
+      const pxToRpx = 750 / this.screenWidth;
+      const totalHeightRpx = totalHeightPx * pxToRpx;
+      return totalHeightRpx + 20 + 'rpx';
+    }
+  },
+  onLoad() {
+    this.getSystemInfo();
+  },
   methods: {
+    getSystemInfo() {
+      const systemInfo = uni.getSystemInfoSync();
+      this.statusBarHeight = systemInfo.statusBarHeight || 0;
+      this.screenWidth = systemInfo.windowWidth || 375;
+      // #ifdef MP-WEIXIN
+      this.navBarHeight = 54;
+      // #endif
+      // #ifdef H5
+      this.navBarHeight = 54;
+      // #endif
+    },
     showPointDetail(point) {
       this.currentPoint = point;
       this.showDetail = true;
@@ -180,23 +223,85 @@ export default {
 <style>
 .trajectory-page {
   min-height: 100vh;
-  background-color: #ffffff;
+  background-color: #F8F0FC;
   padding-bottom: 40rpx;
 }
 
-.header {
-  padding: 40rpx 30rpx 20rpx 30rpx;
+/* 自定义导航栏样式 */
+.custom-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background-color: #F8F0FC;
+  overflow: hidden;
 }
-.title {
+
+.navbar-gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200%;
+  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+}
+
+.status-bar {
+  width: 100%;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+.navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30rpx;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+
+.navbar-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.title-text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #6B5B95;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.navbar-right {
+  width: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-icon {
   font-size: 44rpx;
-  color: #2b2b2b;
-  font-weight: 700;
-  display: block;
+  color: #333333;
+}
+
+.content-area {
+  padding: 30rpx 24rpx;
+}
+
+.header {
+  padding: 0 0 20rpx 0;
 }
 .subtitle {
-  margin-top: 8rpx;
   font-size: 26rpx;
-  color: #7a7a7a;
+  color: #9B8FB8;
   display: block;
 }
 
@@ -264,7 +369,7 @@ export default {
 /* 添加按钮 */
 .add-button {
   margin: 30rpx 20rpx 0 20rpx;
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #2bad81;
   border-radius: 24rpx;
   padding: 24rpx;
   display: flex;
@@ -376,7 +481,7 @@ export default {
 .position-info {
   margin-top: 8rpx;
   font-size: 24rpx;
-  color: #ff8fb3;
+  color: #2bad81;
 }
 
 .modal-actions {
@@ -393,7 +498,7 @@ export default {
 }
 
 .btn.primary {
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #2bad81;
   color: #ffffff;
 }
 

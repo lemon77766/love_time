@@ -16,6 +16,7 @@ if (!Math) {
   "./pages/xinxiang/history.js";
   "./pages/profile/index.js";
   "./pages/trajectory/index.js";
+  "./pages/invite/index.js";
 }
 const pages = [
   {

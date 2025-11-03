@@ -8,7 +8,12 @@
       }
     },
     {
-      "path": "pages/index/index"
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "甜蜜小屋",
+        "navigationStyle": "custom",
+        "navigationBarTextStyle": "black"
+      }
     },
     {
       "path": "pages/jiyi/index",
@@ -19,13 +24,16 @@
     {
       "path": "pages/we/index",
       "style": {
-        "navigationBarTitleText": "我们"
+        "navigationBarTitleText": "我们",
+        "navigationStyle": "custom",
+        "navigationBarTextStyle": "black"
       }
     },
     {
       "path": "pages/qna/index",
       "style": {
-        "navigationBarTitleText": "甜蜜问答"
+        "navigationBarTitleText": "甜蜜问答",
+        "navigationStyle": "custom"
       }
     },
     {
@@ -37,13 +45,15 @@
     {
       "path": "pages/hundred/index",
       "style": {
-        "navigationBarTitleText": "一百件小事"
+        "navigationBarTitleText": "一百件小事",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/heartwall/index",
       "style": {
-        "navigationBarTitleText": "爱心照片墙"
+        "navigationBarTitleText": "爱心照片墙",
+        "navigationStyle": "custom"
       }
     },
     {
@@ -56,20 +66,24 @@
       "path": "pages/xinxiang/index",
       "style": {
         "navigationBarTitleText": "未来情书",
+        "navigationStyle": "custom",
         "navigationBarTextStyle": "black",
-        "navigationBarBackgroundColor": "#ffffff"
+        "navigationBarBackgroundColor": "#ffffff",
+        "disableScroll": true
       }
     },
     {
       "path": "pages/xinxiang/create",
       "style": {
-        "navigationBarTitleText": "写信"
+        "navigationBarTitleText": "写信",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/xinxiang/history",
       "style": {
-        "navigationBarTitleText": "信件记录"
+        "navigationBarTitleText": "信件记录",
+        "navigationStyle": "custom"
       }
     },
     {
@@ -81,13 +95,23 @@
     {
       "path": "pages/trajectory/index",
       "style": {
-        "navigationBarTitleText": "恋爱轨迹"
+        "navigationBarTitleText": "恋爱轨迹",
+        "navigationStyle": "custom",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/invite/index",
+      "style": {
+        "navigationBarTitleText": "邀请另一半",
+        "navigationStyle": "custom",
+        "navigationBarTextStyle": "black"
       }
     }
   ],
   "tabBar": {
-    "color": "#000000",
-    "selectedColor": "#ff8fb3",
+    "color": "#333333",
+    "selectedColor": "#C084FC",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
@@ -98,8 +122,9 @@
   },
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarBackgroundColor": "#f0f0f0",
-    "backgroundColor": "#fff5f7"
+
+    "navigationBarBackgroundColor": "#F8F0FC",
+    "backgroundColor": "#F8F0FC"
   },
   "uniIdRouter": {}
 }

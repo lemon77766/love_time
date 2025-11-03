@@ -1,29 +1,74 @@
 
 .my-page {
   min-height: 100vh;
-  background: #f5f6f7;
+  background: #F8F0FC;
   padding-bottom: 32rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
-/* 功能按钮 */
-.profile-actions {
-  position: absolute;
-  right: 24rpx;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  gap: 16rpx;
+/* 自定义导航栏样式 */
+.custom-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background-color: #F8F0FC;
+  overflow: hidden;
 }
-.icon-btn {
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 32rpx;
-  background: #fdf2f8;
-  color: #ff8fb3;
-  font-size: 28rpx;
+.navbar-gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200%;
+  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+}
+.status-bar {
+  width: 100%;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+.navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30rpx;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+.navbar-title {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
+}
+.title-text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #6B5B95;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.navbar-right {
+  width: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.navbar-icon {
+  font-size: 44rpx;
+  color: #6B5B95;
+  opacity: 0.8;
+}
+.navbar-icon:active {
+  opacity: 0.5;
+}
+.content-area {
+  padding: 20rpx 0;
 }
 
 /* 用户信息卡片 */
@@ -31,11 +76,13 @@
   margin: 24rpx;
   background: #ffffff;
   border-radius: 24rpx;
-  padding: 24rpx;
+  padding: 32rpx 24rpx;
   position: relative;
   display: flex;
   align-items: center;
   overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+  border: 1rpx solid #F3E8FF;
 }
 .profile-bg {
   position: absolute;
@@ -44,19 +91,60 @@
   width: 240rpx;
   height: 240rpx;
   border-radius: 120rpx;
-  background: rgba(255,143,179,0.12);
+  background: linear-gradient(135deg, rgba(255,143,179,0.15) 0%, rgba(220,199,225,0.12) 100%);
 }
 .avatar {
   width: 120rpx;
   height: 120rpx;
   border-radius: 24rpx;
-  background: #f7f9f8;
+  background: #F3E8FF;
+  border: 3rpx solid rgba(255,255,255,0.8);
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
+  flex-shrink: 0;
 }
-.profile-texts { margin-left: 20rpx;
+/* 双人头像样式 */
+.couple-avatars {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
-.hello { font-size: 32rpx; color: #ff8fb3; font-weight: 700;
+.couple-avatars .avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border: 3rpx solid #ffffff;
+  z-index: 2;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.1);
 }
-.sub { margin-top: 6rpx; font-size: 24rpx; color: #7a7a7a;
+.partner-avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 24rpx;
+  border: 3rpx solid #ffffff;
+  margin-left: -20rpx;
+  z-index: 1;
+  background: #F3E8FF;
+  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.08);
+}
+.profile-texts { 
+  margin-left: 20rpx; 
+  flex: 1;
+  min-width: 0;
+}
+.hello { 
+  font-size: 32rpx; 
+  color: #FF8FB3; 
+  font-weight: 600;
+  display: block;
+  margin-bottom: 8rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.sub { 
+  font-size: 26rpx; 
+  color: #9B8FB8; 
+  font-weight: 400;
+  line-height: 1.5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 /* 数据统计卡片 */
@@ -64,8 +152,9 @@
   margin: 0 24rpx 24rpx 24rpx;
   background: #ffffff;
   border-radius: 24rpx;
-  padding: 20rpx 24rpx 10rpx 24rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.04);
+  padding: 32rpx 24rpx 20rpx 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+  border: 1rpx solid #F3E8FF;
 }
 .stat-item {
   display: inline-flex;
@@ -73,18 +162,40 @@
   align-items: flex-start;
   width: 25%;
   padding: 16rpx 8rpx;
+  box-sizing: border-box;
 }
-.stat-num { font-size: 36rpx; font-weight: 700; color: #2b2b2b;
+.stat-num { 
+  font-size: 40rpx; 
+  font-weight: 600; 
+  color: #6B5B95;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
-.stat-row { display: flex; align-items: center; gap: 8rpx; margin-top: 6rpx;
+.stat-row { 
+  display: flex; 
+  align-items: center; 
+  gap: 6rpx; 
+  margin-top: 8rpx;
 }
-.stat-icon { font-size: 24rpx; color: #ff8fb3;
+.stat-icon { 
+  font-size: 26rpx; 
+  opacity: 0.8;
 }
-.stat-label { font-size: 24rpx; color: #666;
+.stat-label { 
+  font-size: 26rpx; 
+  color: #9B8FB8; 
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
-.stats-footer { margin-top: 8rpx;
+.stats-footer { 
+  margin-top: 16rpx; 
+  padding-top: 16rpx;
+  border-top: 1rpx solid #F3E8FF;
 }
-.update { font-size: 22rpx; color: #9aa0a6;
+.update { 
+  font-size: 24rpx; 
+  color: #9B8FB8; 
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 /* 菜单列表 */
@@ -93,24 +204,52 @@
   background: #ffffff;
   border-radius: 24rpx;
   overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+  border: 1rpx solid #F3E8FF;
 }
 .menu-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28rpx 24rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  padding: 32rpx 24rpx;
+  border-bottom: 1rpx solid #F3E8FF;
+  transition: background-color 0.2s;
 }
-.menu-item:last-child { border-bottom: none;
+.menu-item:last-child { 
+  border-bottom: none;
 }
-.menu-left { display: flex; align-items: center; gap: 16rpx;
+.menu-item:active {
+  background-color: rgba(248, 240, 252, 0.5);
+  opacity: 0.8;
+}
+.menu-left { 
+  display: flex; 
+  align-items: center; 
+  gap: 20rpx; 
+  flex: 1;
 }
 .menu-icon {
-  width: 40rpx; height: 40rpx; border-radius: 20rpx;
-  background: #fdf2f8; color: #ff8fb3; font-size: 24rpx;
-  display: flex; align-items: center; justify-content: center;
+  width: 48rpx; 
+  height: 48rpx; 
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, #fdf2f8 0%, #F3E8FF 100%); 
+  color: #FF8FB3; 
+  font-size: 28rpx;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2rpx 8rpx rgba(255,143,179,0.15);
 }
-.menu-text { font-size: 28rpx; color: #333;
+.menu-text { 
+  font-size: 28rpx; 
+  color: #6B5B95; 
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
-.menu-arrow { font-size: 34rpx; color: #b6b6b6;
+.menu-arrow { 
+  font-size: 36rpx; 
+  color: #DCC7E1; 
+  font-weight: 300;
+  flex-shrink: 0;
 }

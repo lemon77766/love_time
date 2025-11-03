@@ -432,7 +432,7 @@ export default {
 .app-name {
   font-size: 48rpx;
   font-weight: 700;
-  color: #ff8fb3;
+  color: #6B5B95;
   margin-bottom: 16rpx;
 }
 
@@ -489,14 +489,14 @@ export default {
 /* 登录按钮 */
 .login-btn, .enter-btn, .guest-btn {
   width: 100%;
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #C084FC;
   border-radius: 48rpx;
   padding: 28rpx 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12rpx;
-  box-shadow: 0 8rpx 20rpx rgba(255, 143, 179, 0.35);
+  box-shadow: 0 8rpx 20rpx rgba(192, 132, 252, 0.3);
   margin-bottom: 20rpx;
   border: none;
   color: #ffffff;
@@ -511,14 +511,14 @@ export default {
 }
 
 .enter-btn {
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
-  box-shadow: 0 8rpx 20rpx rgba(255, 143, 179, 0.35);
+  background: #C084FC;
+  box-shadow: 0 8rpx 20rpx rgba(192, 132, 252, 0.3);
 }
 
 /* 游客登录按钮样式 */
 .guest-btn {
-  background: #ff9800;
-  box-shadow: 0 8rpx 20rpx rgba(255, 152, 0, 0.25);
+  background: #D8B4FE;
+  box-shadow: 0 8rpx 20rpx rgba(216, 180, 254, 0.3);
 }
 
 .btn-icon {
@@ -551,7 +551,7 @@ export default {
 
 .link-text {
   font-size: 22rpx;
-  color: #ff8fb3;
+  color: #C084FC;
 }
 
 /* 资料确认伹媗 */
@@ -685,8 +685,8 @@ export default {
 }
 
 .option-radio.active {
-  border-color: #ff8fb3;
-  background: #ff8fb3;
+  border-color: #C084FC;
+  background: #C084FC;
 }
 
 .option-radio.active::after {
@@ -728,8 +728,8 @@ export default {
 }
 
 .checkbox.checked {
-  background: #ff8fb3;
-  border-color: #ff8fb3;
+  background: #C084FC;
+  border-color: #C084FC;
 }
 
 .checkbox.checked::after {
@@ -814,13 +814,13 @@ export default {
 .btn-confirm {
   flex: 1;
   padding: 16rpx;
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #C084FC;
   border-radius: 24rpx;
   border: none;
   font-size: 28rpx;
   color: #fff;
   font-weight: 600;
-  box-shadow: 0 4rpx 12rpx rgba(255, 143, 179, 0.4);
+  box-shadow: 0 4rpx 12rpx rgba(192, 132, 252, 0.3);
 }
 
 .btn-confirm:active {

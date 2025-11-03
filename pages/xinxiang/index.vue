@@ -1,5 +1,23 @@
 <template>
-  <view class="xinxiang-page">
+  <view class="xinxiang-page" :style="{ paddingTop: containerPaddingTop }">
+    <!-- 自定义导航栏 -->
+    <view class="custom-navbar">
+      <!-- 渐变背景 -->
+      <view class="navbar-gradient-bg"></view>
+      <!-- 状态栏占位 -->
+      <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
+      <!-- 导航栏内容 -->
+      <view class="navbar-content" :style="{ height: navBarHeight + 'px' }">
+        <view class="navbar-left" @click="goBack">
+          <text class="back-icon">←</text>
+        </view>
+        <view class="navbar-title">
+          <text class="title-text">未来情书</text>
+        </view>
+        <view class="navbar-right"></view>
+      </view>
+    </view>
+    
     <!-- 背景图片铺满整个屏幕 -->
     <image class="background-image" src="/static/xinxiang/1.jpg" mode="aspectFill"></image>
     
@@ -20,8 +38,11 @@
 
       <!-- 底部前进按钮 -->
       <view class="bottom-action">
-        <view class="arrow-button" @click="createLetter">
-          <text class="arrow-icon">→</text>
+        <view class="action-content" @click="createLetter">
+          <text class="action-text">下一步</text>
+          <view class="arrow-button">
+            <text class="arrow-icon">→</text>
+          </view>
         </view>
       </view>
     </view>
@@ -31,9 +52,38 @@
 <script>
 export default {
   data() {
-    return {};
+    return {
+      statusBarHeight: 0,
+      navBarHeight: 44,
+      screenWidth: 375
+    };
+  },
+  computed: {
+    containerPaddingTop() {
+      const totalHeightPx = this.statusBarHeight + this.navBarHeight;
+      const pxToRpx = 750 / this.screenWidth;
+      const totalHeightRpx = totalHeightPx * pxToRpx;
+      return totalHeightRpx + 'rpx';
+    }
+  },
+  mounted() {
+    this.getSystemInfo();
   },
   methods: {
+    goBack() {
+      uni.navigateBack();
+    },
+    getSystemInfo() {
+      const systemInfo = uni.getSystemInfoSync();
+      this.statusBarHeight = systemInfo.statusBarHeight || 0;
+      this.screenWidth = systemInfo.windowWidth || 375;
+      // #ifdef MP-WEIXIN
+      this.navBarHeight = 44;
+      // #endif
+      // #ifdef H5
+      this.navBarHeight = 44;
+      // #endif
+    },
     openHistory() {
       uni.navigateTo({ url: '/pages/xinxiang/history' });
     },
@@ -46,9 +96,90 @@ export default {
 
 <style>
 .xinxiang-page {
-  min-height: 100vh;
+  height: 100vh;
   position: relative;
   overflow: hidden;
+  touch-action: none;
+}
+
+/* 自定义导航栏样式 */
+.custom-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background-color: #F8F0FC;
+  overflow: hidden;
+}
+
+.navbar-gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200%;
+  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+}
+
+.status-bar {
+  width: 100%;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+.navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30rpx;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+
+.navbar-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.title-text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #6B5B95;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.navbar-left {
+  width: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  font-size: 50rpx;
+  font-weight: 600;
+  color: #6B5B95;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.back-icon:active {
+  opacity: 0.6;
+}
+
+.navbar-right {
+  width: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 背景图片铺满屏幕 */
@@ -65,7 +196,8 @@ export default {
 .content-layer {
   position: relative;
   z-index: 1;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* 顶部订单记录 */
@@ -99,7 +231,7 @@ export default {
 /* 文字描述 */
 .text-container {
   position: absolute;
-  bottom: 280rpx;
+  bottom: 480rpx;
   left: 0;
   right: 0;
   display: flex;
@@ -121,11 +253,26 @@ export default {
 /* 底部前进按钮 */
 .bottom-action {
   position: absolute;
-  bottom: 100rpx;
+  bottom: 280rpx;
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
+}
+
+.action-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.action-text {
+  font-size: 28rpx;
+  color: #ffffff;
+  letter-spacing: 2rpx;
+  text-shadow: 0 4rpx 12rpx rgba(0,0,0,0.8);
+  font-weight: 500;
 }
 
 .arrow-button {
@@ -143,6 +290,13 @@ export default {
 }
 
 .arrow-button:active {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(0.95);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.8),
+              0 2rpx 8rpx rgba(0, 0, 0, 0.5);
+}
+
+.action-content:active .arrow-button {
   background: rgba(255, 255, 255, 0.1);
   transform: scale(0.95);
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.8),

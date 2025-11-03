@@ -94,7 +94,7 @@
 .app-name.data-v-d08ef7d4 {
   font-size: 48rpx;
   font-weight: 700;
-  color: #ff8fb3;
+  color: #6B5B95;
   margin-bottom: 16rpx;
 }
 .app-slogan.data-v-d08ef7d4 {
@@ -147,14 +147,14 @@
 /* 登录按钮 */
 .login-btn.data-v-d08ef7d4, .enter-btn.data-v-d08ef7d4, .guest-btn.data-v-d08ef7d4 {
   width: 100%;
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #C084FC;
   border-radius: 48rpx;
   padding: 28rpx 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12rpx;
-  box-shadow: 0 8rpx 20rpx rgba(255, 143, 179, 0.35);
+  box-shadow: 0 8rpx 20rpx rgba(192, 132, 252, 0.3);
   margin-bottom: 20rpx;
   border: none;
   color: #ffffff;
@@ -166,14 +166,14 @@
   opacity: 0.85;
 }
 .enter-btn.data-v-d08ef7d4 {
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
-  box-shadow: 0 8rpx 20rpx rgba(255, 143, 179, 0.35);
+  background: #C084FC;
+  box-shadow: 0 8rpx 20rpx rgba(192, 132, 252, 0.3);
 }
 
 /* 游客登录按钮样式 */
 .guest-btn.data-v-d08ef7d4 {
-  background: #ff9800;
-  box-shadow: 0 8rpx 20rpx rgba(255, 152, 0, 0.25);
+  background: #D8B4FE;
+  box-shadow: 0 8rpx 20rpx rgba(216, 180, 254, 0.3);
 }
 .btn-icon.data-v-d08ef7d4 {
   font-size: 32rpx;
@@ -203,7 +203,7 @@
 }
 .link-text.data-v-d08ef7d4 {
   font-size: 22rpx;
-  color: #ff8fb3;
+  color: #C084FC;
 }
 
 /* 资料确认伹媗 */
@@ -322,8 +322,8 @@
   position: relative;
 }
 .option-radio.active.data-v-d08ef7d4 {
-  border-color: #ff8fb3;
-  background: #ff8fb3;
+  border-color: #C084FC;
+  background: #C084FC;
 }
 .option-radio.active.data-v-d08ef7d4::after {
   content: "";
@@ -361,8 +361,8 @@
   position: relative;
 }
 .checkbox.checked.data-v-d08ef7d4 {
-  background: #ff8fb3;
-  border-color: #ff8fb3;
+  background: #C084FC;
+  border-color: #C084FC;
 }
 .checkbox.checked.data-v-d08ef7d4::after {
   content: "";
@@ -437,13 +437,13 @@
 .btn-confirm.data-v-d08ef7d4 {
   flex: 1;
   padding: 16rpx;
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #C084FC;
   border-radius: 24rpx;
   border: none;
   font-size: 28rpx;
   color: #fff;
   font-weight: 600;
-  box-shadow: 0 4rpx 12rpx rgba(255, 143, 179, 0.4);
+  box-shadow: 0 4rpx 12rpx rgba(192, 132, 252, 0.3);
 }
 .btn-confirm.data-v-d08ef7d4:active {
   opacity: 0.9;

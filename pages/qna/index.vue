@@ -1,8 +1,25 @@
 <template>
-  <view class="qna-page">
+  <view class="qna-page" :style="{ paddingTop: containerPaddingTop }">
+    <!-- 自定义导航栏 -->
+    <view class="custom-navbar">
+      <!-- 渐变背景 -->
+      <view class="navbar-gradient-bg"></view>
+      <!-- 状态栏占位 -->
+      <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
+      <!-- 导航栏内容 -->
+      <view class="navbar-content" :style="{ height: navBarHeight + 'px' }">
+        <view class="navbar-left" @click="goBack">
+          <text class="back-icon">←</text>
+        </view>
+        <view class="navbar-title">
+          <text class="title-text">甜蜜问答</text>
+        </view>
+        <view class="navbar-right"></view>
+      </view>
+    </view>
+
     <!-- 顶部标题 -->
     <view class="header">
-      <text class="title">甜蜜问答</text>
       <text class="subtitle">用问题和答案更了解彼此</text>
     </view>
 
@@ -112,6 +129,7 @@ import {
 
 export default {
   async onLoad(options) {
+    this.getSystemInfo();
     // 检查登录状态和token
     const loginInfo = uni.getStorageSync('login_info');
     if (!loginInfo || !loginInfo.token) {
@@ -151,6 +169,9 @@ export default {
   },
   data() {
     return {
+      statusBarHeight: 0,
+      navBarHeight: 44,
+      screenWidth: 375,
       defaultQuestions: [
         { id: 1, text: '我们第一次约会的地点是哪里？', isDefault: true },
         { id: 2, text: '你最喜欢我做的哪道菜？', isDefault: true },
@@ -169,6 +190,12 @@ export default {
     };
   },
   computed: {
+    containerPaddingTop() {
+      const totalHeightPx = this.statusBarHeight + this.navBarHeight;
+      const pxToRpx = 750 / this.screenWidth;
+      const totalHeightRpx = totalHeightPx * pxToRpx;
+      return totalHeightRpx + 20 + 'rpx';
+    },
     questions() {
       // 过滤掉无效的问题对象，确保每个问题都有 id 和 text
       const validDefaultQuestions = (this.defaultQuestions || []).filter(q => q && q.id != null);
@@ -234,6 +261,20 @@ export default {
     // onLoad 中已经加载，无需重复加载
   },
   methods: {
+    goBack() {
+      uni.navigateBack();
+    },
+    getSystemInfo() {
+      const systemInfo = uni.getSystemInfoSync();
+      this.statusBarHeight = systemInfo.statusBarHeight || 0;
+      this.screenWidth = systemInfo.windowWidth || 375;
+      // #ifdef MP-WEIXIN
+      this.navBarHeight = 44;
+      // #endif
+      // #ifdef H5
+      this.navBarHeight = 44;
+      // #endif
+    },
     // 保存历史记录到本地存储
     saveHistory() {
       try {
@@ -770,57 +811,327 @@ export default {
 </script>
 
 <style>
-.qna-page { min-height: 100vh; background: #f7f7f9; padding-bottom: 60rpx; }
+.qna-page { 
+  min-height: 100vh; 
+  background: #F8F0FC; 
+  padding-bottom: 60rpx; 
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
 .header { padding: 32rpx 24rpx 12rpx 24rpx; }
-.title { font-size: 36rpx; font-weight: 700; color: #2b2b2b; }
-.subtitle { margin-top: 6rpx; font-size: 24rpx; color: #7a7a7a; display: block; }
+/* 自定义导航栏样式 */
+.custom-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background-color: #F8F0FC;
+  overflow: hidden;
+}
+
+.navbar-gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200%;
+  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+}
+
+.status-bar {
+  width: 100%;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+.navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30rpx;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+
+.navbar-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.title-text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #6B5B95;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.navbar-left {
+  width: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  font-size: 50rpx;
+  font-weight: 600;
+  color: #6B5B95;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.back-icon:active {
+  opacity: 0.6;
+}
+
+.navbar-right {
+  width: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title { 
+  font-size: 34rpx; 
+  font-weight: 600; 
+  color: #6B5B95; 
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.subtitle { 
+  margin-top: 6rpx; 
+  font-size: 26rpx; 
+  color: #9B8FB8; 
+  display: block; 
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
 .header-actions { margin-top: 16rpx; }
-.btn-custom { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; border-radius: 24rpx; padding: 14rpx 28rpx; font-size: 26rpx; border: none; }
+.btn-custom { 
+  background: #DCC7E1; 
+  color: #ffffff; 
+  border-radius: 24rpx; 
+  padding: 14rpx 28rpx; 
+  font-size: 26rpx; 
+  border: none; 
+}
 
-.question-card { margin: 24rpx; background: #ffffff; border-radius: 24rpx; padding: 24rpx; box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.06); }
-.q-label { font-size: 24rpx; color: #9aa0a6; }
-.q-text { margin-top: 8rpx; font-size: 30rpx; color: #2b2b2b; font-weight: 600; }
+.question-card { 
+  margin: 24rpx; 
+  background: #ffffff; 
+  border-radius: 24rpx; 
+  padding: 24rpx; 
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06); 
+}
+.q-label { font-size: 24rpx; color: #9B8FB8; }
+.q-text { 
+  margin-top: 8rpx; 
+  font-size: 34rpx; 
+  color: #6B5B95; 
+  font-weight: 600; 
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
 
-.answer-card { margin: 0 24rpx; background: #ffffff; border-radius: 24rpx; padding: 24rpx; box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.06); }
-.a-label { font-size: 24rpx; color: #9aa0a6; }
-.a-input { margin-top: 12rpx; min-height: 100rpx; border: 1rpx solid #e6e6e6; border-radius: 16rpx; padding: 16rpx; font-size: 26rpx; }
+.answer-card { 
+  margin: 0 24rpx; 
+  background: #ffffff; 
+  border-radius: 24rpx; 
+  padding: 24rpx; 
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06); 
+}
+.a-label { 
+  font-size: 28rpx; 
+  color: #6B5B95; 
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.a-input { 
+  margin-top: 12rpx; 
+  min-height: 100rpx; 
+  border: 1rpx solid #F3E8FF; 
+  border-radius: 16rpx; 
+  padding: 16rpx; 
+  font-size: 26rpx; 
+  color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
 .actions { margin-top: 16rpx; display: flex; gap: 12rpx; }
-.btn { padding: 16rpx 26rpx; border-radius: 14rpx; font-size: 26rpx; }
-.btn.primary { background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%); color: #ffffff; }
-.btn.secondary { background: #f0f0f0; color: #333; }
+.btn { 
+  padding: 16rpx 26rpx; 
+  border-radius: 14rpx; 
+  font-size: 26rpx; 
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.btn.primary { 
+  background: #DCC7E1; 
+  color: #ffffff; 
+}
+.btn.secondary { 
+  background: #F3E8FF; 
+  color: #6B5B95; 
+}
 
-.partner-card { margin: 16rpx 24rpx; background: #ffffff; border-radius: 24rpx; padding: 24rpx; box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.06); }
-.p-label { font-size: 24rpx; color: #9aa0a6; }
-.p-text { margin-top: 8rpx; font-size: 28rpx; color: #2b2b2b; }
+.partner-card { 
+  margin: 16rpx 24rpx; 
+  background: #ffffff; 
+  border-radius: 24rpx; 
+  padding: 24rpx; 
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06); 
+}
+.p-label { 
+  font-size: 28rpx; 
+  color: #6B5B95; 
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.p-text { 
+  margin-top: 8rpx; 
+  font-size: 26rpx; 
+  color: #9B8FB8; 
+  font-weight: 400;
+  line-height: 1.8;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
 
-.floating { position: fixed; right: 24rpx; bottom: 120rpx; background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%); color: #ffffff; border-radius: 999rpx; padding: 16rpx 20rpx; display: flex; align-items: center; gap: 10rpx; box-shadow: 0 10rpx 24rpx rgba(255,143,179,0.4); z-index: 99; }
-.custom-floating { bottom: 200rpx; } /* 自定义问题按钮在历史按钮上面 */
+.floating { 
+  position: fixed; 
+  right: 24rpx; 
+  bottom: 120rpx; 
+  background: #DCC7E1; 
+  color: #ffffff; 
+  border-radius: 999rpx; 
+  padding: 16rpx 20rpx; 
+  display: flex; 
+  align-items: center; 
+  gap: 10rpx; 
+  box-shadow: 0 10rpx 24rpx rgba(220, 199, 225, 0.35); 
+  z-index: 99; 
+}
+.custom-floating { bottom: 200rpx; }
 .float-icon { font-size: 26rpx; }
 .float-text { font-size: 24rpx; }
 
-.modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; z-index: 100; }
-.modal { width: 88%; background: #ffffff; border-radius: 24rpx; padding: 24rpx; max-height: 80vh; display: flex; flex-direction: column; }
+.modal-mask { 
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0,0,0,0.35); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  z-index: 100; 
+}
+.modal { 
+  width: 88%; 
+  background: #ffffff; 
+  border-radius: 24rpx; 
+  padding: 24rpx; 
+  max-height: 80vh; 
+  display: flex; 
+  flex-direction: column; 
+}
 .modal.custom-modal { width: 92%; }
-.modal-title { font-size: 30rpx; font-weight: 700; color: #2b2b2b; margin-bottom: 16rpx; }
+.modal-title { 
+  font-size: 34rpx; 
+  font-weight: 600; 
+  color: #6B5B95; 
+  margin-bottom: 16rpx; 
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
 .history-list { max-height: 520rpx; margin-top: 12rpx; }
-.history-item { padding: 16rpx 0; border-bottom: 1rpx solid #f0f0f0; }
-.h-q { font-size: 26rpx; color: #333; }
-.h-me, .h-ta { font-size: 24rpx; color: #555; margin-top: 6rpx; }
-.h-time { font-size: 22rpx; color: #9aa0a6; margin-top: 6rpx; }
+.history-item { padding: 16rpx 0; border-bottom: 1rpx solid #F3E8FF; }
+.h-q { 
+  font-size: 26rpx; 
+  color: #6B5B95; 
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.h-me, .h-ta { 
+  font-size: 26rpx; 
+  color: #9B8FB8; 
+  margin-top: 6rpx; 
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.h-time { 
+  font-size: 24rpx; 
+  color: #9B8FB8; 
+  margin-top: 6rpx; 
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
 .modal-actions { margin-top: 14rpx; display: flex; justify-content: flex-end; gap: 12rpx; }
 
 /* 自定义问题弹窗样式 */
 .add-question { display: flex; gap: 12rpx; align-items: flex-start; margin-bottom: 16rpx; }
-.q-input { flex: 1; min-height: 80rpx; border: 1rpx solid #e6e6e6; border-radius: 12rpx; padding: 12rpx; font-size: 26rpx; }
+.q-input { 
+  flex: 1; 
+  min-height: 80rpx; 
+  border: 1rpx solid #F3E8FF; 
+  border-radius: 12rpx; 
+  padding: 12rpx; 
+  font-size: 26rpx; 
+  color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
 .btn.small { padding: 12rpx 20rpx; font-size: 24rpx; white-space: nowrap; }
 
 .question-list { flex: 1; overflow-y: auto; }
-.section-title { font-size: 24rpx; color: #9aa0a6; margin-bottom: 12rpx; padding-left: 4rpx; }
-.question-item { display: flex; align-items: flex-start; padding: 14rpx 12rpx; background: #f7f7f9; border-radius: 12rpx; margin-bottom: 8rpx; }
-.question-item.custom { background: linear-gradient(135deg, #f5e6f0 0%, #fdf2f8 100%); } /* 改为淡粉紫色渐变 */
-.q-num { font-size: 24rpx; color: #ff8fb3; font-weight: 600; margin-right: 8rpx; flex-shrink: 0; }
-.q-content { flex: 1; font-size: 26rpx; color: #2b2b2b; word-break: break-all; }
-.q-delete { font-size: 24rpx; color: #ff6b6b; margin-left: 12rpx; flex-shrink: 0; padding: 4rpx 8rpx; }
+.section-title { 
+  font-size: 26rpx; 
+  color: #6B5B95; 
+  margin-bottom: 12rpx; 
+  padding-left: 4rpx; 
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.question-item { 
+  display: flex; 
+  align-items: flex-start; 
+  padding: 14rpx 12rpx; 
+  background: #F8F0FC; 
+  border-radius: 12rpx; 
+  margin-bottom: 8rpx; 
+  border: 1rpx solid #F3E8FF;
+}
+.question-item.custom { 
+  background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%); 
+  border: 1rpx solid #D8B4FE;
+}
+.q-num { 
+  font-size: 24rpx; 
+  color: #DCC7E1; 
+  font-weight: 600; 
+  margin-right: 8rpx; 
+  flex-shrink: 0; 
+}
+.q-content { 
+  flex: 1; 
+  font-size: 26rpx; 
+  color: #6B5B95; 
+  word-break: break-all; 
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.q-delete { 
+  font-size: 24rpx; 
+  color: #ff6b6b; 
+  margin-left: 12rpx; 
+  flex-shrink: 0; 
+  padding: 4rpx 8rpx; 
+}
 
-.empty-hint { padding: 32rpx; text-align: center; color: #9aa0a6; font-size: 24rpx; }
+.empty-hint { 
+  padding: 32rpx; 
+  text-align: center; 
+  color: #9B8FB8; 
+  font-size: 26rpx; 
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
 </style>

@@ -1,5 +1,23 @@
 <template>
-  <view class="hundred-page">
+  <view class="hundred-page" :style="{ paddingTop: containerPaddingTop }">
+    <!-- 自定义导航栏 -->
+    <view class="custom-navbar">
+      <!-- 渐变背景 -->
+      <view class="navbar-gradient-bg"></view>
+      <!-- 状态栏占位 -->
+      <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
+      <!-- 导航栏内容 -->
+      <view class="navbar-content" :style="{ height: navBarHeight + 'px' }">
+        <view class="navbar-left" @click="goBack">
+          <text class="back-icon">←</text>
+        </view>
+        <view class="navbar-title">
+          <text class="title-text">一百件小事</text>
+        </view>
+        <view class="navbar-right"></view>
+      </view>
+    </view>
+    
     <!-- 顶部背景图 -->
     <image class="top-bg" src="/static/hundred/shangmian.jpg" mode="aspectFill"></image>
     
@@ -90,9 +108,15 @@
 </template>
 
 <script>
+import { getTasks, addTask, deleteTask, completeTask, favoriteTask } from '@/api/hundred.js';
+import config from '@/utils/config.js';
+
 export default {
   data() {
     return {
+      statusBarHeight: 0,
+      navBarHeight: 44,
+      screenWidth: 375,
       items: [],
       showAdd: false,
       showEdit: false,
@@ -100,6 +124,7 @@ export default {
       editForm: null,
       filterMode: 'all', // 'all', 'done', 'todo', 'favorite'
       showDropdown: false,
+      loading: false, // 加载状态
       filterOptions: [
         { label: '全部', value: 'all' },
         { label: '待完成', value: 'todo' },
@@ -109,6 +134,12 @@ export default {
     };
   },
   computed: {
+    containerPaddingTop() {
+      const totalHeightPx = this.statusBarHeight + this.navBarHeight;
+      const pxToRpx = 750 / this.screenWidth;
+      const totalHeightRpx = totalHeightPx * pxToRpx;
+      return totalHeightRpx + 'rpx';
+    },
     doneCount() {
       return this.items.filter(item => item.done).length;
     },
@@ -130,35 +161,204 @@ export default {
     }
   },
   mounted() {
-    this.loadItems();
-    if (this.items.length === 0) {
-      // 预置示例
-      this.items = [
-        { id: 1, text: '一起看日出', image: '', done: false, favorite: false },
-        { id: 2, text: '一起看日落', image: '', done: false, favorite: false },
-        { id: 3, text: '一起去教堂', image: '', done: false, favorite: false },
-        { id: 4, text: '一起看星星', image: '', done: false, favorite: false },
-        { id: 5, text: '一起看电影', image: '', done: false, favorite: false },
-        { id: 6, text: '一起牵手逛街', image: '', done: false, favorite: false },
-        { id: 7, text: '一起做饭', image: '', done: false, favorite: false },
-        { id: 8, text: '一起逛超市', image: '', done: false, favorite: false },
-        { id: 9, text: '一起逛家', image: '', done: false, favorite: false },
-        { id: 10, text: '一起看相声', image: '', done: false, favorite: false },
-        { id: 11, text: '一起打黑', image: '', done: false, favorite: false },
-        { id: 12, text: '一起躺雨', image: '', done: false, favorite: false }
-      ];
-      this.saveItems();
-    }
+    this.getSystemInfo();
+    this.loadItemsFromBackend();
   },
   methods: {
-    loadItems() {
+    goBack() {
+      uni.navigateBack();
+    },
+    getSystemInfo() {
+      // 使用新的 API 替代已弃用的 getSystemInfoSync
+      // #ifdef MP-WEIXIN
+      try {
+        // 尝试使用新 API
+        const windowInfo = wx.getWindowInfo && wx.getWindowInfo();
+        const deviceInfo = wx.getDeviceInfo && wx.getDeviceInfo();
+        
+        if (windowInfo && deviceInfo) {
+          this.statusBarHeight = windowInfo.statusBarHeight || 0;
+          this.screenWidth = windowInfo.windowWidth || 375;
+        } else {
+          // 降级到旧 API
+          const sysInfo = uni.getSystemInfoSync();
+          this.statusBarHeight = sysInfo.statusBarHeight || 0;
+          this.screenWidth = sysInfo.windowWidth || 375;
+        }
+      } catch (e) {
+        // 如果新 API 不支持，降级到旧 API
+        const sysInfo = uni.getSystemInfoSync();
+        this.statusBarHeight = sysInfo.statusBarHeight || 0;
+        this.screenWidth = sysInfo.windowWidth || 375;
+      }
+      this.navBarHeight = 44;
+      // #endif
+      // #ifdef H5
+      const sysInfoH5 = uni.getSystemInfoSync();
+      this.statusBarHeight = sysInfoH5.statusBarHeight || 0;
+      this.screenWidth = sysInfoH5.windowWidth || 375;
+      this.navBarHeight = 44;
+      // #endif
+      // #ifndef MP-WEIXIN || H5
+      const sysInfoOther = uni.getSystemInfoSync();
+      this.statusBarHeight = sysInfoOther.statusBarHeight || 0;
+      this.screenWidth = sysInfoOther.windowWidth || 375;
+      this.navBarHeight = 44;
+      // #endif
+    },
+    /**
+     * 从后端加载任务列表
+     * 包含详细的前后端连接日志
+     */
+    async loadItemsFromBackend() {
+      console.log('🚀 [一百件事] ========== 开始加载任务列表 ==========');
+      console.log('📱 [前端] 页面初始化，准备从后端获取数据');
+      console.log('⏰ [时间]', new Date().toLocaleString());
+      
+      this.loading = true;
+      
+      try {
+        console.log('📡 [前端] 调用 getTasks() API');
+        const response = await getTasks();
+        
+        console.log('✅ [前端] 收到后端响应');
+        console.log('📦 [响应] 原始数据:', JSON.stringify(response, null, 2));
+        
+        // 处理响应数据
+        let tasks = [];
+        if (response && response.tasks) {
+          tasks = response.tasks;
+          console.log(`📊 [数据统计] 后端返回 ${tasks.length} 个任务`);
+        } else if (Array.isArray(response)) {
+          tasks = response;
+          console.log(`📊 [数据统计] 后端返回数组格式，共 ${tasks.length} 个任务`);
+        } else {
+          console.warn('⚠️ [警告] 后端返回数据格式异常，使用空数组');
+          tasks = [];
+        }
+        
+        // 转换数据格式：后端格式 -> 前端格式
+        console.log('🔄 [数据转换] 开始转换数据格式...');
+        this.items = tasks.map(task => this.convertBackendToFrontend(task));
+        console.log(`✅ [数据转换] 转换完成，共 ${this.items.length} 个任务`);
+        
+        // 保存到本地缓存（作为备份）
+        this.saveItemsToLocal();
+        
+        console.log('✅ [一百件事] ========== 任务列表加载完成 ==========');
+        console.log(`📊 [最终结果] 显示 ${this.items.length} 个任务`);
+        console.log(`   - 已完成: ${this.items.filter(i => i.done).length} 个`);
+        console.log(`   - 待完成: ${this.items.filter(i => !i.done).length} 个`);
+        console.log(`   - 已收藏: ${this.items.filter(i => i.favorite).length} 个`);
+        
+      } catch (error) {
+        console.error('❌ [一百件事] ========== 加载任务列表失败 ==========');
+        console.error('🔴 [错误] 详细信息:', error);
+        
+        // 分析错误类型并给出针对性提示
+        const statusCode = error.statusCode || error.data?.statusCode;
+        const errorMsg = error.message || error.errMsg || '';
+        const errorData = error.data || {};
+        
+        // 检查是否是HTML错误页面（通常是404）
+        const isHtmlError = typeof errorData === 'string' && errorData.includes('<!doctype html>');
+        
+        if (statusCode === 404 || errorMsg.includes('404') || isHtmlError) {
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.error('❌ [错误类型] 接口不存在 (404)');
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.error('📍 [请求URL]', `${config.baseURL}${config.API.CHALLENGE.LIST}`);
+          console.error('💡 [解决方案]');
+          console.error('    1. 检查后端是否已实现此接口');
+          console.error('    2. 确认接口路径是否正确（当前: /api/challenge/tasks）');
+          console.error('    3. 联系后端开发确认接口是否已部署');
+          console.error('    4. 如果是路径问题，可能需要修改 utils/config.js 中的配置');
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        } else if (statusCode === 401 || errorMsg.includes('401')) {
+          console.error('🔐 [错误类型] 未授权 (401)');
+          console.error('💡 [解决方案] Token可能已过期，请重新登录');
+        } else if (errorMsg.includes('timeout')) {
+          console.error('⏱️ [错误类型] 请求超时');
+          console.error('💡 [解决方案] 检查网络连接或后端服务是否正常');
+        } else {
+          console.error('📋 [错误] 错误消息:', errorMsg || '未知错误');
+          console.error('📍 [错误] 可能原因:');
+          console.error('   1. 后端服务未启动');
+          console.error('   2. 网络连接问题');
+          console.error('   3. Token已过期');
+          console.error('   4. 接口路径错误');
+        }
+        
+        // 尝试从本地缓存加载
+        console.log('🔄 [降级] 尝试从本地缓存加载数据...');
+        this.loadItemsFromLocal();
+        
+        uni.showToast({
+          title: '加载失败，已使用本地数据',
+          icon: 'none',
+          duration: 2000
+        });
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    /**
+     * 数据格式转换：后端格式 -> 前端格式
+     * 后端: { id, taskName, status, photoUrl, isFavorited, ... }
+     * 前端: { id, text, done, image, favorite, ... }
+     */
+    convertBackendToFrontend(task) {
+      return {
+        id: task.id,
+        text: task.taskName || task.taskDescription || '',
+        done: task.status === 'completed',
+        image: task.photoUrl || '',
+        favorite: task.isFavorited || false,
+        category: task.category || 'preset',
+        note: task.note || '',
+        completedAt: task.completedAt || null
+      };
+    },
+    
+    /**
+     * 数据格式转换：前端格式 -> 后端格式
+     */
+    convertFrontendToBackend(item) {
+      return {
+        taskId: item.id,
+        taskName: item.text,
+        completed: item.done,
+        photoUrl: item.image || null,
+        favorited: item.favorite
+      };
+    },
+    
+    /**
+     * 从本地缓存加载（降级方案）
+     */
+    loadItemsFromLocal() {
+      console.log('💾 [本地缓存] 从本地存储加载数据...');
       try {
         const data = uni.getStorageSync('hundred_items');
         this.items = Array.isArray(data) ? data : [];
-      } catch (e) { this.items = []; }
+        console.log(`✅ [本地缓存] 加载了 ${this.items.length} 个任务`);
+      } catch (e) {
+        console.error('❌ [本地缓存] 加载失败:', e);
+        this.items = [];
+      }
     },
-    saveItems() {
-      try { uni.setStorageSync('hundred_items', this.items); } catch (e) {}
+    
+    /**
+     * 保存到本地缓存（作为备份）
+     */
+    saveItemsToLocal() {
+      try {
+        uni.setStorageSync('hundred_items', this.items);
+        console.log('💾 [本地缓存] 已保存到本地存储');
+      } catch (e) {
+        console.error('❌ [本地缓存] 保存失败:', e);
+      }
     },
     toggleDropdown() {
       this.showDropdown = !this.showDropdown;
@@ -180,31 +380,93 @@ export default {
         duration: 1500
       });
     },
+    /**
+     * 上传图片
+     * 选择图片后，更新任务完成状态并同步到后端
+     */
     uploadImage(item) {
+      console.log('📸 [一百件事] ========== 开始上传图片 ==========');
+      console.log('📋 [任务] ID:', item.id, '名称:', item.text);
+      
       uni.chooseImage({
         count: 1,
         sizeType: ['compressed'],
         sourceType: ['album', 'camera'],
-        success: (res) => {
+        success: async (res) => {
           const tempFilePath = res.tempFilePaths[0];
+          console.log('✅ [图片选择] 成功，临时路径:', tempFilePath);
+          
+          // 更新本地显示
           item.image = tempFilePath;
-          this.saveItems();
-          uni.showToast({ title: '图片已上传', icon: 'success' });
+          
+          // 同步到后端：标记任务完成并上传图片
+          try {
+            console.log('📡 [后端] 同步图片到服务器...');
+            await this.syncTaskComplete(item, true, tempFilePath);
+            console.log('✅ [后端] 图片同步成功');
+            uni.showToast({ title: '图片已上传', icon: 'success' });
+          } catch (error) {
+            console.error('❌ [后端] 图片同步失败:', error);
+            // 即使后端失败，也保留本地图片
+            uni.showToast({ title: '图片已保存（未同步）', icon: 'none' });
+          }
+          
+          // 保存到本地缓存
+          this.saveItemsToLocal();
         },
         fail: (err) => {
-          console.error('选择图片失败:', err);
+          // 如果是用户取消操作，不显示错误提示
+          if (err && err.errMsg && err.errMsg.includes('cancel')) {
+            console.log('ℹ️ [图片选择] 用户取消操作');
+            return;
+          }
+          // 其他错误才显示提示
+          console.error('❌ [图片选择] 失败:', err);
           uni.showToast({ title: '上传失败', icon: 'none' });
         }
       });
     },
-    toggleFavorite(item) {
-      item.favorite = !item.favorite;
-      this.saveItems();
-      uni.showToast({ 
-        title: item.favorite ? '已收藏' : '取消收藏', 
-        icon: 'none',
-        duration: 1500
-      });
+    /**
+     * 切换收藏状态
+     * 同步到后端
+     */
+    async toggleFavorite(item) {
+      const newFavoriteState = !item.favorite;
+      const action = newFavoriteState ? '收藏' : '取消收藏';
+      
+      console.log(`⭐ [一百件事] ========== ${action}任务 ==========`);
+      console.log('📋 [任务] ID:', item.id, '名称:', item.text);
+      console.log('🔄 [状态] 当前:', item.favorite ? '已收藏' : '未收藏', '→ 新状态:', newFavoriteState ? '已收藏' : '未收藏');
+      
+      // 先更新本地状态（乐观更新）
+      item.favorite = newFavoriteState;
+      this.saveItemsToLocal();
+      
+      try {
+        console.log('📡 [前端] 调用 favoriteTask() API');
+        await favoriteTask({
+          taskId: item.id,
+          favorited: newFavoriteState
+        });
+        
+        console.log(`✅ [后端] ${action}任务成功`);
+        uni.showToast({ 
+          title: newFavoriteState ? '已收藏' : '取消收藏', 
+          icon: 'none',
+          duration: 1500
+        });
+      } catch (error) {
+        console.error(`❌ [后端] ${action}任务失败:`, error);
+        // 回滚状态
+        item.favorite = !newFavoriteState;
+        this.saveItemsToLocal();
+        
+        uni.showToast({
+          title: `${action}失败，请重试`,
+          icon: 'none',
+          duration: 2000
+        });
+      }
     },
     openEdit(item) {
       this.editForm = { ...item };
@@ -214,17 +476,50 @@ export default {
       this.showEdit = false;
       this.editForm = null;
     },
-    saveEdit() {
+    /**
+     * 保存编辑
+     * 注意：后端可能不支持编辑预设任务，只支持自定义任务
+     */
+    async saveEdit() {
       if (!this.editForm.text) {
         uni.showToast({ title: '请输入内容', icon: 'none' });
         return;
       }
+      
+      console.log('✏️ [一百件事] ========== 保存编辑 ==========');
+      console.log('📋 [任务] ID:', this.editForm.id);
+      console.log('📝 [内容] 旧:', this.items.find(i => i.id === this.editForm.id)?.text);
+      console.log('📝 [内容] 新:', this.editForm.text);
+      
       const index = this.items.findIndex(item => item.id === this.editForm.id);
       if (index !== -1) {
+        const oldText = this.items[index].text;
+        
+        // 先更新本地
         this.items[index].text = this.editForm.text;
-        this.saveItems();
+        this.saveItemsToLocal();
         this.closeEdit();
-        uni.showToast({ title: '已保存', icon: 'success' });
+        
+        // 如果是自定义任务，同步到后端（预设任务可能不支持编辑）
+        const item = this.items[index];
+        if (item.category === 'custom') {
+          try {
+            console.log('📡 [前端] 自定义任务，尝试同步到后端...');
+            // 注意：后端可能没有编辑接口，这里先只保存本地
+            // 如果需要后端支持，可以添加编辑接口
+            console.log('ℹ️ [提示] 当前后端可能不支持编辑接口，仅保存到本地');
+            uni.showToast({ title: '已保存（仅本地）', icon: 'success' });
+          } catch (error) {
+            console.error('❌ [后端] 同步失败:', error);
+            // 回滚
+            this.items[index].text = oldText;
+            this.saveItemsToLocal();
+            uni.showToast({ title: '保存失败，请重试', icon: 'none' });
+          }
+        } else {
+          console.log('ℹ️ [提示] 预设任务仅保存到本地');
+          uni.showToast({ title: '已保存', icon: 'success' });
+        }
       }
     },
     confirmDelete(item) {
@@ -236,26 +531,153 @@ export default {
         success: (res) => { if (res.confirm) this.deleteItem(item); }
       });
     },
-    deleteItem(item) {
-      this.items = this.items.filter(it => it.id !== item.id);
-      this.saveItems();
-      uni.showToast({ title: '已删除', icon: 'none' });
+    /**
+     * 删除任务
+     * 同步到后端（仅自定义任务可删除）
+     */
+    async deleteItem(item) {
+      console.log('🗑️ [一百件事] ========== 删除任务 ==========');
+      console.log('📋 [任务] ID:', item.id, '名称:', item.text);
+      console.log('📂 [类型]', item.category || '未知');
+      
+      // 只有自定义任务可以删除
+      if (item.category === 'custom') {
+        try {
+          console.log('📡 [前端] 调用 deleteTask() API');
+          await deleteTask(item.id);
+          
+          console.log('✅ [后端] 删除任务成功');
+          
+          // 从列表中移除
+          this.items = this.items.filter(it => it.id !== item.id);
+          this.saveItemsToLocal();
+          
+          uni.showToast({ title: '已删除', icon: 'success' });
+        } catch (error) {
+          console.error('❌ [后端] 删除任务失败:', error);
+          uni.showToast({
+            title: '删除失败，请重试',
+            icon: 'none',
+            duration: 2000
+          });
+        }
+      } else {
+        console.log('⚠️ [警告] 预设任务不能删除');
+        uni.showToast({
+          title: '预设任务不能删除',
+          icon: 'none',
+          duration: 2000
+        });
+      }
     },
-    toggleDone(item) {
-      item.done = !item.done;
-      this.saveItems();
+    /**
+     * 切换完成状态
+     * 同步到后端
+     */
+    async toggleDone(item) {
+      const newDoneState = !item.done;
+      const action = newDoneState ? '标记完成' : '取消完成';
+      
+      console.log(`✅ [一百件事] ========== ${action}任务 ==========`);
+      console.log('📋 [任务] ID:', item.id, '名称:', item.text);
+      console.log('🔄 [状态] 当前:', item.done ? '已完成' : '未完成', '→ 新状态:', newDoneState ? '已完成' : '未完成');
+      
+      // 先更新本地状态（乐观更新）
+      item.done = newDoneState;
+      this.saveItemsToLocal();
+      
+      try {
+        await this.syncTaskComplete(item, newDoneState, item.image);
+        console.log(`✅ [后端] ${action}任务成功`);
+      } catch (error) {
+        console.error(`❌ [后端] ${action}任务失败:`, error);
+        // 回滚状态
+        item.done = !newDoneState;
+        this.saveItemsToLocal();
+        
+        uni.showToast({
+          title: `${action}失败，请重试`,
+          icon: 'none',
+          duration: 2000
+        });
+      }
+    },
+    
+    /**
+     * 同步任务完成状态到后端
+     */
+    async syncTaskComplete(item, completed, photoUrl = null) {
+      console.log('📡 [前端] 调用 completeTask() API');
+      console.log('📤 [参数] taskId:', item.id, 'completed:', completed, 'photoUrl:', photoUrl || '无');
+      
+      await completeTask({
+        taskId: item.id,
+        completed: completed,
+        photoUrl: photoUrl || null,
+        note: item.note || null
+      });
     },
     openCatalog() { this.showCatalog = true; },
     closeCatalog() { this.showCatalog = false; },
     openAdd() { this.showAdd = true; },
     closeAdd() { this.showAdd = false; this.form.text = ''; },
-    saveItem() {
-      if (!this.form.text) { uni.showToast({ title: '请输入内容', icon: 'none' }); return; }
-      const id = (this.items.reduce((m, it)=>Math.max(m, it.id||0), 0) + 1);
-      this.items.unshift({ id, text: this.form.text, icon: '', done: false, favorite: false });
-      this.saveItems();
-      this.closeAdd();
-      uni.showToast({ title: '已添加', icon: 'none' });
+    /**
+     * 保存新任务
+     * 同步到后端
+     */
+    async saveItem() {
+      if (!this.form.text) {
+        uni.showToast({ title: '请输入内容', icon: 'none' });
+        return;
+      }
+      
+      console.log('➕ [一百件事] ========== 添加新任务 ==========');
+      console.log('📝 [内容]', this.form.text);
+      
+      const taskData = {
+        taskName: this.form.text,
+        taskDescription: ''
+      };
+      
+      try {
+        console.log('📡 [前端] 调用 addTask() API');
+        const response = await addTask(taskData);
+        
+        console.log('✅ [后端] 添加任务成功');
+        console.log('📦 [响应]', response);
+        
+        // 添加新任务到列表
+        if (response && response.task) {
+          const newTask = this.convertBackendToFrontend(response.task);
+          this.items.unshift(newTask);
+          console.log('✅ [前端] 新任务已添加到列表，ID:', newTask.id);
+        } else {
+          // 如果后端没有返回完整任务对象，创建一个临时对象
+          console.warn('⚠️ [警告] 后端未返回完整任务对象，创建临时对象');
+          const maxId = this.items.reduce((m, it) => Math.max(m, it.id || 0), 0);
+          const tempTask = {
+            id: maxId + 1,
+            text: this.form.text,
+            done: false,
+            favorite: false,
+            image: '',
+            category: 'custom'
+          };
+          this.items.unshift(tempTask);
+        }
+        
+        this.saveItemsToLocal();
+        this.closeAdd();
+        uni.showToast({ title: '已添加', icon: 'success' });
+        
+      } catch (error) {
+        console.error('❌ [后端] 添加任务失败:', error);
+        uni.showToast({
+          title: '添加失败，请重试',
+          icon: 'none',
+          duration: 2000
+        });
+      }
     }
   }
 };
@@ -264,8 +686,89 @@ export default {
 <style>
 .hundred-page { 
   min-height: 100vh; 
-  background: linear-gradient(to bottom, #f5e6f0 0%, #fdf2f8 100%);
+  background: #F8F0FC;
   padding-bottom: 120rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+/* 自定义导航栏样式 */
+.custom-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background-color: #F8F0FC;
+  overflow: hidden;
+}
+
+.navbar-gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200%;
+  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+}
+
+.status-bar {
+  width: 100%;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+.navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30rpx;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+
+.navbar-title {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.title-text {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #6B5B95;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.navbar-left {
+  width: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  font-size: 50rpx;
+  font-weight: 600;
+  color: #6B5B95;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.back-icon:active {
+  opacity: 0.6;
+}
+
+.navbar-right {
+  width: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 顶部背景图 */
@@ -273,6 +776,7 @@ export default {
   width: 100%;
   height: 360rpx;
   display: block;
+  
 }
 
 /* 标题区域 */
@@ -282,11 +786,12 @@ export default {
 }
 
 .main-title {
-  font-size: 38rpx;
-  font-weight: 700;
-  color: #3a3a3a;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #6B5B95;
   display: block;
   margin-bottom: 20rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 /* 进度区域 */
@@ -306,40 +811,42 @@ export default {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #ffb3c6 0%, #ff8fb3 100%);
+  background: #DCC7E1;
   border-radius: 6rpx;
   transition: width 0.3s ease;
 }
 
 .progress-text {
-  font-size: 28rpx;
-  color: #5a5a5a;
+  font-size: 26rpx;
+  color: #6B5B95;
   font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .filter-dropdown {
   padding: 8rpx 16rpx;
   background: #ffffff;
-  border: 2rpx solid #ffb3c6;
+  border: 2rpx solid #F3E8FF;
   border-radius: 20rpx;
   font-size: 24rpx;
-  color: #5a5a5a;
+  color: #6B5B95;
   font-weight: 600;
-  box-shadow: 0 2rpx 8rpx rgba(224, 181, 216, 0.2);
+  box-shadow: 0 2rpx 8rpx rgba(220, 199, 225, 0.2);
   display: flex;
   align-items: center;
   gap: 8rpx;
   cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .filter-label {
   font-size: 24rpx;
-  color: #5a5a5a;
+  color: #6B5B95;
 }
 
 .dropdown-icon {
   font-size: 20rpx;
-  color: #ffb3c6;
+  color: #DCC7E1;
   transition: transform 0.3s ease;
 }
 
@@ -350,11 +857,11 @@ export default {
   top: 130rpx;
   background: #ffffff;
   border-radius: 16rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.12);
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
   overflow: hidden;
   z-index: 10;
   min-width: 160rpx;
-  border: 2rpx solid #ffb3c6;
+  border: 2rpx solid #F3E8FF;
 }
 
 .dropdown-item {
@@ -375,22 +882,23 @@ export default {
 }
 
 .dropdown-item.active {
-  background: #f5e6f0;
+  background: #F8F0FC;
 }
 
 .item-label {
   font-size: 26rpx;
-  color: #5a5a5a;
+  color: #6B5B95;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .dropdown-item.active .item-label {
-  color: #ff8fb3;
+  color: #DCC7E1;
   font-weight: 600;
 }
 
 .check-icon {
   font-size: 28rpx;
-  color: #ff8fb3;
+  color: #DCC7E1;
   font-weight: bold;
 }
 
@@ -403,14 +911,14 @@ export default {
 }
 
 .event-card {
-  background: #faf9f5;
+  background: #ffffff;
   border-radius: 16rpx;
   padding: 12rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.06);
-  border: 1rpx solid #e8e8e0;
+  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
+  border: 1rpx solid #F3E8FF;
   position: relative;
 }
 
@@ -431,7 +939,7 @@ export default {
 }
 
 .favorite-icon .favorite-active {
-  color: #ff8fb3;
+  color: #DCC7E1;
   transform: scale(1.1);
 }
 
@@ -439,7 +947,7 @@ export default {
   width: 100%;
   height: 160rpx;
   border-radius: 12rpx;
-  background: #e8e8e0;
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -454,7 +962,7 @@ export default {
 
 .placeholder-icon {
   font-size: 48rpx;
-  color: #b8b8a8;
+  color: #D8B4FE;
 }
 
 .event-title-wrapper {
@@ -464,10 +972,12 @@ export default {
 
 .event-title {
   font-size: 24rpx;
-  color: #5a5a5a;
+  color: #6B5B95;
   text-align: center;
   line-height: 1.4;
   display: block;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .event-title.done {
@@ -483,8 +993,8 @@ export default {
   width: 96rpx;
   height: 96rpx;
   border-radius: 48rpx;
-  background: #3a3a3a;
-  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.15);
+  background: #DCC7E1;
+  box-shadow: 0 10rpx 24rpx rgba(220, 199, 225, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -516,9 +1026,10 @@ export default {
 }
 
 .modal-title { 
-  font-size: 32rpx; 
-  font-weight: 700; 
-  color: #2b2b2b; 
+  font-size: 34rpx; 
+  font-weight: 600; 
+  color: #6B5B95; 
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .form { 
@@ -526,11 +1037,13 @@ export default {
 }
 
 .input { 
-  border: 1rpx solid #e5e5e5; 
+  border: 1rpx solid #F3E8FF; 
   border-radius: 12rpx; 
   padding: 16rpx; 
   font-size: 26rpx; 
   background: #ffffff; 
+  color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .modal-actions { 
@@ -545,16 +1058,17 @@ export default {
   border-radius: 12rpx; 
   font-size: 26rpx; 
   border: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .btn.primary {
-  background: linear-gradient(135deg, #ff8fb3 0%, #ff7aa0 100%);
+  background: #DCC7E1;
   color: #fff;
 }
 
 .btn.secondary { 
-  background: #f0f0f0; 
-  color: #333; 
+  background: #F3E8FF; 
+  color: #6B5B95; 
 }
 
 .btn.danger {

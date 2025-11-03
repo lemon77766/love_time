@@ -13,16 +13,17 @@
     "pages/xinxiang/create",
     "pages/xinxiang/history",
     "pages/profile/index",
-    "pages/trajectory/index"
+    "pages/trajectory/index",
+    "pages/invite/index"
   ],
   "window": {
     "navigationBarTextStyle": "black",
-    "navigationBarBackgroundColor": "#f0f0f0",
-    "backgroundColor": "#fff5f7"
+    "navigationBarBackgroundColor": "#F8F0FC",
+    "backgroundColor": "#F8F0FC"
   },
   "tabBar": {
-    "color": "#000000",
-    "selectedColor": "#ff8fb3",
+    "color": "#333333",
+    "selectedColor": "#C084FC",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [

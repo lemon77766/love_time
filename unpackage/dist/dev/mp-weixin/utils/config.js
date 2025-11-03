@@ -56,6 +56,30 @@ const devConfig = {
       // 标记完成/取消完成
       FAVORITE: "/api/challenge/favorite"
       // 收藏/取消收藏
+    },
+    COUPLE: {
+      INVITE_CREATE: "/api/couple/invite/create",
+      // 生成邀请码
+      INVITE_VALIDATE: "/api/couple/invite/validate",
+      // 验证邀请码
+      BIND_ACCEPT: "/api/couple/bind/accept",
+      // 接受邀请（绑定）
+      STATUS: "/api/couple/status",
+      // 查询绑定状态
+      UNBIND: "/api/couple/unbind"
+      // 解绑关系
+    },
+    HEART_WALL: {
+      // 项目相关接口
+      PROJECTS: "/api/heart-wall/projects",
+      // 获取用户所有项目、创建项目
+      PROJECT_DETAIL: "/api/heart-wall/projects",
+      // 获取/更新/删除项目详情 (需要拼接projectId)
+      // 照片相关接口
+      PHOTOS: "/api/heart-wall/photos",
+      // 上传照片、更新/删除照片 (需要拼接photoId)
+      NEXT_POSITION: "/api/heart-wall/next-position"
+      // 获取下一个可用位置
     }
   }
 };
