@@ -370,7 +370,7 @@ export default {
         
         // 401错误特殊处理
         if (e.statusCode === 401) {
-          uni.hideLoading();
+          // 不需要手动 hideLoading，finally 块会处理
           uni.showModal({
             title: '登录已过期',
             content: '您的登录已过期，请重新登录',
@@ -386,7 +386,7 @@ export default {
         
         // 404错误：后端接口未实现
         if (e.statusCode === 404) {
-          uni.hideLoading();
+          // 不需要手动 hideLoading，finally 块会处理
           console.warn('⚠️ 后端接口未实现: POST /api/qna/answer/submit');
           console.warn('💡 提示: 请联系后端开发人员实现该接口，或检查接口路径是否正确');
           
@@ -421,15 +421,19 @@ export default {
           return;
         }
         
-        uni.hideLoading();
+        // 不需要手动 hideLoading，finally 块会处理
         uni.showToast({ 
           title: `提交失败: ${e.statusCode || '网络错误'}`, 
           icon: 'none',
           duration: 3000
         });
       } finally {
-        // 确保loading关闭
-        uni.hideLoading();
+        // 确保loading关闭（使用 try-catch 避免重复隐藏导致的错误）
+        try {
+          uni.hideLoading();
+        } catch (e) {
+          // 忽略 hideLoading 错误（可能已经隐藏过了）
+        }
       }
     },
     nextQuestion() {
@@ -651,7 +655,7 @@ export default {
         
         // 401错误特殊处理
         if (e.statusCode === 401) {
-          uni.hideLoading();
+          // 不需要手动 hideLoading，finally 块会处理
           uni.showModal({
             title: '登录已过期',
             content: '您的登录已过期，请重新登录',
@@ -674,7 +678,12 @@ export default {
           this.customQuestions = []; 
         }
       } finally {
-        uni.hideLoading();
+        // 确保loading关闭（使用 try-catch 避免重复隐藏导致的错误）
+        try {
+          uni.hideLoading();
+        } catch (e) {
+          // 忽略 hideLoading 错误（可能已经隐藏过了）
+        }
       }
     },
 
@@ -752,7 +761,12 @@ export default {
         
         uni.showToast({ title: '添加失败，请重试', icon: 'none' });
       } finally {
-        uni.hideLoading();
+        // 确保loading关闭（使用 try-catch 避免重复隐藏导致的错误）
+        try {
+          uni.hideLoading();
+        } catch (e) {
+          // 忽略 hideLoading 错误（可能已经隐藏过了）
+        }
       }
     },
 
@@ -795,7 +809,12 @@ export default {
               
               uni.showToast({ title: '删除失败，请重试', icon: 'none' });
             } finally {
-              uni.hideLoading();
+              // 确保loading关闭（使用 try-catch 避免重复隐藏导致的错误）
+              try {
+                uni.hideLoading();
+              } catch (e) {
+                // 忽略 hideLoading 错误（可能已经隐藏过了）
+              }
             }
           }
         }

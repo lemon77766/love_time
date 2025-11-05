@@ -200,7 +200,6 @@ const _sfc_main = {
           url: e.url || "未知"
         });
         if (e.statusCode === 401) {
-          common_vendor.index.hideLoading();
           common_vendor.index.showModal({
             title: "登录已过期",
             content: "您的登录已过期，请重新登录",
@@ -214,7 +213,6 @@ const _sfc_main = {
           return;
         }
         if (e.statusCode === 404) {
-          common_vendor.index.hideLoading();
           common_vendor.index.__f__("warn", "at pages/qna/index.vue:390", "⚠️ 后端接口未实现: POST /api/qna/answer/submit");
           common_vendor.index.__f__("warn", "at pages/qna/index.vue:391", "💡 提示: 请联系后端开发人员实现该接口，或检查接口路径是否正确");
           common_vendor.index.showModal({
@@ -245,14 +243,16 @@ const _sfc_main = {
           });
           return;
         }
-        common_vendor.index.hideLoading();
         common_vendor.index.showToast({
           title: `提交失败: ${e.statusCode || "网络错误"}`,
           icon: "none",
           duration: 3e3
         });
       } finally {
-        common_vendor.index.hideLoading();
+        try {
+          common_vendor.index.hideLoading();
+        } catch (e) {
+        }
       }
     },
     nextQuestion() {
@@ -282,7 +282,7 @@ const _sfc_main = {
     async loadHistoryFromServer() {
       try {
         const res = await api_qna.getHistory({ page: 1, pageSize: 100 });
-        common_vendor.index.__f__("log", "at pages/qna/index.vue:464", "📥 历史记录响应:", res);
+        common_vendor.index.__f__("log", "at pages/qna/index.vue:468", "📥 历史记录响应:", res);
         let historyList = [];
         if (res && res.success && Array.isArray(res.history)) {
           historyList = res.history;
@@ -297,7 +297,7 @@ const _sfc_main = {
         } else if (Array.isArray(res)) {
           historyList = res;
         } else {
-          common_vendor.index.__f__("warn", "at pages/qna/index.vue:488", "⚠️ 历史记录响应格式不符合预期:", res);
+          common_vendor.index.__f__("warn", "at pages/qna/index.vue:492", "⚠️ 历史记录响应格式不符合预期:", res);
           historyList = [];
         }
         this.history = historyList.map((item) => {
@@ -331,14 +331,14 @@ const _sfc_main = {
             ...item
           };
         });
-        common_vendor.index.__f__("log", "at pages/qna/index.vue:532", "✅ 历史记录加载成功:", {
+        common_vendor.index.__f__("log", "at pages/qna/index.vue:536", "✅ 历史记录加载成功:", {
           count: this.history.length,
           totalCount: res == null ? void 0 : res.totalCount,
           sample: this.history.slice(0, 3)
         });
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/qna/index.vue:538", "加载历史记录失败", e);
-        common_vendor.index.__f__("error", "at pages/qna/index.vue:539", "错误详情:", {
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:542", "加载历史记录失败", e);
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:543", "错误详情:", {
           message: e.message,
           statusCode: e.statusCode,
           data: e.data
@@ -359,13 +359,13 @@ const _sfc_main = {
       try {
         common_vendor.index.showLoading({ title: "加载中..." });
         const res = await api_qna.getQuestions();
-        common_vendor.index.__f__("log", "at pages/qna/index.vue:564", "📥 问题列表响应:", res);
+        common_vendor.index.__f__("log", "at pages/qna/index.vue:568", "📥 问题列表响应:", res);
         if (res && res.success && Array.isArray(res.questions)) {
           const presetQuestions = [];
           const customQuestions = [];
           res.questions.forEach((q) => {
             if (!q || q.id === void 0 || q.id === null) {
-              common_vendor.index.__f__("warn", "at pages/qna/index.vue:575", "⚠️ 跳过无效的问题对象:", q);
+              common_vendor.index.__f__("warn", "at pages/qna/index.vue:579", "⚠️ 跳过无效的问题对象:", q);
               return;
             }
             const question = {
@@ -396,7 +396,7 @@ const _sfc_main = {
           });
           this.defaultQuestions = presetQuestions;
           this.customQuestions = customQuestions;
-          common_vendor.index.__f__("log", "at pages/qna/index.vue:614", "✅ 问题列表加载成功:", {
+          common_vendor.index.__f__("log", "at pages/qna/index.vue:618", "✅ 问题列表加载成功:", {
             preset: presetQuestions.length,
             custom: customQuestions.length,
             total: presetQuestions.length + customQuestions.length
@@ -413,19 +413,18 @@ const _sfc_main = {
             ...q
           })) : [];
         } else {
-          common_vendor.index.__f__("warn", "at pages/qna/index.vue:640", "⚠️ 问题列表响应格式不符合预期:", res);
+          common_vendor.index.__f__("warn", "at pages/qna/index.vue:644", "⚠️ 问题列表响应格式不符合预期:", res);
           this.defaultQuestions = [];
           this.customQuestions = [];
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/qna/index.vue:645", "加载问题失败", e);
-        common_vendor.index.__f__("error", "at pages/qna/index.vue:646", "错误详情:", {
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:649", "加载问题失败", e);
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:650", "错误详情:", {
           message: e.message,
           statusCode: e.statusCode,
           data: e.data
         });
         if (e.statusCode === 401) {
-          common_vendor.index.hideLoading();
           common_vendor.index.showModal({
             title: "登录已过期",
             content: "您的登录已过期，请重新登录",
@@ -446,7 +445,10 @@ const _sfc_main = {
           this.customQuestions = [];
         }
       } finally {
-        common_vendor.index.hideLoading();
+        try {
+          common_vendor.index.hideLoading();
+        } catch (e) {
+        }
       }
     },
     // 添加自定义问题
@@ -482,13 +484,13 @@ const _sfc_main = {
               this.qIndex = newQuestionIndex;
               this.myAnswer = "";
               this.partnerAnswer = "";
-              common_vendor.index.__f__("log", "at pages/qna/index.vue:729", "✅ 已切换到新添加的问题:", formattedQuestion);
+              common_vendor.index.__f__("log", "at pages/qna/index.vue:738", "✅ 已切换到新添加的问题:", formattedQuestion);
             }
           }, 100);
           common_vendor.index.showToast({ title: "问题添加成功", icon: "success" });
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/qna/index.vue:736", "添加问题失败", e);
+        common_vendor.index.__f__("error", "at pages/qna/index.vue:745", "添加问题失败", e);
         if (e.statusCode === 401) {
           common_vendor.index.showModal({
             title: "登录已过期",
@@ -504,7 +506,10 @@ const _sfc_main = {
         }
         common_vendor.index.showToast({ title: "添加失败，请重试", icon: "none" });
       } finally {
-        common_vendor.index.hideLoading();
+        try {
+          common_vendor.index.hideLoading();
+        } catch (e) {
+        }
       }
     },
     async deleteCustomQuestion(index) {
@@ -522,7 +527,7 @@ const _sfc_main = {
                 common_vendor.index.showToast({ title: "已删除", icon: "success" });
               }
             } catch (e) {
-              common_vendor.index.__f__("error", "at pages/qna/index.vue:779", "删除问题失败", e);
+              common_vendor.index.__f__("error", "at pages/qna/index.vue:793", "删除问题失败", e);
               if (e.statusCode === 401) {
                 common_vendor.index.showModal({
                   title: "登录已过期",
@@ -538,7 +543,10 @@ const _sfc_main = {
               }
               common_vendor.index.showToast({ title: "删除失败，请重试", icon: "none" });
             } finally {
-              common_vendor.index.hideLoading();
+              try {
+                common_vendor.index.hideLoading();
+              } catch (e) {
+              }
             }
           }
         }

@@ -5,7 +5,6 @@ if (!Math) {
   "./pages/login/index.js";
   "./pages/index/index.js";
   "./pages/jiyi/index.js";
-  "./pages/we/index.js";
   "./pages/qna/index.js";
   "./pages/qna/history.js";
   "./pages/hundred/index.js";
@@ -14,7 +13,8 @@ if (!Math) {
   "./pages/xinxiang/index.js";
   "./pages/xinxiang/create.js";
   "./pages/xinxiang/history.js";
-  "./pages/profile/index.js";
+  "./pages/we/index.js";
+  "./pages/we/profile.js";
   "./pages/trajectory/index.js";
   "./pages/invite/index.js";
 }
@@ -69,10 +69,20 @@ const globalStyle = {
   navigationBarBackgroundColor: "#fff5f7",
   backgroundColor: "#fff5f7"
 };
+const permission = {
+  "scope.userLocation": {
+    desc: "你的位置信息将用于显示双方实时位置"
+  }
+};
+const requiredPrivateInfos = [
+  "getLocation"
+];
 const App = {
   pages,
   tabBar,
-  globalStyle
+  globalStyle,
+  permission,
+  requiredPrivateInfos
 };
 function createApp() {
   const app = common_vendor.createSSRApp(App);

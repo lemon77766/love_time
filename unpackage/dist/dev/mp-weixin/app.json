@@ -3,7 +3,6 @@
     "pages/login/index",
     "pages/index/index",
     "pages/jiyi/index",
-    "pages/we/index",
     "pages/qna/index",
     "pages/qna/history",
     "pages/hundred/index",
@@ -12,7 +11,8 @@
     "pages/xinxiang/index",
     "pages/xinxiang/create",
     "pages/xinxiang/history",
-    "pages/profile/index",
+    "pages/we/index",
+    "pages/we/profile",
     "pages/trajectory/index",
     "pages/invite/index"
   ],
@@ -47,5 +47,13 @@
       }
     ]
   },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于显示双方实时位置"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
   "usingComponents": {}
 }

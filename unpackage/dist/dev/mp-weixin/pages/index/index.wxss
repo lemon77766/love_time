@@ -6,7 +6,7 @@
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: #F8F0FC;
+  background-color: #FFF8E7;
   overflow: hidden;
 }
 .navbar-gradient-bg {
@@ -15,8 +15,7 @@
   left: 0;
   right: 0;
   height: 200%;
-  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
-  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: #FFF8E7;
 }
 .status-bar {
   width: 100%;
@@ -51,13 +50,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 .navbar-icon {
   font-size: 44rpx;
-  color: #333333;
+  color: #666;
+}
+.navbar-right:active {
+  opacity: 0.6;
 }
 .container {
-  background-color: #F8F0FC;
+  background-color: #FFF8E7;
   min-height: 100vh;
   padding-bottom: 120rpx;
 }
@@ -92,39 +95,6 @@
 }
 .card-body {
   padding: 0 30rpx 32rpx;
-}
-
-/* 我们的纪念日卡片 */
-.anniversary-content {
-  display: flex;
-  flex-direction: column;
-  gap: 18rpx;
-}
-.anniversary-name {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #6B5B95;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-}
-.anniversary-info {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-.clock-icon {
-  font-size: 30rpx;
-}
-.countdown-text {
-  font-size: 26rpx;
-  color: #9B8FB8;
-  font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-}
-.anniversary-date {
-  font-size: 24rpx;
-  color: #9B8FB8;
-  font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 /* 心语心愿卡片 */
@@ -162,7 +132,7 @@
 }
 .grid-item:active {
   transform: scale(0.96);
-  background-color: #F8F0FC;
+  background-color: #F5F5F5;
 }
 .grid-icon-wrapper {
   margin-bottom: 20rpx;
@@ -263,6 +233,154 @@
   color: #9B8FB8;
   font-weight: 400;
   text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+/* 情侣状态卡片 */
+.couple-status-card {
+  padding: 32rpx 30rpx;
+}
+.couple-avatars-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24rpx;
+}
+.couple-avatar {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 64rpx;
+  border: 4rpx solid #ffffff;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+.couple-avatar-placeholder {
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 64rpx;
+  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
+  border: 4rpx solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+.placeholder-text {
+  font-size: 48rpx;
+  color: #ffffff;
+  font-weight: 600;
+}
+.heart-connector {
+  margin: 0 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.heart-icon {
+  font-size: 40rpx;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+@keyframes heartbeat {
+0%, 100% { transform: scale(1);
+}
+50% { transform: scale(1.1);
+}
+}
+.couple-status-info {
+  text-align: center;
+  margin-bottom: 24rpx;
+}
+.days-together {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #4A4A4A;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.couple-stats {
+  display: flex;
+  justify-content: space-around;
+  padding-top: 24rpx;
+  border-top: 1rpx solid #F0F0F0;
+}
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+.stat-icon {
+  font-size: 32rpx;
+}
+.stat-text {
+  font-size: 24rpx;
+  color: #666;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.unbind-section {
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid #F0F0F0;
+  display: flex;
+  justify-content: center;
+}
+.unbind-btn {
+  background: #f5f5f5;
+  color: #999;
+  border: none;
+  border-radius: 12rpx;
+  padding: 16rpx 48rpx;
+  font-size: 26rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.unbind-btn:active {
+  opacity: 0.7;
+  background: #e8e8e8;
+}
+.invite-hint {
+  text-align: center;
+  padding: 16rpx;
+  margin-top: 16rpx;
+  background: linear-gradient(to right, #FF9EBC, #D9ACFF);
+  border-radius: 22rpx;
+  cursor: pointer;
+}
+.invite-hint:active {
+  opacity: 0.8;
+}
+.hint-text {
+  color: #ffffff;
+  font-size: 26rpx;
+  font-weight: 500;
+}
+
+/* 近期动态 */
+.recent-activities-card {
+  padding-bottom: 0;
+}
+.activity-item {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #F0F0F0;
+}
+.activity-item:last-child {
+  border-bottom: none;
+}
+.activity-icon-wrapper {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+}
+.activity-icon {
+  font-size: 32rpx;
+}
+.activity-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: #666;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 

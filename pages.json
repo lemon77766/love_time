@@ -22,14 +22,6 @@
       }
     },
     {
-      "path": "pages/we/index",
-      "style": {
-        "navigationBarTitleText": "我们",
-        "navigationStyle": "custom",
-        "navigationBarTextStyle": "black"
-      }
-    },
-    {
       "path": "pages/qna/index",
       "style": {
         "navigationBarTitleText": "甜蜜问答",
@@ -87,9 +79,19 @@
       }
     },
     {
-      "path": "pages/profile/index",
+      "path": "pages/we/index",
       "style": {
-        "navigationBarTitleText": "个人资料"
+        "navigationBarTitleText": "我们",
+        "navigationStyle": "custom",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
+      "path": "pages/we/profile",
+      "style": {
+        "navigationBarTitleText": "个人资料",
+        "navigationStyle": "custom",
+        "navigationBarTextStyle": "black"
       }
     },
     {
@@ -126,5 +128,13 @@
     "navigationBarBackgroundColor": "#F8F0FC",
     "backgroundColor": "#F8F0FC"
   },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于显示双方实时位置"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
   "uniIdRouter": {}
 }

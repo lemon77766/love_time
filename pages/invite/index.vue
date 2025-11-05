@@ -64,39 +64,73 @@
           <button class="btn unbind-btn" @click="handleUnbind">解除关系</button>
         </view>
 
-        <!-- 未绑定状态：生成邀请 -->
+        <!-- 未绑定状态：生成邀请或输入邀请码 -->
         <view v-else class="invite-content">
-          <view class="invite-header">
-            <text class="invite-title">💕 邀请另一半</text>
-            <text class="invite-subtitle">分享邀请给TA，一起记录美好时光</text>
-          </view>
-
-          <!-- 邀请码显示 -->
-          <view v-if="inviteCode" class="invite-code-card">
-            <text class="code-label">邀请码</text>
-            <view class="code-display">
-              <text class="code-text">{{ inviteCode }}</text>
-              <button class="copy-btn" @click="copyInviteCode">复制</button>
+          <!-- 输入邀请码模式 -->
+          <view v-if="showInputCode" class="input-code-container">
+            <view class="invite-header">
+              <text class="invite-title">💕 输入邀请码</text>
+              <text class="invite-subtitle">请输入对方分享的邀请码</text>
             </view>
-            <text class="code-tip">有效期：{{ expireTimeText }}</text>
+
+            <view class="input-code-card">
+              <input 
+                class="code-input" 
+                type="text" 
+                v-model="inputCode" 
+                placeholder="请输入6位邀请码"
+                maxlength="6"
+                :focus="inputFocus"
+                @input="onInputCode"
+              />
+              <view class="input-actions">
+                <button class="btn verify-btn" @click="verifyInputCode" :disabled="!inputCode || inputCode.length !== 6 || isVerifying">
+                  {{ isVerifying ? '验证中...' : '验证邀请码' }}
+                </button>
+                <button class="btn cancel-input-btn" @click="cancelInputCode">取消</button>
+              </view>
+            </view>
           </view>
 
-          <!-- 分享按钮 -->
-          <view class="action-buttons">
-            <button v-if="!inviteCode" class="btn primary-btn" @click="generateInviteCode" :disabled="isGenerating">
-              {{ isGenerating ? '生成中...' : '生成邀请码' }}
-            </button>
-            <button v-else class="btn primary-btn" @click="shareInvite" :disabled="isSharing">
-              {{ isSharing ? '分享中...' : '分享给TA' }}
-            </button>
-            <button v-if="inviteCode" class="btn secondary-btn" @click="regenerateInviteCode" :disabled="isGenerating">
-              重新生成
-            </button>
-          </view>
+          <!-- 生成邀请码模式 -->
+          <view v-else>
+            <view class="invite-header">
+              <text class="invite-title">💕 邀请另一半</text>
+              <text class="invite-subtitle">分享邀请给TA，一起记录美好时光</text>
+            </view>
 
-          <!-- 分享提示 -->
-          <view v-if="inviteCode" class="share-tip">
-            <text class="tip-text">💡 点击右上角"..."按钮，选择"转发"分享给好友</text>
+            <!-- 邀请码显示 -->
+            <view v-if="inviteCode" class="invite-code-card">
+              <text class="code-label">邀请码</text>
+              <view class="code-display">
+                <text class="code-text">{{ inviteCode }}</text>
+                <button class="copy-btn" @click="copyInviteCode">复制</button>
+              </view>
+              <text class="code-tip">有效期：{{ expireTimeText }}</text>
+            </view>
+
+            <!-- 操作按钮 -->
+            <view class="action-buttons">
+              <button v-if="!inviteCode" class="btn primary-btn" @click="generateInviteCode" :disabled="isGenerating">
+                {{ isGenerating ? '生成中...' : '生成邀请码' }}
+              </button>
+              <button v-else class="btn primary-btn" @click="shareInvite" :disabled="isSharing">
+                {{ isSharing ? '分享中...' : '分享给TA' }}
+              </button>
+              <button v-if="inviteCode" class="btn secondary-btn" @click="regenerateInviteCode" :disabled="isGenerating">
+                重新生成
+              </button>
+              <!-- 输入邀请码按钮 -->
+              <button class="btn input-code-btn" @click="showInputCodePanel">
+                <text class="input-code-icon">📥</text>
+                <text>输入邀请码</text>
+              </button>
+            </view>
+
+            <!-- 分享提示 -->
+            <view v-if="inviteCode" class="share-tip">
+              <text class="tip-text">💡 点击右上角"..."按钮，选择"转发"分享给好友</text>
+            </view>
           </view>
         </view>
       </view>
@@ -123,6 +157,11 @@ export default {
       isInviteMode: false, // 是否为接受邀请模式
       creatorInfo: {}, // 邀请方信息
       isAccepting: false,
+      // 输入邀请码相关
+      showInputCode: false, // 是否显示输入邀请码界面
+      inputCode: '', // 输入的邀请码
+      inputFocus: false, // 输入框是否聚焦
+      isVerifying: false, // 是否正在验证邀请码
       // 绑定状态
       isBound: false,
       partnerInfo: {},
@@ -238,18 +277,27 @@ export default {
           // 再从服务器同步一次状态
           try {
             const response = await getCoupleStatus();
-            if (response && response.data && response.data.isBound) {
-              // 更新本地信息
-              saveCoupleInfo({
-                isBound: true,
-                coupleId: response.data.coupleId,
-                partnerId: response.data.partnerInfo?.userId || '',
-                partnerInfo: response.data.partnerInfo || {},
-                bindTime: response.data.bindTime || '',
-                role: response.data.role || ''
-              });
-              this.partnerInfo = response.data.partnerInfo || {};
-              this.bindTime = response.data.bindTime || '';
+            if (response && response.data) {
+              if (response.data.isBound) {
+                // 更新本地信息
+                saveCoupleInfo({
+                  isBound: true,
+                  coupleId: response.data.coupleId,
+                  partnerId: response.data.partnerInfo?.userId || '',
+                  partnerInfo: response.data.partnerInfo || {},
+                  bindTime: response.data.bindTime || '',
+                  role: response.data.role || ''
+                });
+                this.partnerInfo = response.data.partnerInfo || {};
+                this.bindTime = response.data.bindTime || '';
+              } else {
+                // 服务器返回未绑定，清除本地状态
+                console.log('⚠️ 服务器返回未绑定，清除本地状态');
+                clearCoupleInfo();
+                this.isBound = false;
+                this.partnerInfo = {};
+                this.bindTime = '';
+              }
             }
           } catch (e) {
             console.error('同步绑定状态失败', e);
@@ -261,20 +309,28 @@ export default {
         this.isBound = false;
         try {
           const response = await getCoupleStatus();
-          if (response && response.data && response.data.isBound) {
-            this.isBound = true;
-            this.partnerInfo = response.data.partnerInfo || {};
-            this.bindTime = response.data.bindTime || '';
-            
-            // 保存到本地
-            saveCoupleInfo({
-              isBound: true,
-              coupleId: response.data.coupleId,
-              partnerId: response.data.partnerInfo?.userId || '',
-              partnerInfo: response.data.partnerInfo || {},
-              bindTime: response.data.bindTime || '',
-              role: response.data.role || ''
-            });
+          if (response && response.data) {
+            if (response.data.isBound) {
+              this.isBound = true;
+              this.partnerInfo = response.data.partnerInfo || {};
+              this.bindTime = response.data.bindTime || '';
+              
+              // 保存到本地
+              saveCoupleInfo({
+                isBound: true,
+                coupleId: response.data.coupleId,
+                partnerId: response.data.partnerInfo?.userId || '',
+                partnerInfo: response.data.partnerInfo || {},
+                bindTime: response.data.bindTime || '',
+                role: response.data.role || ''
+              });
+            } else {
+              // 服务器返回未绑定，确保本地也是未绑定状态
+              this.isBound = false;
+              this.partnerInfo = {};
+              this.bindTime = '';
+              clearCoupleInfo();
+            }
           }
         } catch (e) {
           console.error('查询绑定状态失败', e);
@@ -309,9 +365,11 @@ export default {
           this.inviteCode = code;
           this.expireAt = response.data.expireAt || '';
         } else {
+          // 提供更详细的错误提示
+          const errorMsg = response.message || '邀请码无效或已过期';
           uni.showModal({
-            title: '提示',
-            content: response.message || '邀请码无效或已过期',
+            title: '验证失败',
+            content: errorMsg + '\n\n可能原因：\n1. 邀请码不存在\n2. 邀请码已过期\n3. 邀请码已被使用\n\n请确认邀请码是否正确',
             showCancel: false,
             success: () => {
               this.goBack();
@@ -321,9 +379,20 @@ export default {
       } catch (error) {
         uni.hideLoading();
         console.error('验证邀请码失败', error);
+        
+        // 提供更详细的错误提示
+        let errorMessage = '验证邀请码失败，请检查网络连接';
+        if (error.message) {
+          if (error.message.includes('邀请码无效') || error.message.includes('无效')) {
+            errorMessage = '邀请码无效\n\n可能原因：\n1. 邀请码不存在\n2. 邀请码已过期\n3. 邀请码已被使用\n\n请确认邀请码是否正确';
+          } else {
+            errorMessage = error.message || errorMessage;
+          }
+        }
+        
         uni.showModal({
           title: '错误',
-          content: '验证邀请码失败，请检查网络连接',
+          content: errorMessage,
           showCancel: false,
           success: () => {
             this.goBack();
@@ -405,6 +474,206 @@ export default {
         });
       }
       // #endif
+    },
+    
+    // 显示输入邀请码面板
+    showInputCodePanel() {
+      this.showInputCode = true;
+      this.inputCode = '';
+      this.inputFocus = true;
+    },
+    
+    // 取消输入邀请码
+    cancelInputCode() {
+      this.showInputCode = false;
+      this.inputCode = '';
+      this.inputFocus = false;
+    },
+    
+    // 输入邀请码时的处理
+    onInputCode(e) {
+      // 自动转换为大写
+      this.inputCode = e.detail.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    },
+    
+    // 验证输入的邀请码
+    async verifyInputCode() {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔍 [页面] 开始验证邀请码');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📝 [输入码原始值]', this.inputCode);
+      console.log('📝 [输入码类型]', typeof this.inputCode);
+      console.log('📝 [输入码长度]', this.inputCode ? this.inputCode.length : 0);
+      console.log('📝 [输入码是否为空]', !this.inputCode);
+      console.log('📝 [输入码trim后]', this.inputCode ? this.inputCode.trim() : '');
+      console.log('📝 [输入码trim后长度]', this.inputCode ? this.inputCode.trim().length : 0);
+      if (this.inputCode) {
+        console.log('📝 [输入码字符编码]', Array.from(this.inputCode).map(c => c.charCodeAt(0)).join(', '));
+        console.log('📝 [输入码是否包含空格]', this.inputCode.includes(' '));
+        console.log('📝 [输入码是否包含换行]', this.inputCode.includes('\n'));
+        console.log('📝 [输入码是否包含制表符]', this.inputCode.includes('\t'));
+      }
+      console.log('🔗 [是否已绑定]', this.isBound);
+      console.log('⏰ [验证时间]', new Date().toLocaleString());
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      
+      if (!this.inputCode || this.inputCode.length !== 6) {
+        console.warn('⚠️ [页面] 邀请码格式验证失败');
+        console.warn('📝 [输入码]', this.inputCode);
+        console.warn('📝 [输入码长度]', this.inputCode ? this.inputCode.length : 0);
+        uni.showToast({ title: '请输入6位邀请码', icon: 'none' });
+        return;
+      }
+      
+      // 检查是否已绑定
+      if (this.isBound) {
+        console.warn('⚠️ [页面] 用户已绑定，无法接受新邀请');
+        uni.showModal({
+          title: '提示',
+          content: '您已经绑定了情侣关系，无法接受新的邀请',
+          showCancel: false
+        });
+        return;
+      }
+      
+      this.isVerifying = true;
+      try {
+        uni.showLoading({ title: '验证中...' });
+        
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('📞 [页面] 调用 validateInviteCode API');
+        console.log('📝 [传递给API的邀请码]', this.inputCode);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        
+        const response = await validateInviteCode(this.inputCode);
+        
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('✅ [页面] API调用成功');
+        console.log('📦 [API响应]', response);
+        console.log('📦 [API响应类型]', typeof response);
+        if (response && typeof response === 'object') {
+          console.log('📦 [API响应字段]', Object.keys(response).join(', '));
+          console.log('📦 [success字段]', response.success);
+          console.log('📦 [data字段]', response.data);
+        }
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        
+        uni.hideLoading();
+        
+        if (response && response.success && response.data) {
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.log('✅ [页面] 验证成功，处理响应数据');
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.log('👤 [创建者信息]', response.data.creator);
+          console.log('📝 [邀请码]', response.data.code || this.inputCode);
+          console.log('⏰ [过期时间]', response.data.expireAt);
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          
+          // 验证成功，切换到接受邀请模式
+          this.creatorInfo = response.data.creator || {};
+          this.inviteCode = this.inputCode;
+          this.expireAt = response.data.expireAt || '';
+          this.showInputCode = false;
+          this.isInviteMode = true;
+          this.inputCode = '';
+          this.inputFocus = false;
+          
+          console.log('✅ [页面] 已切换到接受邀请模式');
+        } else {
+          console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.warn('⚠️ [页面] 验证失败：响应数据不符合预期');
+          console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.warn('📦 [响应数据]', response);
+          console.warn('📦 [response是否存在]', !!response);
+          console.warn('📦 [response.success]', response?.success);
+          console.warn('📦 [response.data]', response?.data);
+          console.warn('📦 [response.message]', response?.message);
+          if (response && typeof response === 'object') {
+            console.warn('📦 [响应数据字段]', Object.keys(response).join(', '));
+          }
+          console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          
+          // 提供更详细的错误提示
+          const errorMsg = response?.message || '邀请码无效或已过期';
+          uni.showModal({
+            title: '验证失败',
+            content: errorMsg + '\n\n可能原因：\n1. 邀请码不存在\n2. 邀请码已过期\n3. 邀请码已被使用\n\n请确认邀请码是否正确（6位字母数字）',
+            showCancel: false,
+            confirmText: '我知道了'
+          });
+        }
+      } catch (error) {
+        uni.hideLoading();
+        
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.error('❌ [页面] 验证邀请码异常');
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.error('📝 [输入的邀请码]', this.inputCode);
+        console.error('📝 [邀请码类型]', typeof this.inputCode);
+        console.error('📝 [邀请码长度]', this.inputCode ? this.inputCode.length : 0);
+        console.error('🔍 [错误类型]', typeof error);
+        console.error('🔍 [错误消息]', error?.message);
+        console.error('🔍 [错误状态码]', error?.statusCode);
+        console.error('🔍 [错误数据]', error?.data);
+        console.error('🔍 [错误响应数据]', error?.responseData);
+        console.error('🔍 [完整错误对象]', error);
+        if (error && typeof error === 'object') {
+          console.error('🔍 [错误对象字段]', Object.keys(error).join(', '));
+        }
+        if (error?.stack) {
+          console.error('🔍 [错误堆栈]', error.stack);
+        }
+        console.error('⏰ [错误时间]', new Date().toLocaleString());
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        
+        // 提供更详细的错误提示
+        let errorMessage = '验证失败，请重试';
+        if (error && error.message) {
+          errorMessage = error.message;
+          // 如果是"邀请码无效"，提供更详细的提示
+          if (error.message.includes('邀请码无效') || error.message.includes('无效')) {
+            errorMessage = '邀请码无效，可能原因：\n1. 邀请码不存在\n2. 邀请码已过期\n3. 邀请码已被使用\n\n请确认邀请码是否正确';
+          }
+        }
+        
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('🔍 [页面错误处理] 准备显示错误提示');
+        console.log('📝 [错误提示内容]', errorMessage);
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        
+        // 确保错误提示能够显示
+        uni.showModal({
+          title: '验证失败',
+          content: errorMessage,
+          showCancel: false,
+          confirmText: '我知道了',
+          success: (res) => {
+            console.log('✅ [页面错误处理] 错误提示已显示');
+            console.log('📝 [用户选择]', res.confirm ? '确认' : '取消');
+          },
+          fail: (err) => {
+            console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.error('❌ [页面错误处理] 显示错误提示失败');
+            console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.error('🔴 [失败原因]', err);
+            console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            // 如果 showModal 失败，使用 showToast 作为备选
+            uni.showToast({
+              title: errorMessage.length > 20 ? errorMessage.substring(0, 20) + '...' : errorMessage,
+              icon: 'none',
+              duration: 3000,
+              success: () => {
+                console.log('✅ [页面错误处理] 已使用Toast显示错误');
+              },
+              fail: (toastErr) => {
+                console.error('❌ [页面错误处理] Toast也失败:', toastErr);
+              }
+            });
+          }
+        });
+      } finally {
+        this.isVerifying = false;
+      }
     },
     
     // 分享邀请
@@ -717,6 +986,79 @@ export default {
   background: #ffffff;
   color: #FF8FB3;
   border: 2rpx solid #FF8FB3;
+}
+
+.input-code-btn {
+  background: #ffffff;
+  color: #6B5B95;
+  border: 2rpx solid #6B5B95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  margin-top: 20rpx;
+}
+
+.input-code-icon {
+  font-size: 32rpx;
+}
+
+/* 输入邀请码容器 */
+.input-code-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40rpx 0;
+}
+
+.input-code-card {
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  width: 100%;
+  margin-top: 40rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.06);
+}
+
+.code-input {
+  width: 100%;
+  height: 100rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 16rpx;
+  padding: 0 30rpx;
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+  letter-spacing: 8rpx;
+  font-family: 'Courier New', monospace;
+  box-sizing: border-box;
+  margin-bottom: 40rpx;
+}
+
+.code-input:focus {
+  border-color: #FF8FB3;
+}
+
+.input-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.verify-btn {
+  background: linear-gradient(135deg, #FF8FB3 0%, #FF6B9D 100%);
+  color: #ffffff;
+}
+
+.verify-btn[disabled] {
+  background: #ddd;
+  color: #999;
+}
+
+.cancel-input-btn {
+  background: #f5f5f5;
+  color: #666;
 }
 
 .unbind-btn {

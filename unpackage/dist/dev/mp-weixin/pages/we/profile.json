@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "个人资料",
+  "navigationStyle": "custom",
+  "navigationBarTextStyle": "black",
   "usingComponents": {}
 }

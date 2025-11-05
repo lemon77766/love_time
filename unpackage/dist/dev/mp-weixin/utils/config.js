@@ -80,6 +80,18 @@ const devConfig = {
       // 上传照片、更新/删除照片 (需要拼接photoId)
       NEXT_POSITION: "/api/heart-wall/next-position"
       // 获取下一个可用位置
+    },
+    TRAJECTORY: {
+      // 位置相关接口
+      LOCATION_UPDATE: "/api/trajectory/location/update",
+      // 上传/更新用户位置
+      LOCATION_CURRENT: "/api/trajectory/location/current",
+      // 获取双方实时位置
+      // 轨迹点相关接口
+      POINTS: "/api/trajectory/points",
+      // 获取轨迹点列表、添加轨迹点
+      STATISTICS: "/api/trajectory/statistics"
+      // 获取轨迹统计信息
     }
   }
 };

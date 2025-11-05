@@ -52,27 +52,30 @@ export function saveLoginInfo(userInfo) {
 
 /**
  * 退出登录
+ * @param {boolean} silent - 是否静默退出（不显示提示，用于自动退出场景）
  * @returns {Promise<boolean>} 是否退出成功
  */
-export function logout() {
+export function logout(silent = false) {
   return new Promise((resolve) => {
     try {
       // 清除本地存储
       uni.removeStorageSync('login_info');
       
-      // 显示退出成功提示
-      uni.showToast({
-        title: '已退出登录',
-        icon: 'success',
-        duration: 1500
-      });
+      // 如果不是静默模式，显示退出成功提示
+      if (!silent) {
+        uni.showToast({
+          title: '已退出登录',
+          icon: 'success',
+          duration: 1500
+        });
+      }
       
-      // 延迟跳转到登录页
+      // 延迟跳转到登录页（静默模式延迟更短）
       setTimeout(() => {
         uni.reLaunch({
           url: '/pages/login/index'
         });
-      }, 1500);
+      }, silent ? 500 : 1500);
       
       resolve(true);
     } catch (e) {

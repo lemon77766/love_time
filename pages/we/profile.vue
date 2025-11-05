@@ -1,5 +1,5 @@
 <template>
-  <view class="profile-page">
+  <view class="profile-edit-page">
     <!-- 内容区域 -->
     <view class="content">
       <!-- 头像设置 -->
@@ -7,7 +7,7 @@
         <text class="section-title">头像设置</text>
         <view class="avatar-section">
           <view class="current-avatar">
-            <image class="avatar" :src="userInfo.displayAvatar || userInfo.avatarUrl" mode="aspectFill" />
+            <image class="avatar" :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/zhuye/lanmei_boy.png'" mode="aspectFill" />
             <text class="avatar-label">当前头像</text>
           </view>
           
@@ -49,7 +49,7 @@
 
       <!-- 保存按钮 -->
       <view class="save-section">
-        <button class="save-btn" @click="saveProfile">
+        <button class="save-btn" @click="saveProfile" :disabled="isLoading">
           <text class="save-icon">💾</text>
           <text class="save-text">保存设置</text>
         </button>
@@ -96,8 +96,6 @@ export default {
         console.error('加载用户信息失败', error);
       }
     },
-    
-    // 返回上一页（使用系统导航栏的返回按钮）
     
     // 使用微信头像
     selectWechatAvatar() {
@@ -248,7 +246,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.profile-page {
+.profile-edit-page {
   min-height: 100vh;
   background: #f5f5f5;
 }
@@ -256,7 +254,7 @@ export default {
 /* 内容区域 */
 .content {
   padding: 30rpx;
-  margin-top: 20rpx; /* 为系统导航栏留出空间 */
+  margin-top: 20rpx;
 }
 
 /* 区块样式 */
@@ -341,6 +339,7 @@ export default {
   background: #f8f8f8;
   border-radius: 12rpx;
   margin-bottom: 16rpx;
+  cursor: pointer;
 }
 
 .checkbox {
@@ -350,6 +349,7 @@ export default {
   border-radius: 6rpx;
   margin-right: 12rpx;
   position: relative;
+  flex-shrink: 0;
 }
 
 .checkbox.checked {
@@ -397,6 +397,7 @@ export default {
   font-size: 28rpx;
   background: #ffffff;
   margin-bottom: 8rpx;
+  box-sizing: border-box;
 }
 
 .char-count {
@@ -431,6 +432,10 @@ export default {
   opacity: 0.85;
 }
 
+.save-btn[disabled] {
+  opacity: 0.6;
+}
+
 .save-icon {
   font-size: 32rpx;
 }
@@ -439,3 +444,4 @@ export default {
   font-size: 30rpx;
 }
 </style>
+

@@ -84,16 +84,34 @@ export default {
     checkLoginStatus() {
       try {
         const loginInfo = uni.getStorageSync('login_info');
-        if (loginInfo && loginInfo.isLoggedIn) {
-          console.log('检测到已登录，自动跳转到首页');
+        // 检查登录信息是否存在，且包含有效的token
+        const hasToken = loginInfo && (
+          (loginInfo.token && loginInfo.token.trim()) ||
+          (loginInfo.data?.token && loginInfo.data.token.trim()) ||
+          (loginInfo.accessToken && loginInfo.accessToken.trim())
+        );
+        
+        if (loginInfo && loginInfo.isLoggedIn && hasToken) {
+          // 注意：这里只检查本地是否有token，不验证token是否有效
+          // 如果token已过期，会在后续API请求时被后端返回401，然后由handleUnauthorized处理
+          console.log('检测到本地登录信息，自动跳转到首页');
+          console.log('⚠️ 提示：如果token已过期，将在后续请求时自动处理');
           this.isLoggedIn = true;
           this.userInfo = loginInfo.userInfo || {};
           // ✅ 立即跳转到首页，不显示登录页面
+          // 如果token已过期，会在首页的API请求时被检测到并处理
           setTimeout(() => {
             uni.reLaunch({
               url: '/pages/index/index'
             });
           }, 300);
+        } else if (loginInfo && loginInfo.isLoggedIn && !hasToken) {
+          // 登录状态为true但token缺失，清除无效的登录信息
+          console.warn('⚠️ 检测到无效的登录信息（缺少token），正在清除...');
+          uni.removeStorageSync('login_info');
+          this.isLoggedIn = false;
+          this.userInfo = {};
+          console.warn('✅ 已清除无效的登录信息，请重新登录');
         }
       } catch (e) {
         console.error('检查登录状态失败', e);
@@ -193,11 +211,39 @@ export default {
         }
 
         // 4. 保存登录信息到本地
-        // 处理后端响应格式：可能是 {success: true, data: {token: ...}} 或 {token: ...}
-        const responseData = loginResult.data || loginResult;
-        const token = responseData.token || loginResult.token || '';
-        const openid = responseData.openid || loginResult.openid || '';
-        const sessionKey = responseData.session_key || loginResult.session_key || '';
+        // 处理后端响应格式：支持多种格式
+        // 格式1: {success: true, data: {token: ...}}
+        // 格式2: {token: ...}
+        // 格式3: {success: true, token: ...}
+        // 格式4: {data: {success: true, data: {token: ...}}}
+        let responseData = loginResult;
+        
+        // 如果存在data字段，优先使用data字段
+        if (loginResult.data && typeof loginResult.data === 'object') {
+          responseData = loginResult.data;
+        }
+        
+        // 尝试从多个可能的路径获取token
+        const token = responseData.token || 
+                     loginResult.token || 
+                     loginResult.data?.token || 
+                     (responseData.data && responseData.data.token) || 
+                     '';
+        
+        // 尝试从多个可能的路径获取openid
+        const openid = responseData.openid || 
+                      loginResult.openid || 
+                      loginResult.data?.openid || 
+                      (responseData.data && responseData.data.openid) || 
+                      '';
+        
+        // 尝试从多个可能的路径获取session_key
+        const sessionKey = responseData.session_key || 
+                           loginResult.session_key || 
+                           loginResult.data?.session_key || 
+                           (responseData.data && responseData.data.session_key) || 
+                           '';
+        
         const isSuccess = loginResult.success !== false; // 如果没有success字段，默认为成功
         
         const loginInfo = {
@@ -217,10 +263,26 @@ export default {
         
         // 调试信息：检查token是否正确提取
         if (process.env.NODE_ENV === 'development') {
-          console.log('登录响应数据:', loginResult);
-          console.log('提取的Token:', token ? `已找到，长度: ${token.length}` : '未找到');
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.log('🔍 [登录响应分析]');
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.log('📦 原始响应数据:', loginResult);
+          console.log('📦 响应数据类型:', typeof loginResult);
+          console.log('📦 responseData:', responseData);
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.log('🔑 Token提取结果:');
+          console.log('   - responseData.token:', responseData.token || '未找到');
+          console.log('   - loginResult.token:', loginResult.token || '未找到');
+          console.log('   - loginResult.data?.token:', loginResult.data?.token || '未找到');
+          console.log('   - 最终提取的Token:', token ? `✅ 已找到，长度: ${token.length}` : '❌ 未找到');
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.log('👤 OpenID提取结果:');
+          console.log('   - 最终提取的OpenID:', openid ? `✅ 已找到: ${openid}` : '❌ 未找到');
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
           if (!token) {
-            console.error('❌ Token提取失败！响应结构:', JSON.stringify(loginResult, null, 2));
+            console.error('❌ Token提取失败！');
+            console.error('📋 完整响应结构:', JSON.stringify(loginResult, null, 2));
+            console.error('💡 提示: 请检查后端返回的数据结构是否符合预期');
           }
         }
         
@@ -231,13 +293,26 @@ export default {
         // 验证token是否保存成功
         const savedLoginInfo = uni.getStorageSync('login_info');
         if (process.env.NODE_ENV === 'development') {
-          console.log('保存后的登录信息:', savedLoginInfo);
-          console.log('保存后的Token:', savedLoginInfo?.token ? `✅ 已保存，长度: ${savedLoginInfo.token.length}` : '❌ 未保存');
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.log('💾 [存储验证]');
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.log('📦 保存后的登录信息:', savedLoginInfo);
+          console.log('🔑 保存后的Token:', savedLoginInfo?.token ? `✅ 已保存，长度: ${savedLoginInfo.token.length}` : '❌ 未保存');
+          console.log('👤 保存后的OpenID:', savedLoginInfo?.openid ? `✅ 已保存: ${savedLoginInfo.openid}` : '❌ 未保存');
+          console.log('🔐 保存后的SessionKey:', savedLoginInfo?.sessionKey ? `✅ 已保存，长度: ${savedLoginInfo.sessionKey.length}` : '❌ 未保存');
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         }
         
         // 如果token为空，给出警告
         if (!token || !token.trim()) {
-          console.error('⚠️ 警告：Token为空，登录可能失败！');
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.error('⚠️ [警告] Token为空！');
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.error('🔍 可能的原因:');
+          console.error('   1. 后端返回的数据结构中不包含token字段');
+          console.error('   2. 后端返回的token字段名为空字符串');
+          console.error('   3. 后端返回的数据结构不符合预期');
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
           uni.showModal({
             title: '登录警告',
             content: '未获取到有效的登录凭证，部分功能可能无法使用。请检查后端服务是否正常。',
