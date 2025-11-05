@@ -122,6 +122,7 @@
           :enable-zoom="true"
           :enable-scroll="true"
           @tap="onMapTap"
+          @markertap="onMarkerTap"
         />
         
         <!-- 备用：如果没有位置信息，显示静态地图和轨迹点 -->
@@ -833,8 +834,14 @@ export default {
      */
     onMapTap(e) {
       console.log('地图点击:', e);
-      // 如果是历史轨迹模式，检查是否点击了标记点
-      if (this.showHistoryMode && e.detail && e.detail.markerId) {
+    },
+    
+    /**
+     * 地图标记点点击事件
+     */
+    onMarkerTap(e) {
+      console.log('标记点点击:', e);
+      if (this.showHistoryMode && e.detail) {
         const markerId = e.detail.markerId;
         // 找到对应的轨迹点
         const marker = this.mapMarkers.find(m => m.id === markerId);

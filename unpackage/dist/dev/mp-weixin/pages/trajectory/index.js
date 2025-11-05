@@ -140,7 +140,7 @@ const _sfc_main = {
           await this.loadCurrentLocations();
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:311", "初始化定位失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:312", "初始化定位失败:", error);
       }
     },
     /**
@@ -228,22 +228,22 @@ const _sfc_main = {
             latitude,
             longitude
           });
-          common_vendor.index.__f__("log", "at pages/trajectory/index.vue:412", "位置上传成功");
+          common_vendor.index.__f__("log", "at pages/trajectory/index.vue:413", "位置上传成功");
         } catch (error) {
-          common_vendor.index.__f__("error", "at pages/trajectory/index.vue:414", "位置上传失败:", error);
+          common_vendor.index.__f__("error", "at pages/trajectory/index.vue:415", "位置上传失败:", error);
           if (error.message && error.message.includes("用户不存在")) {
-            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:417", "⚠️ 位置上传失败：用户信息已失效，请重新登录");
+            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:418", "⚠️ 位置上传失败：用户信息已失效，请重新登录");
           }
         }
         try {
           await this.loadCurrentLocations();
         } catch (error) {
           if (error.message && error.message.includes("用户不存在")) {
-            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:430", "⚠️ 加载双方位置失败：用户信息已失效");
+            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:431", "⚠️ 加载双方位置失败：用户信息已失效");
           }
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:435", "获取位置失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:436", "获取位置失败:", error);
         this.locationError = error.errMsg || "获取位置失败";
         if (error.errMsg && error.errMsg.includes("auth deny")) {
           common_vendor.index.showToast({
@@ -304,7 +304,7 @@ const _sfc_main = {
               );
             }
           }
-          common_vendor.index.__f__("log", "at pages/trajectory/index.vue:511", "双方位置加载成功", {
+          common_vendor.index.__f__("log", "at pages/trajectory/index.vue:512", "双方位置加载成功", {
             myLocation: this.myLocation,
             partnerLocation: this.partnerLocation,
             distance: distanceText || this.distance,
@@ -313,13 +313,13 @@ const _sfc_main = {
           this.updateMap();
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:522", "加载双方位置失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:523", "加载双方位置失败:", error);
         if (error.message && error.message.includes("用户不存在")) {
-          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:525", "⚠️ 加载双方位置失败：用户信息已失效");
+          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:526", "⚠️ 加载双方位置失败：用户信息已失效");
           return;
         }
         {
-          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:532", "⚠️ 后端接口可能未实现，跳过加载双方位置");
+          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:533", "⚠️ 后端接口可能未实现，跳过加载双方位置");
         }
       }
     },
@@ -453,7 +453,7 @@ const _sfc_main = {
           this.partnerLocation.location_name = this.partnerLocation.location_name || location.location_name;
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:698", "地址反解析失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:699", "地址反解析失败:", error);
       }
     },
     /**
@@ -568,8 +568,14 @@ const _sfc_main = {
      * 地图点击事件
      */
     onMapTap(e) {
-      common_vendor.index.__f__("log", "at pages/trajectory/index.vue:835", "地图点击:", e);
-      if (this.showHistoryMode && e.detail && e.detail.markerId) {
+      common_vendor.index.__f__("log", "at pages/trajectory/index.vue:836", "地图点击:", e);
+    },
+    /**
+     * 地图标记点点击事件
+     */
+    onMarkerTap(e) {
+      common_vendor.index.__f__("log", "at pages/trajectory/index.vue:843", "标记点点击:", e);
+      if (this.showHistoryMode && e.detail) {
         const markerId = e.detail.markerId;
         const marker = this.mapMarkers.find((m) => m.id === markerId);
         if (marker && marker.pointData) {
@@ -666,7 +672,7 @@ const _sfc_main = {
           throw new Error(res.message || "加载失败");
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:945", "加载历史轨迹失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:952", "加载历史轨迹失败:", error);
         common_vendor.index.showToast({
           title: error.message || "加载历史轨迹失败",
           icon: "none",
@@ -880,10 +886,11 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     R: $data.mapMarkers,
     S: $data.mapPolyline,
     T: common_vendor.o((...args) => $options.onMapTap && $options.onMapTap(...args)),
-    U: !$data.myLocation && !$data.partnerLocation
+    U: common_vendor.o((...args) => $options.onMarkerTap && $options.onMarkerTap(...args)),
+    V: !$data.myLocation && !$data.partnerLocation
   }, !$data.myLocation && !$data.partnerLocation ? common_vendor.e({
-    V: common_assets._imports_0$5,
-    W: common_vendor.f($data.trajectoryPoints, (point, index, i0) => {
+    W: common_assets._imports_0$5,
+    X: common_vendor.f($data.trajectoryPoints, (point, index, i0) => {
       return {
         a: common_vendor.t(point.title),
         b: index,
@@ -892,37 +899,37 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         e: common_vendor.o(($event) => $options.showPointDetail(point), index)
       };
     }),
-    X: $data.trajectoryPoints.length > 1
+    Y: $data.trajectoryPoints.length > 1
   }, $data.trajectoryPoints.length > 1 ? {} : {}) : {}, {
-    Y: $data.showDetail
+    Z: $data.showDetail
   }, $data.showDetail ? common_vendor.e({
-    Z: common_vendor.t($data.currentPoint.location_name || $data.currentPoint.locationName || $data.currentPoint.title || "未知地点"),
-    aa: common_vendor.t($options.formatPointDate($data.currentPoint)),
-    ab: $data.currentPoint.address
+    aa: common_vendor.t($data.currentPoint.location_name || $data.currentPoint.locationName || $data.currentPoint.title || "未知地点"),
+    ab: common_vendor.t($options.formatPointDate($data.currentPoint)),
+    ac: $data.currentPoint.address
   }, $data.currentPoint.address ? {
-    ac: common_vendor.t($data.currentPoint.address)
+    ad: common_vendor.t($data.currentPoint.address)
   } : {}, {
-    ad: $data.currentPoint.photos && $data.currentPoint.photos.length > 0
+    ae: $data.currentPoint.photos && $data.currentPoint.photos.length > 0
   }, $data.currentPoint.photos && $data.currentPoint.photos.length > 0 ? {
-    ae: $data.currentPoint.photos[0]
+    af: $data.currentPoint.photos[0]
   } : $data.currentPoint.image ? {
-    ag: $data.currentPoint.image
+    ah: $data.currentPoint.image
   } : {}, {
-    af: $data.currentPoint.image,
-    ah: common_vendor.t($data.currentPoint.description || "暂无描述"),
-    ai: $data.currentPoint.visit_count
+    ag: $data.currentPoint.image,
+    ai: common_vendor.t($data.currentPoint.description || "暂无描述"),
+    aj: $data.currentPoint.visit_count
   }, $data.currentPoint.visit_count ? common_vendor.e({
-    aj: common_vendor.t($data.currentPoint.visit_count),
-    ak: $data.currentPoint.stay_duration
+    ak: common_vendor.t($data.currentPoint.visit_count),
+    al: $data.currentPoint.stay_duration
   }, $data.currentPoint.stay_duration ? {
-    al: common_vendor.t($options.formatDuration($data.currentPoint.stay_duration))
+    am: common_vendor.t($options.formatDuration($data.currentPoint.stay_duration))
   } : {}) : {}, {
-    am: common_vendor.o((...args) => $options.hidePointDetail && $options.hidePointDetail(...args)),
-    an: common_vendor.o(() => {
+    an: common_vendor.o((...args) => $options.hidePointDetail && $options.hidePointDetail(...args)),
+    ao: common_vendor.o(() => {
     }),
-    ao: common_vendor.o((...args) => $options.hidePointDetail && $options.hidePointDetail(...args))
+    ap: common_vendor.o((...args) => $options.hidePointDetail && $options.hidePointDetail(...args))
   }) : {}, {
-    ap: $options.containerPaddingTop
+    aq: $options.containerPaddingTop
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-bfa9c4cc"]]);
