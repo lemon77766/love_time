@@ -97,9 +97,9 @@
               <text class="setting-text">云同步</text>
             </view>
             <text class="setting-arrow">›</text>
-    </view>
-        </view>
       </view>
+      </view>
+    </view>
 
       <!-- 账号与安全 -->
       <view class="section account-section">
@@ -133,8 +133,8 @@
                   <text class="btn-text">上传自定义头像</text>
                 </button>
               </view>
-            </view>
-          </view>
+        </view>
+      </view>
 
           <!-- 昵称设置 -->
           <view class="profile-setting-block">
@@ -165,8 +165,8 @@
               <text class="save-text">保存设置</text>
             </button>
           </view>
+        </view>
       </view>
-    </view>
     </view>
   </view>
 </template>
@@ -891,8 +891,8 @@ export default {
 }
 
 .setting-left {
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
   gap: 16rpx;
   flex: 1;
 }

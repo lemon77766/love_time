@@ -127,15 +127,7 @@ export function getCurrentLocations() {
  *           description: string,        // 描述
  *           photos: string[]            // 照片列表
  *         }
- *       ],
- *       summary: {
- *         total_points: number,
- *         total_distance: number,       // 总行程（公里）
- *         most_visited: {              // 最常去的地点
- *           location_name: string,
- *           visit_count: number
- *         }
- *       }
+ *       ]
  *     }
  *   }
  */

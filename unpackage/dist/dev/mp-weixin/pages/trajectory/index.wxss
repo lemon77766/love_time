@@ -139,16 +139,6 @@
   font-size: 28rpx;
   border: none;
 }
-.history-summary.data-v-bfa9c4cc {
-  padding-top: 16rpx;
-  border-top: 1rpx solid #f0f0f0;
-}
-.summary-text.data-v-bfa9c4cc {
-  font-size: 26rpx;
-  color: #666;
-  line-height: 1.6;
-}
-
 /* 实时位置卡片 */
 .location-card.data-v-bfa9c4cc {
   background: #ffffff;

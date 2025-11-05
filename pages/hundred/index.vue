@@ -404,7 +404,7 @@ export default {
             console.log('📡 [后端] 同步图片到服务器...');
             await this.syncTaskComplete(item, true, tempFilePath);
             console.log('✅ [后端] 图片同步成功');
-            uni.showToast({ title: '图片已上传', icon: 'success' });
+          uni.showToast({ title: '图片已上传', icon: 'success' });
           } catch (error) {
             console.error('❌ [后端] 图片同步失败:', error);
             // 即使后端失败，也保留本地图片
@@ -450,11 +450,11 @@ export default {
         });
         
         console.log(`✅ [后端] ${action}任务成功`);
-        uni.showToast({ 
+      uni.showToast({ 
           title: newFavoriteState ? '已收藏' : '取消收藏', 
-          icon: 'none',
-          duration: 1500
-        });
+        icon: 'none',
+        duration: 1500
+      });
       } catch (error) {
         console.error(`❌ [后端] ${action}任务失败:`, error);
         // 回滚状态
@@ -518,7 +518,7 @@ export default {
           }
         } else {
           console.log('ℹ️ [提示] 预设任务仅保存到本地');
-          uni.showToast({ title: '已保存', icon: 'success' });
+        uni.showToast({ title: '已保存', icon: 'success' });
         }
       }
     },
@@ -549,7 +549,7 @@ export default {
           console.log('✅ [后端] 删除任务成功');
           
           // 从列表中移除
-          this.items = this.items.filter(it => it.id !== item.id);
+      this.items = this.items.filter(it => it.id !== item.id);
           this.saveItemsToLocal();
           
           uni.showToast({ title: '已删除', icon: 'success' });
@@ -667,7 +667,7 @@ export default {
         }
         
         this.saveItemsToLocal();
-        this.closeAdd();
+      this.closeAdd();
         uni.showToast({ title: '已添加', icon: 'success' });
         
       } catch (error) {
@@ -1061,9 +1061,9 @@ export default {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
-.btn.primary {
+.btn.primary { 
   background: #DCC7E1;
-  color: #fff;
+  color: #fff; 
 }
 
 .btn.secondary { 

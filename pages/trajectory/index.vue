@@ -16,9 +16,9 @@
 
     <!-- 内容区域 -->
     <view class="content-area">
-      <view class="header">
-        <text class="subtitle">记录你们一起走过的点点滴滴</text>
-      </view>
+    <view class="header">
+      <text class="subtitle">记录你们一起走过的点点滴滴</text>
+    </view>
 
       <!-- 历史轨迹查询卡片 -->
       <view class="history-card">
@@ -45,12 +45,6 @@
             {{ isLoadingHistory ? '加载中...' : '查询轨迹' }}
           </button>
           <button class="btn-clear" @click="clearHistory" v-if="historyPoints.length > 0">清除</button>
-        </view>
-        <view class="history-summary" v-if="historySummary">
-          <text class="summary-text">
-            共找到 {{ historySummary.total_points || 0 }} 个轨迹点，
-            总行程 {{ formatDistance(historySummary.total_distance || 0) }}
-          </text>
         </view>
       </view>
 
@@ -109,7 +103,7 @@
       </view>
 
       <!-- 地图容器 -->
-      <view class="map-container">
+    <view class="map-container">
         <!-- 真实地图组件 -->
         <map
           class="map"
@@ -128,24 +122,24 @@
         <!-- 备用：如果没有位置信息，显示静态地图和轨迹点 -->
         <view v-if="!myLocation && !partnerLocation" class="map-placeholder">
           <image class="map-bg" src="/static/trajectory/map.jpg" mode="aspectFill" />
-          
-          <!-- 轨迹点 -->
-          <view
-            v-for="(point, index) in trajectoryPoints"
-            :key="index"
-            class="trajectory-point"
-            :style="{ top: point.top + '%', left: point.left + '%' }"
-            @click="showPointDetail(point)"
-          >
-            <view class="point-marker">
-              <text class="point-icon">📍</text>
-            </view>
-            <view class="point-label">{{ point.title }}</view>
-          </view>
-          
-          <!-- 轨迹连线 -->
-          <view v-if="trajectoryPoints.length > 1" class="trajectory-line"></view>
+      
+      <!-- 轨迹点 -->
+      <view 
+        v-for="(point, index) in trajectoryPoints" 
+        :key="index"
+        class="trajectory-point"
+        :style="{ top: point.top + '%', left: point.left + '%' }"
+        @click="showPointDetail(point)"
+      >
+        <view class="point-marker">
+          <text class="point-icon">📍</text>
         </view>
+        <view class="point-label">{{ point.title }}</view>
+      </view>
+
+      <!-- 轨迹连线 -->
+          <view v-if="trajectoryPoints.length > 1" class="trajectory-line"></view>
+    </view>
       </view>
     </view>
 
@@ -160,7 +154,7 @@
           <view v-if="currentPoint.address" class="point-address">
             <text class="address-label">📍</text>
             <text class="address-text">{{ currentPoint.address }}</text>
-          </view>
+        </view>
           <image v-if="currentPoint.photos && currentPoint.photos.length > 0" :src="currentPoint.photos[0]" class="point-image" mode="aspectFill" />
           <image v-else-if="currentPoint.image" :src="currentPoint.image" class="point-image" mode="aspectFill" />
           <text class="point-description">{{ currentPoint.description || "暂无描述" }}</text>
@@ -193,7 +187,6 @@ export default {
       startDate: '',  // 开始日期
       endDate: '',    // 结束日期
       historyPoints: [],  // 历史轨迹点列表
-      historySummary: null,  // 历史轨迹统计信息
       isLoadingHistory: false,  // 是否正在加载历史轨迹
       // 定位相关
       isLocationTracking: false,  // 是否开启定位追踪
@@ -546,9 +539,9 @@ export default {
       // 检查权限
       this.checkLocationPermission().then((hasPermission) => {
         if (!hasPermission) {
-          return;
-        }
-        
+        return;
+      }
+      
         this.isLocationTracking = true;
         
         // 立即获取一次位置
@@ -925,9 +918,24 @@ export default {
           limit: 1000  // 获取更多轨迹点
         });
         
+        console.log('轨迹点查询响应:', res);
+        console.log('选择的日期范围:', this.startDate, '至', this.endDate);
+        
         if (res.success && res.data) {
-          this.historyPoints = res.data.points || [];
-          this.historySummary = res.data.summary || null;
+          // 兼容两种数据格式：
+          // 1. res.data.points (标准格式)
+          // 2. res.data 直接是数组 (后端返回格式)
+          let points = [];
+          if (Array.isArray(res.data)) {
+            points = res.data;
+          } else if (res.data.points && Array.isArray(res.data.points)) {
+            points = res.data.points;
+          }
+          
+          console.log('解析后的轨迹点数量:', points.length);
+          console.log('轨迹点数据示例:', points[0]);
+          
+          this.historyPoints = points;
           this.showHistoryMode = true;
           
           // 更新地图显示
@@ -966,7 +974,6 @@ export default {
      */
     clearHistory() {
       this.historyPoints = [];
-      this.historySummary = null;
       this.showHistoryMode = false;
       this.startDate = '';
       this.endDate = '';
@@ -984,9 +991,14 @@ export default {
       
       // 按时间排序轨迹点
       const sortedPoints = [...this.historyPoints].sort((a, b) => {
-        const timeA = new Date(a.visit_time || a.visitTime || 0).getTime();
-        const timeB = new Date(b.visit_time || b.visitTime || 0).getTime();
-        return timeA - timeB;
+        const timeA = this.parseTimeString(a.visit_time || a.visitTime);
+        const timeB = this.parseTimeString(b.visit_time || b.visitTime);
+        
+        if (!timeA && !timeB) return 0;
+        if (!timeA) return 1;
+        if (!timeB) return -1;
+        
+        return timeA.getTime() - timeB.getTime();
       });
       
       // 创建地图标记点
@@ -1073,11 +1085,44 @@ export default {
     },
     
     /**
+     * 解析时间字符串（兼容多种格式）
+     */
+    parseTimeString(timeStr) {
+      if (!timeStr) return null;
+      
+      // 如果是 Date 对象，直接返回
+      if (timeStr instanceof Date) {
+        return timeStr;
+      }
+      
+      // 尝试直接解析
+      let date = new Date(timeStr);
+      
+      // 如果解析失败，尝试处理特殊格式 "Nov 5, 2025, 3:13:02 PM"
+      if (isNaN(date.getTime())) {
+        // 处理 "Nov 5, 2025, 3:13:02 PM" 格式
+        // 将第二个逗号替换为空格: "Nov 5, 2025 3:13:02 PM"
+        const normalized = timeStr.replace(/,\s*(\d{1,2}:\d{2}:\d{2})/, ' $1');
+        date = new Date(normalized);
+      }
+      
+      // 如果还是失败，返回 null
+      if (isNaN(date.getTime())) {
+        console.warn('无法解析时间字符串:', timeStr);
+        return null;
+      }
+      
+      return date;
+    },
+    
+    /**
      * 格式化访问时间
      */
     formatVisitTime(timeStr) {
       if (!timeStr) return '';
-      const date = new Date(timeStr);
+      const date = this.parseTimeString(timeStr);
+      if (!date) return timeStr; // 如果解析失败，返回原始字符串
+      
       const month = date.getMonth() + 1;
       const day = date.getDate();
       const hour = date.getHours();
@@ -1090,7 +1135,9 @@ export default {
      */
     formatPointDate(point) {
       if (point.visit_time || point.visitTime) {
-        const date = new Date(point.visit_time || point.visitTime);
+        const date = this.parseTimeString(point.visit_time || point.visitTime);
+        if (!date) return '';
+        
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
@@ -1263,16 +1310,6 @@ export default {
   font-size: 28rpx;
   border: none;
 }
-.history-summary {
-  padding-top: 16rpx;
-  border-top: 1rpx solid #f0f0f0;
-}
-.summary-text {
-  font-size: 26rpx;
-  color: #666;
-  line-height: 1.6;
-}
-
 /* 实时位置卡片 */
 .location-card {
   background: #ffffff;

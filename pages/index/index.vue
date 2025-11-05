@@ -55,8 +55,8 @@
         </view>
         <view class="unbind-section">
           <button class="unbind-btn" @click="handleUnbind">解除关系</button>
+          </view>
         </view>
-      </view>
 
       <!-- 未绑定时的提示卡片 -->
       <view class="card couple-status-card" v-else>
@@ -71,15 +71,15 @@
           </view>
           <view class="couple-avatar-placeholder">
             <text class="placeholder-text">?</text>
-          </view>
         </view>
+      </view>
         <view class="couple-status-info">
           <text class="days-together">等待另一半</text>
         </view>
         <view class="invite-hint" @click="goToInvite">
           <text class="hint-text">点击邀请另一半</text>
         </view>
-      </view>
+    </view>
 
       <!-- 功能卡片网格 -->
       <view class="card grid-card">
@@ -87,7 +87,7 @@
           <text class="card-title">功能入口</text>
         </view>
         <view class="card-body grid-body">
-          <view class="grid-container">
+      <view class="grid-container">
             <view class="grid-item" @click="goToSweetQA">
               <view class="grid-icon-wrapper">
                 <image class="grid-icon-image" src="/static/zhuye/qna.png" mode="aspectFit"></image>
@@ -118,9 +118,9 @@
               </view>
               <text class="grid-text">未来情书</text>
             </view>
-          </view>
         </view>
       </view>
+    </view>
 
       <!-- 心语心愿卡片 -->
       <view class="card wish-card">
@@ -387,7 +387,7 @@ export default {
                 bindTime: response.data.bindTime || '',
                 role: response.data.role || ''
               });
-            } else {
+      } else {
               // 服务器返回未绑定，确保本地也是未绑定状态
               this.isBound = false;
               this.partnerInfo = null;
@@ -458,7 +458,7 @@ export default {
               // 清除本地信息
               clearCoupleInfo();
               
-              uni.showToast({ 
+            uni.showToast({
                 title: '已解除关系', 
                 icon: 'success' 
               });
@@ -469,7 +469,7 @@ export default {
               this.bindTime = '';
               
               // 延迟刷新页面
-              setTimeout(() => {
+            setTimeout(() => {
                 this.loadCoupleInfo();
               }, 1500);
             } catch (error) {
