@@ -21,13 +21,20 @@ const _sfc_main = {
       isBound: false,
       partnerInfo: null,
       bindTime: "",
+      // 相爱天数相关
+      loveDays: 0,
+      anniversaryDate: "",
+      relationshipName: "",
       // 近期动态
       recentActivities: []
     };
   },
   computed: {
-    // 计算在一起的天数
+    // 计算在一起的天数（优先使用接口返回的数据）
     daysTogether() {
+      if (this.loveDays > 0) {
+        return this.loveDays;
+      }
       if (!this.bindTime)
         return 0;
       try {
@@ -66,15 +73,17 @@ const _sfc_main = {
       return totalHeightRpx + 20 + "rpx";
     }
   },
-  onLoad() {
+  async onLoad() {
     this.getSystemInfo();
     this.loadUserInfo();
-    this.loadCoupleInfo();
+    await this.loadCoupleInfo();
+    this.loadLoveDays();
     this.loadRecentActivities();
   },
-  onShow() {
+  async onShow() {
     this.loadUserInfo();
-    this.loadCoupleInfo();
+    await this.loadCoupleInfo();
+    this.loadLoveDays();
     this.loadRecentActivities();
   },
   methods: {
@@ -136,7 +145,7 @@ const _sfc_main = {
           }
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:317", "加载用户信息失败", error);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:328", "加载用户信息失败", error);
       }
     },
     // 加载情侣信息
@@ -163,7 +172,7 @@ const _sfc_main = {
                 this.partnerInfo = response.data.partnerInfo || {};
                 this.bindTime = response.data.bindTime || "";
               } else {
-                common_vendor.index.__f__("log", "at pages/index/index.vue:348", "⚠️ 服务器返回未绑定，清除本地状态");
+                common_vendor.index.__f__("log", "at pages/index/index.vue:359", "⚠️ 服务器返回未绑定，清除本地状态");
                 utils_couple.clearCoupleInfo();
                 this.isBound = false;
                 this.partnerInfo = null;
@@ -171,7 +180,7 @@ const _sfc_main = {
               }
             }
           } catch (e) {
-            common_vendor.index.__f__("error", "at pages/index/index.vue:356", "同步绑定状态失败", e);
+            common_vendor.index.__f__("error", "at pages/index/index.vue:367", "同步绑定状态失败", e);
           }
           return;
         }
@@ -200,7 +209,7 @@ const _sfc_main = {
             }
           }
         } catch (e) {
-          common_vendor.index.__f__("error", "at pages/index/index.vue:391", "查询绑定状态失败", e);
+          common_vendor.index.__f__("error", "at pages/index/index.vue:402", "查询绑定状态失败", e);
           this.isBound = utils_couple.isBound();
           if (this.isBound) {
             this.partnerInfo = utils_couple.getPartnerInfo();
@@ -209,11 +218,37 @@ const _sfc_main = {
           }
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:401", "加载情侣信息失败", e);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:412", "加载情侣信息失败", e);
         this.isBound = utils_couple.isBound();
         if (this.isBound) {
           this.partnerInfo = utils_couple.getPartnerInfo();
         }
+      }
+    },
+    // 加载相爱天数
+    async loadLoveDays() {
+      if (!this.isBound) {
+        this.loveDays = 0;
+        this.anniversaryDate = "";
+        this.relationshipName = "";
+        return;
+      }
+      try {
+        const response = await api_couple.getLoveDays();
+        if (response && response.success && response.data) {
+          this.loveDays = response.data.loveDays || 0;
+          this.anniversaryDate = response.data.anniversaryDate || "";
+          this.relationshipName = response.data.relationshipName || "";
+          common_vendor.index.__f__("log", "at pages/index/index.vue:436", "✅ 成功加载相爱天数:", {
+            loveDays: this.loveDays,
+            anniversaryDate: this.anniversaryDate,
+            relationshipName: this.relationshipName
+          });
+        } else {
+          common_vendor.index.__f__("warn", "at pages/index/index.vue:442", "⚠️ 获取相爱天数失败，响应格式异常:", response);
+        }
+      } catch (error) {
+        common_vendor.index.__f__("error", "at pages/index/index.vue:445", "❌ 获取相爱天数失败:", error);
       }
     },
     // 加载近期动态

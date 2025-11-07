@@ -48,7 +48,8 @@ const devConfig = {
       INVITE_VALIDATE: '/api/couple/invite/validate',   // 验证邀请码
       BIND_ACCEPT: '/api/couple/bind/accept',           // 接受邀请（绑定）
       STATUS: '/api/couple/status',                     // 查询绑定状态
-      UNBIND: '/api/couple/unbind'                       // 解绑关系
+      UNBIND: '/api/couple/unbind',                     // 解绑关系
+      LOVE_DAYS: '/api/couple/love-days'                // 获取相爱天数
     },
     HEART_WALL: {
       // 项目相关接口

@@ -66,8 +66,10 @@ const devConfig = {
       // 接受邀请（绑定）
       STATUS: "/api/couple/status",
       // 查询绑定状态
-      UNBIND: "/api/couple/unbind"
+      UNBIND: "/api/couple/unbind",
       // 解绑关系
+      LOVE_DAYS: "/api/couple/love-days"
+      // 获取相爱天数
     },
     HEART_WALL: {
       // 项目相关接口

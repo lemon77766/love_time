@@ -25,8 +25,8 @@ const _sfc_main = {
         const loginInfo = common_vendor.index.getStorageSync("login_info");
         const hasToken = loginInfo && (loginInfo.token && loginInfo.token.trim() || ((_a = loginInfo.data) == null ? void 0 : _a.token) && loginInfo.data.token.trim() || loginInfo.accessToken && loginInfo.accessToken.trim());
         if (loginInfo && loginInfo.isLoggedIn && hasToken) {
-          common_vendor.index.__f__("log", "at pages/login/index.vue:97", "检测到本地登录信息，自动跳转到首页");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:98", "⚠️ 提示：如果token已过期，将在后续请求时自动处理");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:102", "检测到本地登录信息，自动跳转到首页");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:103", "⚠️ 提示：如果token已过期，将在后续请求时自动处理");
           this.isLoggedIn = true;
           this.userInfo = loginInfo.userInfo || {};
           setTimeout(() => {
@@ -35,14 +35,14 @@ const _sfc_main = {
             });
           }, 300);
         } else if (loginInfo && loginInfo.isLoggedIn && !hasToken) {
-          common_vendor.index.__f__("warn", "at pages/login/index.vue:110", "⚠️ 检测到无效的登录信息（缺少token），正在清除...");
+          common_vendor.index.__f__("warn", "at pages/login/index.vue:115", "⚠️ 检测到无效的登录信息（缺少token），正在清除...");
           common_vendor.index.removeStorageSync("login_info");
           this.isLoggedIn = false;
           this.userInfo = {};
-          common_vendor.index.__f__("warn", "at pages/login/index.vue:114", "✅ 已清除无效的登录信息，请重新登录");
+          common_vendor.index.__f__("warn", "at pages/login/index.vue:119", "✅ 已清除无效的登录信息，请重新登录");
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:117", "检查登录状态失败", e);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:122", "检查登录状态失败", e);
       }
     },
     /**
@@ -75,7 +75,7 @@ const _sfc_main = {
           this.enterApp();
         }, 1500);
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:159", "游客登录失败", error);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:164", "游客登录失败", error);
         common_vendor.index.showToast({
           title: "登录失败，请重试",
           icon: "none"
@@ -107,7 +107,7 @@ const _sfc_main = {
             avatarUrl: userProfile.userInfo.avatarUrl
           });
         } catch (apiError) {
-          common_vendor.index.__f__("warn", "at pages/login/index.vue:196", "后端API调用失败，使用模拟登录", apiError);
+          common_vendor.index.__f__("warn", "at pages/login/index.vue:201", "后端API调用失败，使用模拟登录", apiError);
           loginResult = {
             token: "mock_token_" + Date.now(),
             openid: "mock_openid_" + Date.now(),
@@ -144,26 +144,26 @@ const _sfc_main = {
           // 标记是否为模拟登录
         };
         if (true) {
-          common_vendor.index.__f__("log", "at pages/login/index.vue:266", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:267", "🔍 [登录响应分析]");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:268", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:269", "📦 原始响应数据:", loginResult);
-          common_vendor.index.__f__("log", "at pages/login/index.vue:270", "📦 响应数据类型:", typeof loginResult);
-          common_vendor.index.__f__("log", "at pages/login/index.vue:271", "📦 responseData:", responseData);
-          common_vendor.index.__f__("log", "at pages/login/index.vue:272", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:273", "🔑 Token提取结果:");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:274", "   - responseData.token:", responseData.token || "未找到");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:275", "   - loginResult.token:", loginResult.token || "未找到");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:276", "   - loginResult.data?.token:", ((_d = loginResult.data) == null ? void 0 : _d.token) || "未找到");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:277", "   - 最终提取的Token:", token ? `✅ 已找到，长度: ${token.length}` : "❌ 未找到");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:278", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:279", "👤 OpenID提取结果:");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:280", "   - 最终提取的OpenID:", openid ? `✅ 已找到: ${openid}` : "❌ 未找到");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:281", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:271", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:272", "🔍 [登录响应分析]");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:273", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:274", "📦 原始响应数据:", loginResult);
+          common_vendor.index.__f__("log", "at pages/login/index.vue:275", "📦 响应数据类型:", typeof loginResult);
+          common_vendor.index.__f__("log", "at pages/login/index.vue:276", "📦 responseData:", responseData);
+          common_vendor.index.__f__("log", "at pages/login/index.vue:277", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:278", "🔑 Token提取结果:");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:279", "   - responseData.token:", responseData.token || "未找到");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:280", "   - loginResult.token:", loginResult.token || "未找到");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:281", "   - loginResult.data?.token:", ((_d = loginResult.data) == null ? void 0 : _d.token) || "未找到");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:282", "   - 最终提取的Token:", token ? `✅ 已找到，长度: ${token.length}` : "❌ 未找到");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:283", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:284", "👤 OpenID提取结果:");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:285", "   - 最终提取的OpenID:", openid ? `✅ 已找到: ${openid}` : "❌ 未找到");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:286", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
           if (!token) {
-            common_vendor.index.__f__("error", "at pages/login/index.vue:283", "❌ Token提取失败！");
-            common_vendor.index.__f__("error", "at pages/login/index.vue:284", "📋 完整响应结构:", JSON.stringify(loginResult, null, 2));
-            common_vendor.index.__f__("error", "at pages/login/index.vue:285", "💡 提示: 请检查后端返回的数据结构是否符合预期");
+            common_vendor.index.__f__("error", "at pages/login/index.vue:288", "❌ Token提取失败！");
+            common_vendor.index.__f__("error", "at pages/login/index.vue:289", "📋 完整响应结构:", JSON.stringify(loginResult, null, 2));
+            common_vendor.index.__f__("error", "at pages/login/index.vue:290", "💡 提示: 请检查后端返回的数据结构是否符合预期");
           }
         }
         common_vendor.index.setStorageSync("login_info", loginInfo);
@@ -171,24 +171,24 @@ const _sfc_main = {
         this.isLoggedIn = true;
         const savedLoginInfo = common_vendor.index.getStorageSync("login_info");
         if (true) {
-          common_vendor.index.__f__("log", "at pages/login/index.vue:296", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:297", "💾 [存储验证]");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:298", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:299", "📦 保存后的登录信息:", savedLoginInfo);
-          common_vendor.index.__f__("log", "at pages/login/index.vue:300", "🔑 保存后的Token:", (savedLoginInfo == null ? void 0 : savedLoginInfo.token) ? `✅ 已保存，长度: ${savedLoginInfo.token.length}` : "❌ 未保存");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:301", "👤 保存后的OpenID:", (savedLoginInfo == null ? void 0 : savedLoginInfo.openid) ? `✅ 已保存: ${savedLoginInfo.openid}` : "❌ 未保存");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:302", "🔐 保存后的SessionKey:", (savedLoginInfo == null ? void 0 : savedLoginInfo.sessionKey) ? `✅ 已保存，长度: ${savedLoginInfo.sessionKey.length}` : "❌ 未保存");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:301", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:302", "💾 [存储验证]");
           common_vendor.index.__f__("log", "at pages/login/index.vue:303", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:304", "📦 保存后的登录信息:", savedLoginInfo);
+          common_vendor.index.__f__("log", "at pages/login/index.vue:305", "🔑 保存后的Token:", (savedLoginInfo == null ? void 0 : savedLoginInfo.token) ? `✅ 已保存，长度: ${savedLoginInfo.token.length}` : "❌ 未保存");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:306", "👤 保存后的OpenID:", (savedLoginInfo == null ? void 0 : savedLoginInfo.openid) ? `✅ 已保存: ${savedLoginInfo.openid}` : "❌ 未保存");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:307", "🔐 保存后的SessionKey:", (savedLoginInfo == null ? void 0 : savedLoginInfo.sessionKey) ? `✅ 已保存，长度: ${savedLoginInfo.sessionKey.length}` : "❌ 未保存");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:308", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         }
         if (!token || !token.trim()) {
-          common_vendor.index.__f__("error", "at pages/login/index.vue:308", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("error", "at pages/login/index.vue:309", "⚠️ [警告] Token为空！");
-          common_vendor.index.__f__("error", "at pages/login/index.vue:310", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("error", "at pages/login/index.vue:311", "🔍 可能的原因:");
-          common_vendor.index.__f__("error", "at pages/login/index.vue:312", "   1. 后端返回的数据结构中不包含token字段");
-          common_vendor.index.__f__("error", "at pages/login/index.vue:313", "   2. 后端返回的token字段名为空字符串");
-          common_vendor.index.__f__("error", "at pages/login/index.vue:314", "   3. 后端返回的数据结构不符合预期");
+          common_vendor.index.__f__("error", "at pages/login/index.vue:313", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          common_vendor.index.__f__("error", "at pages/login/index.vue:314", "⚠️ [警告] Token为空！");
           common_vendor.index.__f__("error", "at pages/login/index.vue:315", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          common_vendor.index.__f__("error", "at pages/login/index.vue:316", "🔍 可能的原因:");
+          common_vendor.index.__f__("error", "at pages/login/index.vue:317", "   1. 后端返回的数据结构中不包含token字段");
+          common_vendor.index.__f__("error", "at pages/login/index.vue:318", "   2. 后端返回的token字段名为空字符串");
+          common_vendor.index.__f__("error", "at pages/login/index.vue:319", "   3. 后端返回的数据结构不符合预期");
+          common_vendor.index.__f__("error", "at pages/login/index.vue:320", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
           common_vendor.index.showModal({
             title: "登录警告",
             content: "未获取到有效的登录凭证，部分功能可能无法使用。请检查后端服务是否正常。",
@@ -204,7 +204,7 @@ const _sfc_main = {
           this.enterApp();
         }, 1500);
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:336", "微信登录失败", e);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:341", "微信登录失败", e);
         common_vendor.index.showToast({
           title: e.errMsg || "登录失败，请重试",
           icon: "none"

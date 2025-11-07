@@ -105,9 +105,9 @@
           <view class="unbind-content" @click="handleUnbind">
             <text class="unbind-icon">🔗</text>
             <text class="unbind-text">解除关系</text>
-          </view>
-        </view>
       </view>
+      </view>
+    </view>
 
       <!-- 账号与安全 -->
       <view class="section account-section">
@@ -141,8 +141,8 @@
                   <text class="btn-text">上传自定义头像</text>
                 </button>
               </view>
-            </view>
-          </view>
+        </view>
+      </view>
 
           <!-- 昵称设置 -->
           <view class="profile-setting-block">
@@ -163,8 +163,8 @@
                 />
                 <text class="char-count">{{ customNickname.length }}/20</text>
               </view>
-            </view>
-          </view>
+      </view>
+    </view>
 
           <!-- 保存按钮 -->
           <view class="save-section">

@@ -558,3 +558,56 @@ export function unbindCouple() {
   });
 }
 
+/**
+ * 获取相爱天数
+ * @returns {Promise<Object>} 返回相爱天数信息
+ * 
+ * 后端接口要求：
+ * - 请求方法：GET
+ * - 请求地址：/api/couple/love-days
+ * - 请求头：需携带 Authorization token
+ * - 返回数据格式：
+ *   {
+ *     success: true,
+ *     message: "获取相爱天数成功",
+ *     data: {
+ *       loveDays: 150,
+ *       anniversaryDate: "2025-06-10",
+ *       relationshipName: "我的宝贝"
+ *     }
+ *   }
+ */
+export function getLoveDays() {
+  const url = config.API.COUPLE.LOVE_DAYS;
+  const fullUrl = config.baseURL + url;
+  
+  console.log('🔗 [情侣关系API] 开始获取相爱天数');
+  console.log('📍 请求地址:', fullUrl);
+  console.log('📋 请求方法: GET');
+  console.log('⏰ 请求时间:', new Date().toLocaleString());
+  
+  return http.get(url).then(response => {
+    console.log('✅ [情侣关系API] 获取相爱天数成功');
+    console.log('📦 响应数据:', response);
+    
+    if (response && response.data) {
+      const loveDaysData = response.data;
+      console.log('📊 相爱天数信息:');
+      console.log(`   - 相爱天数: ${loveDaysData.loveDays || '未知'}`);
+      console.log(`   - 纪念日: ${loveDaysData.anniversaryDate || '未知'}`);
+      console.log(`   - 关系名称: ${loveDaysData.relationshipName || '未知'}`);
+      return response;
+    } else if (response && (response.loveDays !== undefined || response.anniversaryDate)) {
+      // 兼容直接返回数据的情况
+      return { success: true, data: response };
+    } else {
+      console.warn('⚠️ 响应数据格式异常:', response);
+      return response;
+    }
+  }).catch(error => {
+    console.error('❌ [情侣关系API] 获取相爱天数失败');
+    console.error('🔴 错误信息:', error);
+    throw error;
+  });
+}
+

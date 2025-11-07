@@ -112,7 +112,7 @@
       <!-- 轨迹连线 -->
           <view v-if="trajectoryPoints.length > 1" class="trajectory-line"></view>
     </view>
-      </view>
+    </view>
     </view>
 
     <!-- 轨迹点详情弹窗 -->

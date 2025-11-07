@@ -1,6 +1,6 @@
 "use strict";
 const _imports_0$4 = "/static/login/beijing.jpg";
-const _imports_1$1 = "/static/zhuye/yellow_love.png";
+const _imports_1$1 = "/static/login/logo.png";
 const _imports_0$3 = "/static/changhe/ditu.jpg";
 const _imports_1 = "/static/changhe/xinfeng.jpg";
 const _imports_0$2 = "/static/hundred/shangmian.jpg";

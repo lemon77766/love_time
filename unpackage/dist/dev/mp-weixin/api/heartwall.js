@@ -125,7 +125,7 @@ function deleteProject(projectId) {
 function uploadPhoto(photoData) {
   const url = utils_config.config.API.HEART_WALL.PHOTOS;
   const fullUrl = utils_config.config.baseURL + url;
-  common_vendor.index.__f__("log", "at api/heartwall.js:251", "🔗 [心形墙API] 开始上传照片");
+  common_vendor.index.__f__("log", "at api/heartwall.js:251", "🔗 [心形墙API] 开始上传照片（JSON格式）");
   common_vendor.index.__f__("log", "at api/heartwall.js:252", "📍 请求地址:", fullUrl);
   common_vendor.index.__f__("log", "at api/heartwall.js:253", "📋 请求方法: POST");
   common_vendor.index.__f__("log", "at api/heartwall.js:254", "📤 请求参数:", photoData);
@@ -157,6 +157,70 @@ function uploadPhoto(photoData) {
     throw error;
   });
 }
+function uploadPhotoWithFile(options) {
+  const { filePath, projectId, positionIndex, caption, takenDate } = options;
+  if (!filePath) {
+    return Promise.reject(new Error("文件路径不能为空"));
+  }
+  if (!projectId) {
+    return Promise.reject(new Error("项目ID不能为空"));
+  }
+  const url = utils_config.config.API.HEART_WALL.PHOTOS;
+  const fullUrl = utils_config.config.baseURL + url;
+  common_vendor.index.__f__("log", "at api/heartwall.js:328", "🔗 [心形墙API] 开始直接上传照片文件");
+  common_vendor.index.__f__("log", "at api/heartwall.js:329", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/heartwall.js:330", "📋 请求方法: POST (multipart/form-data)");
+  common_vendor.index.__f__("log", "at api/heartwall.js:331", "📁 文件路径:", filePath);
+  common_vendor.index.__f__("log", "at api/heartwall.js:332", "📝 项目ID:", projectId);
+  common_vendor.index.__f__("log", "at api/heartwall.js:333", "📍 位置索引:", positionIndex);
+  common_vendor.index.__f__("log", "at api/heartwall.js:334", "💬 照片说明:", caption);
+  common_vendor.index.__f__("log", "at api/heartwall.js:335", "📅 拍摄日期:", takenDate);
+  common_vendor.index.__f__("log", "at api/heartwall.js:336", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  const formData = {
+    projectId: String(projectId)
+  };
+  if (positionIndex !== void 0 && positionIndex !== null) {
+    formData.positionIndex = String(positionIndex);
+  }
+  if (caption) {
+    formData.caption = caption;
+  }
+  if (takenDate) {
+    formData.takenDate = takenDate;
+  }
+  return utils_http.http.upload({
+    url,
+    filePath,
+    name: "file",
+    // 后端期望的文件字段名
+    formData
+  }).then((response) => {
+    common_vendor.index.__f__("log", "at api/heartwall.js:359", "✅ [心形墙API] 直接上传照片文件成功");
+    common_vendor.index.__f__("log", "at api/heartwall.js:360", "📦 响应数据:", response);
+    if (response && response.data) {
+      common_vendor.index.__f__("log", "at api/heartwall.js:365", `📷 照片ID: ${response.data.photoId || response.data.id || "未知"}`);
+      return response;
+    } else if (response && response.photo) {
+      const photo = response.photo;
+      common_vendor.index.__f__("log", "at api/heartwall.js:370", `📷 照片ID: ${photo.id || photo.photoId || "未知"}`);
+      return {
+        success: true,
+        data: photo,
+        message: response.message,
+        photoCount: response.photoCount,
+        nextPosition: response.nextPosition
+      };
+    } else if (response && (response.photoId || response.id)) {
+      return { success: true, data: response };
+    } else {
+      return response;
+    }
+  }).catch((error) => {
+    common_vendor.index.__f__("error", "at api/heartwall.js:386", "❌ [心形墙API] 直接上传照片文件失败");
+    common_vendor.index.__f__("error", "at api/heartwall.js:387", "🔴 错误信息:", error);
+    throw error;
+  });
+}
 function getProjectPhotos(projectId, options = {}) {
   const { page = 1, pageSize = 20 } = options;
   let url = `${utils_config.config.API.HEART_WALL.PROJECT_DETAIL}/${projectId}?action=photos`;
@@ -167,51 +231,51 @@ function getProjectPhotos(projectId, options = {}) {
     url += `&pageSize=${pageSize}`;
   }
   const fullUrl = utils_config.config.baseURL + url;
-  common_vendor.index.__f__("log", "at api/heartwall.js:318", "🔗 [心形墙API] 开始获取项目照片列表");
-  common_vendor.index.__f__("log", "at api/heartwall.js:319", "📍 请求地址:", fullUrl);
-  common_vendor.index.__f__("log", "at api/heartwall.js:320", "📋 请求方法: GET");
-  common_vendor.index.__f__("log", "at api/heartwall.js:321", "📝 项目ID:", projectId);
-  common_vendor.index.__f__("log", "at api/heartwall.js:322", "📄 分页参数: page=", page, "pageSize=", pageSize);
-  common_vendor.index.__f__("log", "at api/heartwall.js:323", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  common_vendor.index.__f__("log", "at api/heartwall.js:419", "🔗 [心形墙API] 开始获取项目照片列表");
+  common_vendor.index.__f__("log", "at api/heartwall.js:420", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/heartwall.js:421", "📋 请求方法: GET");
+  common_vendor.index.__f__("log", "at api/heartwall.js:422", "📝 项目ID:", projectId);
+  common_vendor.index.__f__("log", "at api/heartwall.js:423", "📄 分页参数: page=", page, "pageSize=", pageSize);
+  common_vendor.index.__f__("log", "at api/heartwall.js:424", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
   return utils_http.http.get(url).then((response) => {
-    common_vendor.index.__f__("log", "at api/heartwall.js:326", "✅ [心形墙API] 获取项目照片列表成功");
-    common_vendor.index.__f__("log", "at api/heartwall.js:327", "📦 响应数据:", response);
+    common_vendor.index.__f__("log", "at api/heartwall.js:427", "✅ [心形墙API] 获取项目照片列表成功");
+    common_vendor.index.__f__("log", "at api/heartwall.js:428", "📦 响应数据:", response);
     if (response && response.data) {
       const photos = Array.isArray(response.data) ? response.data : response.data.photos || [];
-      common_vendor.index.__f__("log", "at api/heartwall.js:331", `📊 照片数量: ${photos.length}`);
+      common_vendor.index.__f__("log", "at api/heartwall.js:432", `📊 照片数量: ${photos.length}`);
       return response;
     } else if (Array.isArray(response)) {
-      common_vendor.index.__f__("log", "at api/heartwall.js:335", `📊 照片数量: ${response.length}`);
+      common_vendor.index.__f__("log", "at api/heartwall.js:436", `📊 照片数量: ${response.length}`);
       return { success: true, data: response };
     } else if (response && response.photos) {
-      common_vendor.index.__f__("log", "at api/heartwall.js:339", `📊 照片数量: ${response.photos.length}`);
+      common_vendor.index.__f__("log", "at api/heartwall.js:440", `📊 照片数量: ${response.photos.length}`);
       return { success: true, data: response.photos };
     } else {
-      common_vendor.index.__f__("warn", "at api/heartwall.js:342", "⚠️ 响应数据格式异常:", response);
+      common_vendor.index.__f__("warn", "at api/heartwall.js:443", "⚠️ 响应数据格式异常:", response);
       return { success: true, data: [] };
     }
   }).catch((error) => {
-    common_vendor.index.__f__("error", "at api/heartwall.js:346", "❌ [心形墙API] 获取项目照片列表失败");
-    common_vendor.index.__f__("error", "at api/heartwall.js:347", "🔴 错误信息:", error);
+    common_vendor.index.__f__("error", "at api/heartwall.js:447", "❌ [心形墙API] 获取项目照片列表失败");
+    common_vendor.index.__f__("error", "at api/heartwall.js:448", "🔴 错误信息:", error);
     throw error;
   });
 }
 function updatePhoto(photoId, photoData) {
   const url = `${utils_config.config.API.HEART_WALL.PHOTOS}/${photoId}`;
   const fullUrl = utils_config.config.baseURL + url;
-  common_vendor.index.__f__("log", "at api/heartwall.js:423", "🔗 [心形墙API] 开始更新照片");
-  common_vendor.index.__f__("log", "at api/heartwall.js:424", "📍 请求地址:", fullUrl);
-  common_vendor.index.__f__("log", "at api/heartwall.js:425", "📋 请求方法: PUT");
-  common_vendor.index.__f__("log", "at api/heartwall.js:426", "📷 照片ID:", photoId);
-  common_vendor.index.__f__("log", "at api/heartwall.js:427", "📤 请求参数:", photoData);
-  common_vendor.index.__f__("log", "at api/heartwall.js:428", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  common_vendor.index.__f__("log", "at api/heartwall.js:524", "🔗 [心形墙API] 开始更新照片");
+  common_vendor.index.__f__("log", "at api/heartwall.js:525", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/heartwall.js:526", "📋 请求方法: PUT");
+  common_vendor.index.__f__("log", "at api/heartwall.js:527", "📷 照片ID:", photoId);
+  common_vendor.index.__f__("log", "at api/heartwall.js:528", "📤 请求参数:", photoData);
+  common_vendor.index.__f__("log", "at api/heartwall.js:529", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
   return utils_http.http.put(url, photoData).then((response) => {
-    common_vendor.index.__f__("log", "at api/heartwall.js:431", "✅ [心形墙API] 更新照片成功");
-    common_vendor.index.__f__("log", "at api/heartwall.js:432", "📦 响应数据:", response);
+    common_vendor.index.__f__("log", "at api/heartwall.js:532", "✅ [心形墙API] 更新照片成功");
+    common_vendor.index.__f__("log", "at api/heartwall.js:533", "📦 响应数据:", response);
     return response;
   }).catch((error) => {
-    common_vendor.index.__f__("error", "at api/heartwall.js:435", "❌ [心形墙API] 更新照片失败");
-    common_vendor.index.__f__("error", "at api/heartwall.js:436", "🔴 错误信息:", error);
+    common_vendor.index.__f__("error", "at api/heartwall.js:536", "❌ [心形墙API] 更新照片失败");
+    common_vendor.index.__f__("error", "at api/heartwall.js:537", "🔴 错误信息:", error);
     throw error;
   });
 }
@@ -219,27 +283,27 @@ function clearProjectPhotos(projectId) {
   const projectIdValue = typeof projectId === "string" ? parseInt(projectId, 10) : Number(projectId);
   if (isNaN(projectIdValue) || projectIdValue <= 0) {
     const error = new Error(`无效的项目ID: ${projectId}`);
-    common_vendor.index.__f__("error", "at api/heartwall.js:490", "❌ [心形墙API] 项目ID验证失败:", error);
+    common_vendor.index.__f__("error", "at api/heartwall.js:591", "❌ [心形墙API] 项目ID验证失败:", error);
     return Promise.reject(error);
   }
   const url = `/api/heart-wall/clear-photos?projectId=${projectIdValue}`;
   const fullUrl = utils_config.config.baseURL + url;
-  common_vendor.index.__f__("log", "at api/heartwall.js:498", "🔗 [心形墙API] 开始清空项目照片");
-  common_vendor.index.__f__("log", "at api/heartwall.js:499", "📍 请求地址:", fullUrl);
-  common_vendor.index.__f__("log", "at api/heartwall.js:500", "📋 请求方法: PUT");
-  common_vendor.index.__f__("log", "at api/heartwall.js:501", "📝 项目ID:", projectId, "→", projectIdValue, "(类型: number)");
-  common_vendor.index.__f__("log", "at api/heartwall.js:502", "📤 URL参数: projectId=" + projectIdValue);
-  common_vendor.index.__f__("log", "at api/heartwall.js:503", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  common_vendor.index.__f__("log", "at api/heartwall.js:599", "🔗 [心形墙API] 开始清空项目照片");
+  common_vendor.index.__f__("log", "at api/heartwall.js:600", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/heartwall.js:601", "📋 请求方法: PUT");
+  common_vendor.index.__f__("log", "at api/heartwall.js:602", "📝 项目ID:", projectId, "→", projectIdValue, "(类型: number)");
+  common_vendor.index.__f__("log", "at api/heartwall.js:603", "📤 URL参数: projectId=" + projectIdValue);
+  common_vendor.index.__f__("log", "at api/heartwall.js:604", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
   return utils_http.http.put(url, {}).then((response) => {
-    common_vendor.index.__f__("log", "at api/heartwall.js:507", "✅ [心形墙API] 清空项目照片成功");
-    common_vendor.index.__f__("log", "at api/heartwall.js:508", "📦 响应数据:", response);
+    common_vendor.index.__f__("log", "at api/heartwall.js:608", "✅ [心形墙API] 清空项目照片成功");
+    common_vendor.index.__f__("log", "at api/heartwall.js:609", "📦 响应数据:", response);
     return response;
   }).catch((error) => {
     var _a;
-    common_vendor.index.__f__("error", "at api/heartwall.js:511", "❌ [心形墙API] 清空项目照片失败");
-    common_vendor.index.__f__("error", "at api/heartwall.js:512", "🔴 HTTP状态码:", error.statusCode || "未知");
-    common_vendor.index.__f__("error", "at api/heartwall.js:513", "🔴 错误消息:", error.message || ((_a = error.data) == null ? void 0 : _a.message) || "未知错误");
-    common_vendor.index.__f__("error", "at api/heartwall.js:514", "🔴 完整错误对象:", error);
+    common_vendor.index.__f__("error", "at api/heartwall.js:612", "❌ [心形墙API] 清空项目照片失败");
+    common_vendor.index.__f__("error", "at api/heartwall.js:613", "🔴 HTTP状态码:", error.statusCode || "未知");
+    common_vendor.index.__f__("error", "at api/heartwall.js:614", "🔴 错误消息:", error.message || ((_a = error.data) == null ? void 0 : _a.message) || "未知错误");
+    common_vendor.index.__f__("error", "at api/heartwall.js:615", "🔴 完整错误对象:", error);
     throw error;
   });
 }
@@ -252,4 +316,5 @@ exports.getProjects = getProjects;
 exports.updatePhoto = updatePhoto;
 exports.updateProject = updateProject;
 exports.uploadPhoto = uploadPhoto;
+exports.uploadPhotoWithFile = uploadPhotoWithFile;
 //# sourceMappingURL=../../.sourcemap/mp-weixin/api/heartwall.js.map

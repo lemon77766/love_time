@@ -144,7 +144,7 @@
 
 <script>
 import { getCoupleInfo, getPartnerInfo, isBound as checkIsBound, clearCoupleInfo } from '../../utils/couple.js';
-import { getCoupleStatus } from '../../api/couple.js';
+import { getCoupleStatus, getLoveDays } from '../../api/couple.js';
 import { saveCoupleInfo } from '../../utils/couple.js';
 import { getUserInfo } from '../../utils/auth.js';
 
@@ -166,13 +166,22 @@ export default {
       isBound: false,
       partnerInfo: null,
       bindTime: '',
+      // 相爱天数相关
+      loveDays: 0,
+      anniversaryDate: '',
+      relationshipName: '',
       // 近期动态
       recentActivities: []
     };
   },
   computed: {
-    // 计算在一起的天数
+    // 计算在一起的天数（优先使用接口返回的数据）
     daysTogether() {
+      // 如果接口返回了相爱天数，优先使用接口数据
+      if (this.loveDays > 0) {
+        return this.loveDays;
+      }
+      // 否则使用本地计算的绑定天数
       if (!this.bindTime) return 0;
       try {
         const bindDate = new Date(this.bindTime);
@@ -214,16 +223,18 @@ export default {
       return totalHeightRpx + 20 + 'rpx';
     }
   },
-  onLoad() {
+  async onLoad() {
     this.getSystemInfo();
     this.loadUserInfo();
-    this.loadCoupleInfo();
+    await this.loadCoupleInfo();
+    this.loadLoveDays();
     this.loadRecentActivities();
   },
-  onShow() {
+  async onShow() {
     // 每次页面显示时重新加载用户信息和情侣信息
     this.loadUserInfo();
-    this.loadCoupleInfo();
+    await this.loadCoupleInfo();
+    this.loadLoveDays();
     this.loadRecentActivities();
   },
   methods: {
@@ -403,6 +414,37 @@ export default {
         if (this.isBound) {
           this.partnerInfo = getPartnerInfo();
         }
+      }
+    },
+    // 加载相爱天数
+    async loadLoveDays() {
+      // 只有在已绑定的情况下才调用接口
+      if (!this.isBound) {
+        // 未绑定时重置数据
+        this.loveDays = 0;
+        this.anniversaryDate = '';
+        this.relationshipName = '';
+        return;
+      }
+      
+      try {
+        const response = await getLoveDays();
+        if (response && response.success && response.data) {
+          this.loveDays = response.data.loveDays || 0;
+          this.anniversaryDate = response.data.anniversaryDate || '';
+          this.relationshipName = response.data.relationshipName || '';
+          console.log('✅ 成功加载相爱天数:', {
+            loveDays: this.loveDays,
+            anniversaryDate: this.anniversaryDate,
+            relationshipName: this.relationshipName
+          });
+        } else {
+          console.warn('⚠️ 获取相爱天数失败，响应格式异常:', response);
+        }
+      } catch (error) {
+        console.error('❌ 获取相爱天数失败:', error);
+        // 接口调用失败时，使用本地计算的绑定天数作为降级方案
+        // 不显示错误提示，避免影响用户体验
       }
     },
     // 加载近期动态
@@ -646,7 +688,7 @@ export default {
   width: 128rpx;
   height: 128rpx;
   border-radius: 64rpx;
-  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%);
   border: 4rpx solid #ffffff;
   display: flex;
   align-items: center;
@@ -719,7 +761,7 @@ export default {
   text-align: center;
   padding: 16rpx;
   margin-top: 16rpx;
-  background: linear-gradient(to right, #FF9EBC, #D9ACFF);
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%);
   border-radius: 22rpx;
   cursor: pointer;
 }

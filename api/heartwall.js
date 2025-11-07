@@ -220,7 +220,7 @@ export function deleteProject(projectId) {
 }
 
 /**
- * 上传照片到心形墙
+ * 上传照片到心形墙（使用JSON格式，需要先上传文件获取URL）
  * @param {Object} photoData - 照片数据
  * @param {number|string} photoData.projectId - 项目ID
  * @param {string} photoData.photoUrl - 照片URL
@@ -234,7 +234,7 @@ export function deleteProject(projectId) {
  * - 请求方法：POST
  * - 请求地址：/api/heart-wall/photos
  * - 请求头：需携带 Authorization token
- * - 请求参数：
+ * - 请求参数（JSON格式）：
  *   {
  *     "projectId": 1,
  *     "photoUrl": "https://example.com/photo.jpg",
@@ -248,7 +248,7 @@ export function uploadPhoto(photoData) {
   const url = config.API.HEART_WALL.PHOTOS;
   const fullUrl = config.baseURL + url;
   
-  console.log('🔗 [心形墙API] 开始上传照片');
+  console.log('🔗 [心形墙API] 开始上传照片（JSON格式）');
   console.log('📍 请求地址:', fullUrl);
   console.log('📋 请求方法: POST');
   console.log('📤 请求参数:', photoData);
@@ -283,6 +283,107 @@ export function uploadPhoto(photoData) {
     }
   }).catch(error => {
     console.error('❌ [心形墙API] 上传照片失败');
+    console.error('🔴 错误信息:', error);
+    throw error;
+  });
+}
+
+/**
+ * 直接上传照片文件到心形墙（使用multipart/form-data格式）
+ * 这种方式一步完成，无需先上传文件获取URL
+ * @param {Object} options - 上传选项
+ * @param {string} options.filePath - 本地文件路径（必需）
+ * @param {number|string} options.projectId - 项目ID（必需）
+ * @param {number} [options.positionIndex] - 位置索引（可选）
+ * @param {string} [options.caption] - 照片说明（可选）
+ * @param {string} [options.takenDate] - 拍摄日期，格式: YYYY-MM-DD（可选）
+ * @returns {Promise<Object>} 返回上传结果
+ * 
+ * 后端接口要求：
+ * - 请求方法：POST
+ * - 请求地址：/api/heart-wall/photos
+ * - 请求头：需携带 Authorization token
+ * - 请求格式：multipart/form-data
+ * - 请求参数：
+ *   - file: 文件字段（必需）
+ *   - projectId: 项目ID（必需）
+ *   - positionIndex: 位置索引（可选）
+ *   - caption: 照片说明（可选）
+ *   - takenDate: 拍摄日期（可选）
+ */
+export function uploadPhotoWithFile(options) {
+  const { filePath, projectId, positionIndex, caption, takenDate } = options;
+  
+  // 验证必需参数
+  if (!filePath) {
+    return Promise.reject(new Error('文件路径不能为空'));
+  }
+  if (!projectId) {
+    return Promise.reject(new Error('项目ID不能为空'));
+  }
+  
+  const url = config.API.HEART_WALL.PHOTOS;
+  const fullUrl = config.baseURL + url;
+  
+  console.log('🔗 [心形墙API] 开始直接上传照片文件');
+  console.log('📍 请求地址:', fullUrl);
+  console.log('📋 请求方法: POST (multipart/form-data)');
+  console.log('📁 文件路径:', filePath);
+  console.log('📝 项目ID:', projectId);
+  console.log('📍 位置索引:', positionIndex);
+  console.log('💬 照片说明:', caption);
+  console.log('📅 拍摄日期:', takenDate);
+  console.log('⏰ 请求时间:', new Date().toLocaleString());
+  
+  // 构建formData
+  const formData = {
+    projectId: String(projectId)
+  };
+  
+  if (positionIndex !== undefined && positionIndex !== null) {
+    formData.positionIndex = String(positionIndex);
+  }
+  if (caption) {
+    formData.caption = caption;
+  }
+  if (takenDate) {
+    formData.takenDate = takenDate;
+  }
+  
+  return http.upload({
+    url: url,
+    filePath: filePath,
+    name: 'file',  // 后端期望的文件字段名
+    formData: formData
+  }).then(response => {
+    console.log('✅ [心形墙API] 直接上传照片文件成功');
+    console.log('📦 响应数据:', response);
+    
+    // 处理多种响应格式
+    if (response && response.data) {
+      // 格式1: { data: { photoId: ..., ... } }
+      console.log(`📷 照片ID: ${response.data.photoId || response.data.id || '未知'}`);
+      return response;
+    } else if (response && response.photo) {
+      // 格式2: { success: true, photo: { id: ..., ... }, ... }
+      const photo = response.photo;
+      console.log(`📷 照片ID: ${photo.id || photo.photoId || '未知'}`);
+      return { 
+        success: true, 
+        data: photo,
+        message: response.message,
+        photoCount: response.photoCount,
+        nextPosition: response.nextPosition
+      };
+    } else if (response && (response.photoId || response.id)) {
+      // 格式3: 直接返回照片信息 { photoId: ..., ... }
+      return { success: true, data: response };
+    } else {
+      // 其他格式，直接返回
+      return response;
+    }
+  }).catch(error => {
+    console.error('❌ [心形墙API] 直接上传照片文件失败');
     console.error('🔴 错误信息:', error);
     throw error;
   });

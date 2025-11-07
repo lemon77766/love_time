@@ -364,9 +364,39 @@ function unbindCouple() {
     throw error;
   });
 }
+function getLoveDays() {
+  const url = utils_config.config.API.COUPLE.LOVE_DAYS;
+  const fullUrl = utils_config.config.baseURL + url;
+  common_vendor.index.__f__("log", "at api/couple.js:584", "🔗 [情侣关系API] 开始获取相爱天数");
+  common_vendor.index.__f__("log", "at api/couple.js:585", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/couple.js:586", "📋 请求方法: GET");
+  common_vendor.index.__f__("log", "at api/couple.js:587", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  return utils_http.http.get(url).then((response) => {
+    common_vendor.index.__f__("log", "at api/couple.js:590", "✅ [情侣关系API] 获取相爱天数成功");
+    common_vendor.index.__f__("log", "at api/couple.js:591", "📦 响应数据:", response);
+    if (response && response.data) {
+      const loveDaysData = response.data;
+      common_vendor.index.__f__("log", "at api/couple.js:595", "📊 相爱天数信息:");
+      common_vendor.index.__f__("log", "at api/couple.js:596", `   - 相爱天数: ${loveDaysData.loveDays || "未知"}`);
+      common_vendor.index.__f__("log", "at api/couple.js:597", `   - 纪念日: ${loveDaysData.anniversaryDate || "未知"}`);
+      common_vendor.index.__f__("log", "at api/couple.js:598", `   - 关系名称: ${loveDaysData.relationshipName || "未知"}`);
+      return response;
+    } else if (response && (response.loveDays !== void 0 || response.anniversaryDate)) {
+      return { success: true, data: response };
+    } else {
+      common_vendor.index.__f__("warn", "at api/couple.js:604", "⚠️ 响应数据格式异常:", response);
+      return response;
+    }
+  }).catch((error) => {
+    common_vendor.index.__f__("error", "at api/couple.js:608", "❌ [情侣关系API] 获取相爱天数失败");
+    common_vendor.index.__f__("error", "at api/couple.js:609", "🔴 错误信息:", error);
+    throw error;
+  });
+}
 exports.acceptInvite = acceptInvite;
 exports.createInviteCode = createInviteCode;
 exports.getCoupleStatus = getCoupleStatus;
+exports.getLoveDays = getLoveDays;
 exports.unbindCouple = unbindCouple;
 exports.validateInviteCode = validateInviteCode;
 //# sourceMappingURL=../../.sourcemap/mp-weixin/api/couple.js.map

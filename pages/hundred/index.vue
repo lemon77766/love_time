@@ -686,7 +686,7 @@ export default {
 <style>
 .hundred-page { 
   min-height: 100vh; 
-  background: #F8F0FC;
+  background: #FFFAF4;
   padding-bottom: 120rpx;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -698,7 +698,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: #F8F0FC;
+  background-color: #FFFAF4;
   overflow: hidden;
 }
 
@@ -708,8 +708,9 @@ export default {
   left: 0;
   right: 0;
   height: 200%;
-  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
-  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 
 .status-bar {
@@ -738,9 +739,9 @@ export default {
 }
 
 .title-text {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -754,7 +755,7 @@ export default {
 .back-icon {
   font-size: 50rpx;
   font-weight: 600;
-  color: #6B5B95;
+  color: #4A4A4A;
   line-height: 1;
   cursor: pointer;
   transition: opacity 0.3s;
@@ -786,9 +787,9 @@ export default {
 }
 
 .main-title {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #4A4A4A;
   display: block;
   margin-bottom: 20rpx;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -811,27 +812,27 @@ export default {
 
 .progress-fill {
   height: 100%;
-  background: #DCC7E1;
+  background: #FFCC66;
   border-radius: 6rpx;
   transition: width 0.3s ease;
 }
 
 .progress-text {
   font-size: 26rpx;
-  color: #6B5B95;
-  font-weight: 600;
+  color: #4A4A4A;
+  font-weight: 500;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .filter-dropdown {
   padding: 8rpx 16rpx;
   background: #ffffff;
-  border: 2rpx solid #F3E8FF;
+  border: 2rpx solid #FFEED4;
   border-radius: 20rpx;
   font-size: 24rpx;
-  color: #6B5B95;
-  font-weight: 600;
-  box-shadow: 0 2rpx 8rpx rgba(220, 199, 225, 0.2);
+  color: #4A4A4A;
+  font-weight: 500;
+  box-shadow: 0 2rpx 8rpx rgba(255, 204, 102, 0.2);
   display: flex;
   align-items: center;
   gap: 8rpx;
@@ -841,12 +842,12 @@ export default {
 
 .filter-label {
   font-size: 24rpx;
-  color: #6B5B95;
+  color: #4A4A4A;
 }
 
 .dropdown-icon {
   font-size: 20rpx;
-  color: #DCC7E1;
+  color: #FFCC66;
   transition: transform 0.3s ease;
 }
 
@@ -861,7 +862,7 @@ export default {
   overflow: hidden;
   z-index: 10;
   min-width: 160rpx;
-  border: 2rpx solid #F3E8FF;
+  border: 2rpx solid #FFEED4;
 }
 
 .dropdown-item {
@@ -887,18 +888,18 @@ export default {
 
 .item-label {
   font-size: 26rpx;
-  color: #6B5B95;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .dropdown-item.active .item-label {
-  color: #DCC7E1;
+  color: #FFCC66;
   font-weight: 600;
 }
 
 .check-icon {
   font-size: 28rpx;
-  color: #DCC7E1;
+  color: #FFCC66;
   font-weight: bold;
 }
 
@@ -918,7 +919,7 @@ export default {
   flex-direction: column;
   align-items: center;
   box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06);
-  border: 1rpx solid #F3E8FF;
+  border: 1rpx solid #FFEED4;
   position: relative;
 }
 
@@ -939,7 +940,7 @@ export default {
 }
 
 .favorite-icon .favorite-active {
-  color: #DCC7E1;
+  color: #FFCC66;
   transform: scale(1.1);
 }
 
@@ -962,7 +963,7 @@ export default {
 
 .placeholder-icon {
   font-size: 48rpx;
-  color: #D8B4FE;
+  color: #FFCC66;
 }
 
 .event-title-wrapper {
@@ -972,7 +973,7 @@ export default {
 
 .event-title {
   font-size: 24rpx;
-  color: #6B5B95;
+  color: #4A4A4A;
   text-align: center;
   line-height: 1.4;
   display: block;
@@ -993,8 +994,8 @@ export default {
   width: 96rpx;
   height: 96rpx;
   border-radius: 48rpx;
-  background: #DCC7E1;
-  box-shadow: 0 10rpx 24rpx rgba(220, 199, 225, 0.35);
+  background: #FFCC66;
+  box-shadow: 0 10rpx 24rpx rgba(255, 204, 102, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1027,8 +1028,8 @@ export default {
 
 .modal-title { 
   font-size: 34rpx; 
-  font-weight: 600; 
-  color: #6B5B95; 
+  font-weight: 500; 
+  color: #4A4A4A; 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -1037,7 +1038,7 @@ export default {
 }
 
 .input { 
-  border: 1rpx solid #F3E8FF; 
+  border: 1rpx solid #FFEED4; 
   border-radius: 12rpx; 
   padding: 16rpx; 
   font-size: 26rpx; 
@@ -1062,13 +1063,13 @@ export default {
 }
 
 .btn.primary { 
-  background: #DCC7E1;
-  color: #fff; 
+  background: #FFCC66;
+  color: #8B6914; 
 }
 
 .btn.secondary { 
-  background: #F3E8FF; 
-  color: #6B5B95; 
+  background: #FFF4E0; 
+  color: #8B6914; 
 }
 
 .btn.danger {

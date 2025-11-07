@@ -430,7 +430,7 @@ export default {
       } finally {
         // 确保loading关闭（使用 try-catch 避免重复隐藏导致的错误）
         try {
-          uni.hideLoading();
+        uni.hideLoading();
         } catch (e) {
           // 忽略 hideLoading 错误（可能已经隐藏过了）
         }
@@ -680,7 +680,7 @@ export default {
       } finally {
         // 确保loading关闭（使用 try-catch 避免重复隐藏导致的错误）
         try {
-          uni.hideLoading();
+        uni.hideLoading();
         } catch (e) {
           // 忽略 hideLoading 错误（可能已经隐藏过了）
         }
@@ -763,7 +763,7 @@ export default {
       } finally {
         // 确保loading关闭（使用 try-catch 避免重复隐藏导致的错误）
         try {
-          uni.hideLoading();
+        uni.hideLoading();
         } catch (e) {
           // 忽略 hideLoading 错误（可能已经隐藏过了）
         }
@@ -811,7 +811,7 @@ export default {
             } finally {
               // 确保loading关闭（使用 try-catch 避免重复隐藏导致的错误）
               try {
-                uni.hideLoading();
+              uni.hideLoading();
               } catch (e) {
                 // 忽略 hideLoading 错误（可能已经隐藏过了）
               }
@@ -934,7 +934,7 @@ export default {
 }
 .header-actions { margin-top: 16rpx; }
 .btn-custom { 
-  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%);
   color: #ffffff; 
   border-radius: 24rpx; 
   padding: 14rpx 28rpx; 
@@ -991,14 +991,16 @@ export default {
   border-radius: 14rpx; 
   font-size: 26rpx; 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  border: none;
 }
 .btn.primary { 
-  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%);
   color: #ffffff; 
 }
 .btn.secondary { 
-  background: #F3E8FF; 
-  color: #6B5B95; 
+  background: rgba(255, 255, 255, 0.8);
+  color: #4A4A4A; 
+  border: 1rpx solid rgba(255, 181, 194, 0.3);
 }
 
 .partner-card { 
@@ -1029,14 +1031,14 @@ export default {
   position: fixed; 
   right: 24rpx; 
   bottom: 120rpx; 
-  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%);
   color: #ffffff; 
   border-radius: 999rpx; 
   padding: 16rpx 20rpx; 
   display: flex; 
   align-items: center; 
   gap: 10rpx; 
-  box-shadow: 0 8rpx 24rpx rgba(255, 158, 188, 0.3); 
+  box-shadow: 0 8rpx 24rpx rgba(255, 181, 194, 0.4); 
   z-index: 99; 
 }
 .custom-floating { bottom: 200rpx; }
@@ -1133,7 +1135,7 @@ export default {
 }
 .q-num { 
   font-size: 24rpx; 
-  color: #FF9EBC; 
+  color: #FFB5C2; 
   font-weight: 600; 
   margin-right: 8rpx; 
   flex-shrink: 0; 

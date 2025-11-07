@@ -26,7 +26,7 @@
           <text v-else class="cover-placeholder">♥</text>
         </view>
         <view class="meta">
-          <view class="row"><text class="label">创建人：</text><text class="value">{{ project.creator || '未设置' }}</text></view>
+          <view class="row"><text class="label">项目名称：</text><text class="value">{{ project.projectName || '未设置' }}</text></view>
           <view class="row"><text class="label">进度：</text><text class="value bold">{{ project.progress }}/{{ project.total }}</text></view>
           <view class="row"><text class="label">创建时间：</text><text class="value">{{ project.createdAt || '-' }}</text></view>
         </view>
@@ -47,7 +47,31 @@
 </template>
 
 <script>
-import { getProjects, deleteProject } from '@/api/heartwall.js';
+import { getProjects, deleteProject, getProjectPhotos } from '@/api/heartwall.js';
+import config from '@/utils/config.js';
+
+// 处理图片URL：如果是相对路径，拼接baseURL
+function processImageUrl(url) {
+  if (!url || url === '') {
+    return '';
+  }
+  
+  // 如果已经是完整的URL（http:// 或 https://），直接返回
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // 如果是相对路径（以 / 开头），拼接baseURL
+  if (url.startsWith('/')) {
+    // 移除baseURL末尾可能存在的斜杠，避免双斜杠
+    const baseUrl = config.baseURL.endsWith('/') ? config.baseURL.slice(0, -1) : config.baseURL;
+    return baseUrl + url;
+  }
+  
+  // 其他情况（可能是相对路径但不以/开头），也尝试拼接
+  const baseUrl = config.baseURL.endsWith('/') ? config.baseURL.slice(0, -1) : config.baseURL;
+  return baseUrl + '/' + url;
+}
 
 export default {
   data() {
@@ -75,6 +99,12 @@ export default {
   },
   onShow() {
     // 每次页面显示时重新加载项目数据（从后端获取）
+    // 清除可能的旧缓存，确保使用最新数据
+    try {
+      uni.removeStorageSync('heartwall_projects');
+    } catch (e) {
+      console.warn('⚠️ [爱心墙页面] 清除缓存失败:', e);
+    }
     this.loadProjects();
   },
   methods: {
@@ -103,6 +133,9 @@ export default {
         const response = await getProjects();
         
         console.log('📡 [爱心墙页面] 后端返回数据:', response);
+        console.log('📡 [爱心墙页面] response.data:', response.data);
+        console.log('📡 [爱心墙页面] response.projects:', response.projects);
+        console.log('📡 [爱心墙页面] response.data[0]:', response.data && response.data[0]);
         
         // 处理响应数据
         let projectsData = [];
@@ -118,18 +151,42 @@ export default {
         }
         
         // 转换后端数据格式为前端显示格式
-        this.projects = projectsData.map(project => ({
-          projectId: project.projectId || project.id,
-          cover: project.cover || project.coverImage || '',
-          creator: project.creator || project.creatorName || '未设置',
-          progress: project.progress || project.photoCount || 0,
-          total: project.total || project.maxPhotos || 40,
-          createdAt: project.createdAt || project.createTime || project.created_time || '-',
-          // 保留后端原始数据用于编辑时使用
-          _original: project
-        }));
+        console.log('🔍 [爱心墙页面] 原始项目数据:', projectsData);
+        console.log('🔍 [爱心墙页面] 原始项目数据长度:', projectsData.length);
+        if (projectsData.length > 0) {
+          console.log('🔍 [爱心墙页面] 第一个项目的所有字段:', Object.keys(projectsData[0]));
+          console.log('🔍 [爱心墙页面] 第一个项目的完整数据:', JSON.stringify(projectsData[0], null, 2));
+        }
+        
+        this.projects = projectsData.map((project, index) => {
+          // 确保正确提取 projectName
+          const projectName = project.projectName !== undefined && project.projectName !== null 
+            ? String(project.projectName).trim() 
+            : (project.name || '未设置');
+          
+          console.log(`🔍 [爱心墙页面] 项目 ${index} 原始数据:`, project);
+          console.log(`🔍 [爱心墙页面] 项目 ${index} projectName 原始值:`, project.projectName);
+          console.log(`🔍 [爱心墙页面] 项目 ${index} 提取的 projectName:`, projectName);
+          
+          const mappedProject = {
+            projectId: project.projectId || project.id,
+            cover: project.cover || project.coverImage || project.coverPhotoUrl || '',
+            projectName: projectName || '未设置',
+            progress: project.progress || project.photoCount || 0,
+            total: project.total || project.maxPhotos || 40,
+            createdAt: project.createdAt || project.createTime || project.created_time || '-',
+            // 保留后端原始数据用于编辑时使用
+            _original: project
+          };
+          console.log(`🔍 [爱心墙页面] 项目 ${index} 映射后的数据:`, mappedProject);
+          return mappedProject;
+        });
         
         console.log(`✅ [爱心墙页面] 成功加载 ${this.projects.length} 个项目`);
+        console.log('🔍 [爱心墙页面] 最终项目列表:', this.projects);
+        
+        // 为没有封面图的项目获取第一张照片作为封面图
+        await this.loadProjectCovers();
         
         // 同时更新本地缓存（作为备份）
         try {
@@ -166,6 +223,91 @@ export default {
         });
       } finally {
         this.loading = false;
+      }
+    },
+    // 为没有封面图的项目获取第一张照片作为封面图
+    async loadProjectCovers() {
+      try {
+        console.log('🖼️ [爱心墙页面] 开始加载项目封面图');
+        
+        // 找出所有没有封面图的项目
+        const projectsWithoutCover = this.projects
+          .map((project, index) => ({ project, index }))
+          .filter(({ project }) => !project.cover || project.cover === '');
+        
+        console.log(`🖼️ [爱心墙页面] 需要加载封面图的项目数量: ${projectsWithoutCover.length}`);
+        
+        if (projectsWithoutCover.length === 0) {
+          console.log('✅ [爱心墙页面] 所有项目都有封面图，无需加载');
+          return;
+        }
+        
+        // 并行获取所有项目的第一张照片
+        const coverPromises = projectsWithoutCover.map(async ({ project, index }) => {
+          try {
+            const projectId = project.projectId || project.id;
+            if (!projectId) {
+              console.warn(`⚠️ [爱心墙页面] 项目 ${index} 没有 projectId，跳过加载封面图`);
+              return { index, cover: null };
+            }
+            
+            console.log(`📷 [爱心墙页面] 获取项目 ${index} (ID: ${projectId}) 的第一张照片`);
+            
+            // 只获取第一张照片（pageSize=1）
+            const photosResponse = await getProjectPhotos(projectId, { page: 1, pageSize: 1 });
+            
+            // 处理照片数据
+            let photosData = [];
+            if (photosResponse && photosResponse.data) {
+              photosData = Array.isArray(photosResponse.data) ? photosResponse.data : (photosResponse.data.photos || []);
+            } else if (Array.isArray(photosResponse)) {
+              photosData = photosResponse;
+            } else if (photosResponse && photosResponse.photos) {
+              photosData = photosResponse.photos;
+            }
+            
+            // 获取第一张照片的URL
+            let coverUrl = '';
+            if (photosData.length > 0) {
+              const firstPhoto = photosData[0];
+              const rawUrl = firstPhoto.photoUrl || firstPhoto.photo_url || firstPhoto.thumbnailUrl || firstPhoto.thumbnail_url || '';
+              // 处理URL：如果是相对路径，拼接baseURL
+              coverUrl = processImageUrl(rawUrl);
+              console.log(`✅ [爱心墙页面] 项目 ${index} 找到封面图 - 原始URL: ${rawUrl}, 处理后URL: ${coverUrl}`);
+            } else {
+              console.log(`⚠️ [爱心墙页面] 项目 ${index} 没有照片，无法设置封面图`);
+            }
+            
+            return { index, cover: coverUrl };
+          } catch (error) {
+            console.error(`❌ [爱心墙页面] 获取项目 ${index} 封面图失败:`, error);
+            return { index, cover: null };
+          }
+        });
+        
+        // 等待所有封面图加载完成
+        const coverResults = await Promise.all(coverPromises);
+        
+        // 更新项目的封面图
+        coverResults.forEach(({ index, cover }) => {
+          if (cover) {
+            // 使用 Vue.set 确保响应式更新
+            this.$set(this.projects[index], 'cover', cover);
+            console.log(`✅ [爱心墙页面] 项目 ${index} 封面图已更新:`, cover);
+          }
+        });
+        
+        // 更新本地缓存
+        try {
+          uni.setStorageSync('heartwall_projects', this.projects);
+        } catch (e) {
+          console.warn('⚠️ [爱心墙页面] 更新本地缓存失败:', e);
+        }
+        
+        console.log('✅ [爱心墙页面] 封面图加载完成');
+      } catch (error) {
+        console.error('❌ [爱心墙页面] 加载封面图失败:', error);
+        // 不影响主流程，只记录错误
       }
     },
     startCreate() {
