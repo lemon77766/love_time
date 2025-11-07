@@ -12,17 +12,42 @@
           <text class="back-icon">←</text>
         </view>
         <view class="navbar-title">
-          <text class="title-text">信件记录</text>
+          <text class="title-text">写信记录</text>
         </view>
         <view class="navbar-right"></view>
       </view>
     </view>
 
-    <!-- 信件列表 -->
-    <view v-if="letters.length > 0" class="letter-list">
+    <!-- 分类标签 -->
+    <view class="category-tabs">
       <view 
-        v-for="(letter, index) in letters" 
-        :key="index"
+        class="tab-item" 
+        :class="{ active: activeTab === 'all' }"
+        @click="switchTab('all')"
+      >
+        <text>全部</text>
+      </view>
+      <view 
+        class="tab-item" 
+        :class="{ active: activeTab === 'unsent' }"
+        @click="switchTab('unsent')"
+      >
+        <text>未发送</text>
+      </view>
+      <view 
+        class="tab-item" 
+        :class="{ active: activeTab === 'sent' }"
+        @click="switchTab('sent')"
+      >
+        <text>已发送</text>
+      </view>
+    </view>
+
+    <!-- 信件列表 -->
+    <view v-if="filteredLetters.length > 0" class="letter-list">
+      <view 
+        v-for="(letter, index) in filteredLetters" 
+        :key="letter.id || index"
         class="letter-card"
         @click="viewLetter(letter, index)"
       >
@@ -45,6 +70,11 @@
           <view class="card-meta">
             <text class="meta-item">📅 送达: {{ letter.deliveryDate }}</text>
             <text class="meta-item">📝 {{ letter.createTime }}</text>
+            <view class="meta-item">
+              <text class="status-badge" :class="getStatusClass(letter.status)">
+                {{ getStatusText(letter.status) }}
+              </text>
+            </view>
           </view>
           <view class="card-preview-content">
             <text class="preview-text">{{ letter.content.slice(0, 50) }}{{ letter.content.length > 50 ? '...' : '' }}</text>
@@ -56,7 +86,7 @@
           <view class="action-btn view" @click.stop="viewLetter(letter, index)">
             <text>👁️ 查看</text>
           </view>
-          <view class="action-btn delete" @click.stop="confirmDelete(index)">
+          <view class="action-btn delete" @click.stop="confirmDelete(letter, index)">
             <text>🗑️ 删除</text>
           </view>
         </view>
@@ -66,8 +96,8 @@
     <!-- 空状态 -->
     <view v-else class="empty-state">
       <text class="empty-icon">✉️</text>
-      <text class="empty-text">还没有写过信件</text>
-      <button class="write-btn" @click="goWrite">写第一封信</button>
+      <text class="empty-text">{{ emptyText }}</text>
+      <button v-if="activeTab !== 'sent'" class="write-btn" @click="goWrite">写第一封信</button>
     </view>
 
     <!-- 信件详情弹窗 -->
@@ -100,8 +130,7 @@
               </view>
               
               <view class="letter-footer">
-                <text class="letter-info">收件人：{{ currentLetter.phone.slice(0, 3) }}****{{ currentLetter.phone.slice(-4) }}</text>
-                <text class="letter-info" v-if="currentLetter.wechat">微信：{{ currentLetter.wechat }}</text>
+                <text class="letter-info">—— 给未来的你</text>
                 <text class="letter-time">创建于 {{ currentLetter.createTime }}</text>
               </view>
             </view>
@@ -117,6 +146,13 @@
 </template>
 
 <script>
+import { 
+  getFutureLetterList, 
+  getSentLetters,
+  deleteFutureLetter,
+  getFutureLetterDetail
+} from '@/api/futureLetter.js';
+
 export default {
   data() {
     return {
@@ -124,6 +160,8 @@ export default {
       navBarHeight: 44,
       screenWidth: 375,
       letters: [],
+      sentLetters: [],
+      activeTab: 'all',
       showDetailModal: false,
       currentLetter: null,
       currentIndex: -1
@@ -135,6 +173,24 @@ export default {
       const pxToRpx = 750 / this.screenWidth;
       const totalHeightRpx = totalHeightPx * pxToRpx;
       return totalHeightRpx + 20 + 'rpx';
+    },
+    filteredLetters() {
+      if (this.activeTab === 'all') {
+        return [...this.letters, ...this.sentLetters];
+      } else if (this.activeTab === 'unsent') {
+        return this.letters;
+      } else if (this.activeTab === 'sent') {
+        return this.sentLetters;
+      }
+      return [];
+    },
+    emptyText() {
+      if (this.activeTab === 'sent') {
+        return '还没有已发送的信件';
+      } else if (this.activeTab === 'unsent') {
+        return '还没有未发送的信件';
+      }
+      return '还没有写过信件';
     }
   },
   onLoad() {
@@ -159,15 +215,115 @@ export default {
       this.navBarHeight = 44;
       // #endif
     },
+    // 切换标签
+    switchTab(tab) {
+      this.activeTab = tab;
+    },
+    
     // 加载信件列表
-    loadLetters() {
+    async loadLetters() {
       try {
-        const letters = uni.getStorageSync('xinxiang_letters') || [];
-        this.letters = letters;
-      } catch (e) {
-        console.error('加载信件失败', e);
-        this.letters = [];
+        // 加载未发送的信件（草稿和已安排）
+        const response = await getFutureLetterList();
+        
+        if (response && response.data) {
+          // 转换后端数据格式为前端显示格式
+          const backendLetters = Array.isArray(response.data) ? response.data : [];
+          this.letters = backendLetters
+            .filter(letter => letter.status !== 'SENT') // 过滤掉已发送的
+            .map(letter => ({
+              id: letter.id,
+              title: letter.title,
+              content: letter.content,
+              deliveryDate: letter.scheduledDate, // 后端字段名
+              createTime: letter.createdAt || letter.createTime,
+              status: letter.status,
+              style: this.getStyleFromBackground(letter.backgroundImage),
+              customImage: letter.backgroundImage,
+              opacity: 100, // 默认透明度
+              // 保留后端原始数据
+              _backendData: letter
+            }));
+        } else {
+          // 如果后端没有数据，尝试从本地存储加载（兼容旧数据）
+          const localLetters = uni.getStorageSync('xinxiang_letters') || [];
+          this.letters = localLetters.filter(letter => letter.status !== 'SENT');
+        }
+      } catch (error) {
+        console.error('加载信件失败', error);
+        // 如果API调用失败，尝试从本地存储加载（降级方案）
+        try {
+          const localLetters = uni.getStorageSync('xinxiang_letters') || [];
+          this.letters = localLetters.filter(letter => letter.status !== 'SENT');
+        } catch (e) {
+          console.error('加载本地信件失败', e);
+          this.letters = [];
+        }
+        
+        // 显示错误提示（非关键错误，不阻塞用户）
+        if (error.statusCode !== 401) {
+          // 401错误由http.js统一处理，这里不重复提示
+          console.warn('从后端加载信件失败，使用本地数据');
+        }
       }
+      
+      // 加载已发送的信件
+      try {
+        const sentResponse = await getSentLetters();
+        if (sentResponse && sentResponse.data) {
+          const backendSentLetters = Array.isArray(sentResponse.data) ? sentResponse.data : [];
+          this.sentLetters = backendSentLetters.map(letter => ({
+            id: letter.id,
+            title: letter.title,
+            content: letter.content,
+            deliveryDate: letter.scheduledDate,
+            createTime: letter.createdAt || letter.createTime,
+            sentAt: letter.sentAt,
+            status: letter.status,
+            style: this.getStyleFromBackground(letter.backgroundImage),
+            customImage: letter.backgroundImage,
+            opacity: 100,
+            _backendData: letter
+          }));
+        }
+      } catch (error) {
+        console.error('加载已发送信件失败', error);
+        if (error.statusCode !== 401) {
+          console.warn('从后端加载已发送信件失败');
+        }
+      }
+    },
+    
+    // 获取状态文本
+    getStatusText(status) {
+      const statusMap = {
+        'DRAFT': '草稿',
+        'SCHEDULED': '已安排',
+        'SENT': '已发送'
+      };
+      return statusMap[status] || status;
+    },
+    
+    // 获取状态样式类
+    getStatusClass(status) {
+      const classMap = {
+        'DRAFT': 'status-draft',
+        'SCHEDULED': 'status-scheduled',
+        'SENT': 'status-sent'
+      };
+      return classMap[status] || '';
+    },
+    
+    // 从背景图片URL提取样式ID
+    getStyleFromBackground(backgroundImage) {
+      if (!backgroundImage) return 1;
+      // 如果是自定义图片，返回'custom'
+      if (backgroundImage.includes('custom') || backgroundImage.startsWith('http')) {
+        return 'custom';
+      }
+      // 从路径中提取样式编号，如 /static/xinxiang/xin1.jpg -> 1
+      const match = backgroundImage.match(/xin(\d+)\.jpg/);
+      return match ? parseInt(match[1]) : 1;
     },
     
     // 获取信件背景图
@@ -179,10 +335,59 @@ export default {
     },
     
     // 查看信件详情
-    viewLetter(letter, index) {
-      this.currentLetter = letter;
-      this.currentIndex = index;
-      this.showDetailModal = true;
+    async viewLetter(letter, index) {
+      try {
+        // 显示加载提示
+        uni.showLoading({ title: '加载中...' });
+        
+        // 调用详情接口获取完整信息
+        const response = await getFutureLetterDetail(letter.id);
+        
+        uni.hideLoading();
+        
+        // 处理响应数据
+        if (response && response.data) {
+          const detailData = response.data;
+          // 合并详情数据到当前信件对象
+          this.currentLetter = {
+            ...letter,
+            ...detailData,
+            // 确保字段映射正确
+            id: detailData.id || letter.id,
+            title: detailData.title || letter.title,
+            content: detailData.content || letter.content,
+            deliveryDate: detailData.scheduledDate || detailData.deliveryDate || letter.deliveryDate,
+            createTime: detailData.createdAt || detailData.createTime || letter.createTime,
+            sentAt: detailData.sentAt || letter.sentAt,
+            status: detailData.status || letter.status,
+            style: this.getStyleFromBackground(detailData.backgroundImage || letter.backgroundImage),
+            customImage: detailData.backgroundImage || letter.customImage,
+            opacity: detailData.opacity !== undefined ? detailData.opacity : (letter.opacity || 100),
+            _backendData: detailData
+          };
+        } else {
+          // 如果详情接口失败，使用列表数据
+          this.currentLetter = letter;
+        }
+        
+        this.currentIndex = index;
+        this.showDetailModal = true;
+      } catch (error) {
+        uni.hideLoading();
+        console.error('获取信件详情失败', error);
+        
+        // 如果详情接口失败，使用列表数据作为降级方案
+        this.currentLetter = letter;
+        this.currentIndex = index;
+        this.showDetailModal = true;
+        
+        // 显示错误提示（非阻塞）
+        uni.showToast({
+          title: '加载详情失败，显示基本信息',
+          icon: 'none',
+          duration: 2000
+        });
+      }
     },
     
     // 关闭详情弹窗
@@ -193,26 +398,68 @@ export default {
     },
     
     // 确认删除
-    confirmDelete(index) {
+    confirmDelete(letter, index) {
       uni.showModal({
         title: '确认删除',
         content: '确定要删除这封信件吗？',
         success: (res) => {
           if (res.confirm) {
-            this.deleteLetter(index);
+            this.deleteLetter(letter, index);
           }
         }
       });
     },
     
     // 删除信件
-    deleteLetter(index) {
-      try {
-        this.letters.splice(index, 1);
-        uni.setStorageSync('xinxiang_letters', this.letters);
-        uni.showToast({ title: '已删除', icon: 'success' });
-      } catch (e) {
-        uni.showToast({ title: '删除失败', icon: 'none' });
+    async deleteLetter(letter, index) {
+      const isInSent = this.sentLetters.some(l => l.id === letter.id);
+      const sourceList = isInSent ? this.sentLetters : this.letters;
+      const sourceIndex = sourceList.findIndex(l => l.id === letter.id);
+      
+      // 如果有后端ID，调用后端API删除
+      if (letter && letter.id) {
+        try {
+          uni.showLoading({ title: '正在删除...' });
+          await deleteFutureLetter(letter.id);
+          uni.hideLoading();
+          
+          // 从列表中移除
+          if (sourceIndex !== -1) {
+            sourceList.splice(sourceIndex, 1);
+          }
+          
+          // 同时更新本地存储（如果存在）
+          try {
+            const localLetters = uni.getStorageSync('xinxiang_letters') || [];
+            const localIndex = localLetters.findIndex(l => l.id === letter.id);
+            if (localIndex !== -1) {
+              localLetters.splice(localIndex, 1);
+              uni.setStorageSync('xinxiang_letters', localLetters);
+            }
+          } catch (e) {
+            console.warn('更新本地存储失败', e);
+          }
+          
+          uni.showToast({ title: '已删除', icon: 'success' });
+        } catch (error) {
+          uni.hideLoading();
+          console.error('删除信件失败:', error);
+          uni.showToast({ 
+            title: error.message || '删除失败，请重试', 
+            icon: 'none' 
+          });
+        }
+      } else {
+        // 没有后端ID，只删除本地数据
+        try {
+          if (sourceIndex !== -1) {
+            sourceList.splice(sourceIndex, 1);
+          }
+          uni.setStorageSync('xinxiang_letters', [...this.letters, ...this.sentLetters]);
+          uni.showToast({ title: '已删除', icon: 'success' });
+        } catch (e) {
+          uni.showToast({ title: '删除失败', icon: 'none' });
+        }
       }
     },
     
@@ -312,6 +559,43 @@ export default {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
+/* 分类标签 */
+.category-tabs {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+  background: #ffffff;
+  padding: 16rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.tab-item {
+  flex: 1;
+  padding: 16rpx 24rpx;
+  text-align: center;
+  border-radius: 12rpx;
+  background: #F8F0FC;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.tab-item text {
+  font-size: 28rpx;
+  color: #9B8FB8;
+  font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.tab-item.active {
+  background: #DCC7E1;
+}
+
+.tab-item.active text {
+  color: #ffffff;
+  font-weight: 600;
+}
+
 /* 信件列表 */
 .letter-list {
   display: flex;
@@ -391,6 +675,30 @@ export default {
   color: #9B8FB8;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  margin-top: 8rpx;
+}
+
+.status-draft {
+  background: #FFF3CD;
+  color: #856404;
+}
+
+.status-scheduled {
+  background: #D1ECF1;
+  color: #0C5460;
+}
+
+.status-sent {
+  background: #D4EDDA;
+  color: #155724;
 }
 
 .card-preview-content {

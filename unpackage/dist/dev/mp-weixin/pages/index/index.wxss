@@ -6,7 +6,7 @@
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: #FFF8E7;
+  background-color: #FFFAF4;
   overflow: hidden;
 }
 .navbar-gradient-bg {
@@ -15,7 +15,9 @@
   left: 0;
   right: 0;
   height: 200%;
-  background: #FFF8E7;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 .status-bar {
   width: 100%;
@@ -36,14 +38,18 @@
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
+  justify-content: flex-start;
+  text-align: left;
 }
 .title-text {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  margin-left: 16rpx;
+}
+.navbar-heart-icon {
+  margin-right: 16rpx;
 }
 .navbar-right {
   width: 80rpx;
@@ -52,15 +58,11 @@
   justify-content: center;
   cursor: pointer;
 }
-.navbar-icon {
-  font-size: 44rpx;
-  color: #666;
-}
 .navbar-right:active {
   opacity: 0.6;
 }
 .container {
-  background-color: #FFF8E7;
+  background-color: #FFFAF4;
   min-height: 100vh;
   padding-bottom: 120rpx;
 }
@@ -68,12 +70,14 @@
   padding: 30rpx 24rpx;
 }
 
-/* 卡片通用样式 */
+/* 卡片通用样式 - glass-card风格 */
 .card {
-  background-color: #ffffff;
-  border-radius: 24rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -88,9 +92,9 @@
   padding: 32rpx 30rpx 24rpx;
 }
 .card-title {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .card-body {
@@ -103,7 +107,7 @@
 }
 .wish-text {
   font-size: 26rpx;
-  color: #9B8FB8;
+  color: #666;
   line-height: 1.9;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -123,10 +127,12 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40rpx 20rpx 32rpx;
-  background-color: #FFFFFF;
-  border-radius: 20rpx;
-  border: 1rpx solid #F3E8FF;
+  padding: 48rpx 20rpx 48rpx;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx;
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
   transition: all 0.2s ease;
   cursor: pointer;
 }
@@ -135,104 +141,17 @@
   background-color: #F5F5F5;
 }
 .grid-icon-wrapper {
-  margin-bottom: 20rpx;
+  margin-bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.grid-icon {
-  width: 80rpx;
-  height: 80rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48rpx;
-  position: relative;
-}
-
-/* 心形图标 */
-.heart-icon-purple {
-  color: #DCC7E1;
-  font-size: 52rpx;
-  filter: drop-shadow(0 2rpx 4rpx rgba(220, 199, 225, 0.3));
-}
-
-/* 图片图标 */
-.grid-icon-image {
-  width: 80rpx;
-  height: 80rpx;
-  display: block;
-}
-
-/* 列表图标（两个重叠矩形） */
-.list-icon {
-  position: relative;
-  width: 64rpx;
-  height: 64rpx;
-}
-.list-item-small {
-  position: absolute;
-  top: 6rpx;
-  left: 10rpx;
-  width: 48rpx;
-  height: 34rpx;
-  background: #DCC7E1;
-  border-radius: 4rpx;
-  box-shadow: 0 2rpx 4rpx rgba(220, 199, 225, 0.25);
-  z-index: 2;
-}
-.list-item-large {
-  position: absolute;
-  top: 18rpx;
-  left: 0;
-  width: 54rpx;
-  height: 38rpx;
-  background: #D8B4FE;
-  border-radius: 4rpx;
-  box-shadow: 0 2rpx 4rpx rgba(216, 180, 254, 0.25);
-  z-index: 1;
-}
-
-/* 纸张图标（右上角折叠） */
-.paper-icon {
-  position: relative;
-  width: 64rpx;
-  height: 64rpx;
-}
-.paper-body {
-  position: absolute;
-  top: 4rpx;
-  left: 4rpx;
-  width: 54rpx;
-  height: 56rpx;
-  background: #D8B4FE;
-  border-radius: 2rpx;
-  box-shadow: 0 2rpx 4rpx rgba(216, 180, 254, 0.25);
-}
-.paper-fold {
-  position: absolute;
-  top: 4rpx;
-  right: 4rpx;
-  width: 18rpx;
-  height: 18rpx;
-  background: #DCC7E1;
-  border-radius: 0 2rpx 0 12rpx;
-  box-shadow: -1rpx 1rpx 3rpx rgba(220, 199, 225, 0.3);
-  -webkit-clip-path: polygon(0 0, 100% 0, 100% 100%);
-          clip-path: polygon(0 0, 100% 0, 100% 100%);
-}
-
-/* 信封图标 */
-.envelope-icon {
-  color: #DCC7E1;
-  font-size: 52rpx;
-  filter: drop-shadow(0 2rpx 4rpx rgba(220, 199, 225, 0.3));
 }
 .grid-text {
-  font-size: 26rpx;
-  color: #9B8FB8;
-  font-weight: 400;
+  font-size: 28rpx;
+  color: #4A4A4A;
+  font-weight: 500;
   text-align: center;
+  margin-top: 16rpx;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -276,8 +195,11 @@
   justify-content: center;
 }
 .heart-icon {
-  font-size: 40rpx;
   animation: heartbeat 1.5s ease-in-out infinite;
+  transition: transform 0.3s;
+}
+.heart-icon:hover {
+  transform: scale(1.1);
 }
 @keyframes heartbeat {
 0%, 100% { transform: scale(1);
@@ -291,7 +213,7 @@
 }
 .days-together {
   font-size: 36rpx;
-  font-weight: 600;
+  font-weight: 700;
   color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -307,33 +229,11 @@
   align-items: center;
   gap: 8rpx;
 }
-.stat-icon {
-  font-size: 32rpx;
-}
 .stat-text {
   font-size: 24rpx;
   color: #666;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-}
-.unbind-section {
-  margin-top: 24rpx;
-  padding-top: 24rpx;
-  border-top: 1rpx solid #F0F0F0;
-  display: flex;
-  justify-content: center;
-}
-.unbind-btn {
-  background: #f5f5f5;
-  color: #999;
-  border: none;
-  border-radius: 12rpx;
-  padding: 16rpx 48rpx;
-  font-size: 26rpx;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-}
-.unbind-btn:active {
-  opacity: 0.7;
-  background: #e8e8e8;
+  margin-top: 8rpx;
 }
 .invite-hint {
   text-align: center;
@@ -373,9 +273,6 @@
   justify-content: center;
   margin-right: 16rpx;
   flex-shrink: 0;
-}
-.activity-icon {
-  font-size: 32rpx;
 }
 .activity-text {
   flex: 1;

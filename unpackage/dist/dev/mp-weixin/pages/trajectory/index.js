@@ -12,15 +12,6 @@ const _sfc_main = {
       // 静态轨迹点（已废弃，保留兼容性）
       showDetail: false,
       currentPoint: {},
-      // 历史轨迹相关
-      startDate: "",
-      // 开始日期
-      endDate: "",
-      // 结束日期
-      historyPoints: [],
-      // 历史轨迹点列表
-      isLoadingHistory: false,
-      // 是否正在加载历史轨迹
       // 定位相关
       isLocationTracking: false,
       // 是否开启定位追踪
@@ -46,10 +37,8 @@ const _sfc_main = {
       // 地图缩放级别
       mapMarkers: [],
       // 地图标记点
-      mapPolyline: [],
+      mapPolyline: []
       // 地图路线
-      showHistoryMode: false
-      // 是否显示历史轨迹模式
     };
   },
   computed: {
@@ -58,48 +47,19 @@ const _sfc_main = {
       const pxToRpx = 750 / this.screenWidth;
       const totalHeightRpx = totalHeightPx * pxToRpx;
       return totalHeightRpx + 20 + "rpx";
-    },
-    // 开始日期选择器的最小日期
-    startDateMin() {
-      return "2020-01-01";
-    },
-    // 开始日期选择器的最大日期
-    startDateMax() {
-      return this.endDate || this.formatDate(/* @__PURE__ */ new Date());
-    },
-    // 结束日期选择器的最小日期
-    endDateMin() {
-      return this.startDate || "2020-01-01";
-    },
-    // 结束日期选择器的最大日期
-    endDateMax() {
-      return this.formatDate(/* @__PURE__ */ new Date());
     }
   },
   watch: {
     // 监听位置变化，更新地图
     myLocation: {
       handler() {
-        if (!this.showHistoryMode) {
-          this.updateMap();
-        }
+        this.updateMap();
       },
       deep: true
     },
     partnerLocation: {
       handler() {
-        if (!this.showHistoryMode) {
-          this.updateMap();
-        }
-      },
-      deep: true
-    },
-    // 监听历史轨迹点变化，更新地图
-    historyPoints: {
-      handler() {
-        if (this.showHistoryMode && this.historyPoints.length > 0) {
-          this.updateHistoryMap();
-        }
+        this.updateMap();
       },
       deep: true
     }
@@ -126,6 +86,14 @@ const _sfc_main = {
       this.showDetail = false;
       this.currentPoint = {};
     },
+    /**
+     * 跳转到历史轨迹页面
+     */
+    goToHistoryPage() {
+      common_vendor.index.navigateTo({
+        url: "/pages/trajectory/history"
+      });
+    },
     // ========== 定位相关方法 ==========
     /**
      * 初始化定位功能
@@ -138,7 +106,7 @@ const _sfc_main = {
           await this.loadCurrentLocations();
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:305", "初始化定位失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:257", "初始化定位失败:", error);
       }
     },
     /**
@@ -226,22 +194,22 @@ const _sfc_main = {
             latitude,
             longitude
           });
-          common_vendor.index.__f__("log", "at pages/trajectory/index.vue:406", "位置上传成功");
+          common_vendor.index.__f__("log", "at pages/trajectory/index.vue:358", "位置上传成功");
         } catch (error) {
-          common_vendor.index.__f__("error", "at pages/trajectory/index.vue:408", "位置上传失败:", error);
+          common_vendor.index.__f__("error", "at pages/trajectory/index.vue:360", "位置上传失败:", error);
           if (error.message && error.message.includes("用户不存在")) {
-            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:411", "⚠️ 位置上传失败：用户信息已失效，请重新登录");
+            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:363", "⚠️ 位置上传失败：用户信息已失效，请重新登录");
           }
         }
         try {
           await this.loadCurrentLocations();
         } catch (error) {
           if (error.message && error.message.includes("用户不存在")) {
-            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:424", "⚠️ 加载双方位置失败：用户信息已失效");
+            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:376", "⚠️ 加载双方位置失败：用户信息已失效");
           }
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:429", "获取位置失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:381", "获取位置失败:", error);
         this.locationError = error.errMsg || "获取位置失败";
         if (error.errMsg && error.errMsg.includes("auth deny")) {
           common_vendor.index.showToast({
@@ -302,7 +270,7 @@ const _sfc_main = {
               );
             }
           }
-          common_vendor.index.__f__("log", "at pages/trajectory/index.vue:505", "双方位置加载成功", {
+          common_vendor.index.__f__("log", "at pages/trajectory/index.vue:457", "双方位置加载成功", {
             myLocation: this.myLocation,
             partnerLocation: this.partnerLocation,
             distance: distanceText || this.distance,
@@ -311,13 +279,13 @@ const _sfc_main = {
           this.updateMap();
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:516", "加载双方位置失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:468", "加载双方位置失败:", error);
         if (error.message && error.message.includes("用户不存在")) {
-          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:519", "⚠️ 加载双方位置失败：用户信息已失效");
+          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:471", "⚠️ 加载双方位置失败：用户信息已失效");
           return;
         }
         {
-          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:526", "⚠️ 后端接口可能未实现，跳过加载双方位置");
+          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:478", "⚠️ 后端接口可能未实现，跳过加载双方位置");
         }
       }
     },
@@ -451,7 +419,7 @@ const _sfc_main = {
           this.partnerLocation.location_name = this.partnerLocation.location_name || location.location_name;
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:692", "地址反解析失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:644", "地址反解析失败:", error);
       }
     },
     /**
@@ -566,270 +534,21 @@ const _sfc_main = {
      * 地图点击事件
      */
     onMapTap(e) {
-      common_vendor.index.__f__("log", "at pages/trajectory/index.vue:829", "地图点击:", e);
+      common_vendor.index.__f__("log", "at pages/trajectory/index.vue:781", "地图点击:", e);
     },
     /**
      * 地图标记点点击事件
      */
     onMarkerTap(e) {
-      common_vendor.index.__f__("log", "at pages/trajectory/index.vue:836", "标记点点击:", e);
-      if (this.showHistoryMode && e.detail) {
-        const markerId = e.detail.markerId;
-        const marker = this.mapMarkers.find((m) => m.id === markerId);
-        if (marker && marker.pointData) {
-          this.showPointDetail(marker.pointData);
-        }
-      }
-    },
-    // ========== 历史轨迹相关方法 ==========
-    /**
-     * 开始日期改变
-     */
-    onStartDateChange(e) {
-      const selectedDate = e.detail.value;
-      if (this.endDate && selectedDate > this.endDate) {
-        common_vendor.index.showToast({
-          title: "开始日期不能晚于结束日期",
-          icon: "none"
-        });
-        return;
-      }
-      this.startDate = selectedDate;
-    },
-    /**
-     * 结束日期改变
-     */
-    onEndDateChange(e) {
-      const selectedDate = e.detail.value;
-      if (this.startDate && selectedDate < this.startDate) {
-        common_vendor.index.showToast({
-          title: "结束日期不能早于开始日期",
-          icon: "none"
-        });
-        return;
-      }
-      this.endDate = selectedDate;
-    },
-    /**
-     * 格式化日期为 YYYY-MM-DD
-     */
-    formatDate(date) {
-      if (typeof date === "string") {
-        return date;
-      }
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    },
-    /**
-     * 加载历史轨迹点
-     */
-    async loadHistoryTrajectory() {
-      if (!this.startDate || !this.endDate) {
-        common_vendor.index.showToast({
-          title: "请选择时间区间",
-          icon: "none"
-        });
-        return;
-      }
-      if (this.startDate > this.endDate) {
-        common_vendor.index.showToast({
-          title: "开始日期不能晚于结束日期",
-          icon: "none"
-        });
-        return;
-      }
-      this.isLoadingHistory = true;
-      try {
-        const res = await api_trajectory.getTrajectoryPoints({
-          start_date: this.startDate,
-          end_date: this.endDate,
-          limit: 1e3
-          // 获取更多轨迹点
-        });
-        common_vendor.index.__f__("log", "at pages/trajectory/index.vue:921", "轨迹点查询响应:", res);
-        common_vendor.index.__f__("log", "at pages/trajectory/index.vue:922", "选择的日期范围:", this.startDate, "至", this.endDate);
-        if (res.success && res.data) {
-          let points = [];
-          if (Array.isArray(res.data)) {
-            points = res.data;
-          } else if (res.data.points && Array.isArray(res.data.points)) {
-            points = res.data.points;
-          }
-          common_vendor.index.__f__("log", "at pages/trajectory/index.vue:935", "解析后的轨迹点数量:", points.length);
-          common_vendor.index.__f__("log", "at pages/trajectory/index.vue:936", "轨迹点数据示例:", points[0]);
-          this.historyPoints = points;
-          this.showHistoryMode = true;
-          if (this.historyPoints.length > 0) {
-            this.updateHistoryMap();
-            common_vendor.index.showToast({
-              title: `加载了 ${this.historyPoints.length} 个轨迹点`,
-              icon: "success",
-              duration: 2e3
-            });
-          } else {
-            common_vendor.index.showToast({
-              title: "该时间段内没有轨迹点",
-              icon: "none"
-            });
-            this.showHistoryMode = false;
-          }
-        } else {
-          throw new Error(res.message || "加载失败");
-        }
-      } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:960", "加载历史轨迹失败:", error);
-        common_vendor.index.showToast({
-          title: error.message || "加载历史轨迹失败",
-          icon: "none",
-          duration: 2e3
-        });
-        this.showHistoryMode = false;
-      } finally {
-        this.isLoadingHistory = false;
-      }
-    },
-    /**
-     * 清除历史轨迹
-     */
-    clearHistory() {
-      this.historyPoints = [];
-      this.showHistoryMode = false;
-      this.startDate = "";
-      this.endDate = "";
-      this.updateMap();
-    },
-    /**
-     * 更新历史轨迹地图显示
-     */
-    updateHistoryMap() {
-      if (this.historyPoints.length === 0) {
-        return;
-      }
-      const sortedPoints = [...this.historyPoints].sort((a, b) => {
-        const timeA = this.parseTimeString(a.visit_time || a.visitTime);
-        const timeB = this.parseTimeString(b.visit_time || b.visitTime);
-        if (!timeA && !timeB)
-          return 0;
-        if (!timeA)
-          return 1;
-        if (!timeB)
-          return -1;
-        return timeA.getTime() - timeB.getTime();
-      });
-      const markers = sortedPoints.map((point, index) => {
-        const latitude = point.latitude;
-        const longitude = point.longitude;
-        const locationName = point.location_name || point.locationName || point.address || "未知地点";
-        const visitTime = point.visit_time || point.visitTime;
-        return {
-          id: index + 100,
-          // 使用100+避免与实时位置标记冲突
-          latitude,
-          longitude,
-          width: 30,
-          height: 30,
-          title: locationName,
-          callout: {
-            content: `${locationName}
-${this.formatVisitTime(visitTime)}`,
-            color: "#333",
-            fontSize: 12,
-            borderRadius: 4,
-            bgColor: "#fff",
-            padding: 8,
-            display: "BYCLICK"
-          },
-          // 添加点击事件数据
-          pointData: point
-        };
-      });
-      this.mapMarkers = markers;
-      if (markers.length > 0) {
-        const latitudes = markers.map((m) => m.latitude);
-        const longitudes = markers.map((m) => m.longitude);
-        const minLat = Math.min(...latitudes);
-        const maxLat = Math.max(...latitudes);
-        const minLon = Math.min(...longitudes);
-        const maxLon = Math.max(...longitudes);
-        this.mapCenter = {
-          latitude: (minLat + maxLat) / 2,
-          longitude: (minLon + maxLon) / 2
-        };
-        const latDiff = maxLat - minLat;
-        const lonDiff = maxLon - minLon;
-        const maxDiff = Math.max(latDiff, lonDiff);
-        if (maxDiff < 0.01) {
-          this.mapScale = 16;
-        } else if (maxDiff < 0.1) {
-          this.mapScale = 14;
-        } else if (maxDiff < 1) {
-          this.mapScale = 12;
-        } else {
-          this.mapScale = 10;
-        }
-        if (sortedPoints.length > 1) {
-          const points = sortedPoints.map((point) => ({
-            latitude: point.latitude,
-            longitude: point.longitude
-          }));
-          this.mapPolyline = [{
-            points,
-            color: "#2bad81",
-            width: 4,
-            borderColor: "#fff",
-            borderWidth: 1,
-            arrowLine: true,
-            dottedLine: false
-          }];
-        } else {
-          this.mapPolyline = [];
-        }
-      }
-    },
-    /**
-     * 解析时间字符串（兼容多种格式）
-     */
-    parseTimeString(timeStr) {
-      if (!timeStr)
-        return null;
-      if (timeStr instanceof Date) {
-        return timeStr;
-      }
-      let date = new Date(timeStr);
-      if (isNaN(date.getTime())) {
-        const normalized = timeStr.replace(/,\s*(\d{1,2}:\d{2}:\d{2})/, " $1");
-        date = new Date(normalized);
-      }
-      if (isNaN(date.getTime())) {
-        common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:1111", "无法解析时间字符串:", timeStr);
-        return null;
-      }
-      return date;
-    },
-    /**
-     * 格式化访问时间
-     */
-    formatVisitTime(timeStr) {
-      if (!timeStr)
-        return "";
-      const date = this.parseTimeString(timeStr);
-      if (!date)
-        return timeStr;
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      const hour = date.getHours();
-      const minute = date.getMinutes();
-      return `${month}-${day} ${hour}:${minute.toString().padStart(2, "0")}`;
+      common_vendor.index.__f__("log", "at pages/trajectory/index.vue:788", "标记点点击:", e);
     },
     /**
      * 格式化轨迹点日期
      */
     formatPointDate(point) {
       if (point.visit_time || point.visitTime) {
-        const date = this.parseTimeString(point.visit_time || point.visitTime);
-        if (!date)
+        const date = new Date(point.visit_time || point.visitTime);
+        if (isNaN(date.getTime()))
           return "";
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -864,64 +583,45 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
     a: $data.statusBarHeight + "px",
     b: $data.navBarHeight + "px",
-    c: common_vendor.t($data.startDate || "请选择"),
-    d: !$data.startDate ? 1 : "",
-    e: $data.startDate,
-    f: $options.startDateMin,
-    g: $options.startDateMax,
-    h: common_vendor.o((...args) => $options.onStartDateChange && $options.onStartDateChange(...args)),
-    i: common_vendor.t($data.endDate || "请选择"),
-    j: !$data.endDate ? 1 : "",
-    k: $data.endDate,
-    l: $options.endDateMin,
-    m: $options.endDateMax,
-    n: common_vendor.o((...args) => $options.onEndDateChange && $options.onEndDateChange(...args)),
-    o: common_vendor.t($data.isLoadingHistory ? "加载中..." : "查询轨迹"),
-    p: common_vendor.o((...args) => $options.loadHistoryTrajectory && $options.loadHistoryTrajectory(...args)),
-    q: !$data.startDate || !$data.endDate || $data.isLoadingHistory,
-    r: $data.historyPoints.length > 0
-  }, $data.historyPoints.length > 0 ? {
-    s: common_vendor.o((...args) => $options.clearHistory && $options.clearHistory(...args))
-  } : {}, {
-    t: $data.myLocation || $data.partnerLocation
+    c: $data.myLocation || $data.partnerLocation
   }, $data.myLocation || $data.partnerLocation ? common_vendor.e({
-    v: common_vendor.o((...args) => $options.refreshLocation && $options.refreshLocation(...args)),
-    w: common_vendor.t($data.isLocationTracking ? "追踪中" : "开启追踪"),
-    x: $data.isLocationTracking ? 1 : "",
-    y: common_vendor.o((...args) => $options.toggleLocationTracking && $options.toggleLocationTracking(...args)),
-    z: $data.myLocation
+    d: common_vendor.o((...args) => $options.refreshLocation && $options.refreshLocation(...args)),
+    e: common_vendor.t($data.isLocationTracking ? "追踪中" : "开启追踪"),
+    f: $data.isLocationTracking ? 1 : "",
+    g: common_vendor.o((...args) => $options.toggleLocationTracking && $options.toggleLocationTracking(...args)),
+    h: $data.myLocation
   }, $data.myLocation ? common_vendor.e({
-    A: common_vendor.t($data.myLocation.address || $data.myLocation.location_name || "定位中..."),
-    B: $data.myLocation.updateTime
+    i: common_vendor.t($data.myLocation.address || $data.myLocation.location_name || "定位中..."),
+    j: $data.myLocation.updateTime
   }, $data.myLocation.updateTime ? {
-    C: common_vendor.t($options.formatTime($data.myLocation.updateTime))
+    k: common_vendor.t($options.formatTime($data.myLocation.updateTime))
   } : {}) : {}, {
-    D: $data.partnerLocation
+    l: $data.partnerLocation
   }, $data.partnerLocation ? common_vendor.e({
-    E: common_vendor.t($data.partnerLocation.address || $data.partnerLocation.location_name || "定位中..."),
-    F: $data.partnerLocation.updateTime
+    m: common_vendor.t($data.partnerLocation.address || $data.partnerLocation.location_name || "定位中..."),
+    n: $data.partnerLocation.updateTime
   }, $data.partnerLocation.updateTime ? {
-    G: common_vendor.t($options.formatTime($data.partnerLocation.updateTime))
+    o: common_vendor.t($options.formatTime($data.partnerLocation.updateTime))
   } : {}) : {}, {
-    H: $data.distance !== null
+    p: $data.distance !== null
   }, $data.distance !== null ? {
-    I: common_vendor.t($options.formatDistance($data.distance))
+    q: common_vendor.t($options.formatDistance($data.distance))
   } : {}, {
-    J: $data.locationError
+    r: $data.locationError
   }, $data.locationError ? {
-    K: common_vendor.t($data.locationError)
+    s: common_vendor.t($data.locationError)
   } : {}) : {}, {
-    L: $data.mapCenter.latitude,
-    M: $data.mapCenter.longitude,
-    N: $data.mapScale,
-    O: $data.mapMarkers,
-    P: $data.mapPolyline,
-    Q: common_vendor.o((...args) => $options.onMapTap && $options.onMapTap(...args)),
-    R: common_vendor.o((...args) => $options.onMarkerTap && $options.onMarkerTap(...args)),
-    S: !$data.myLocation && !$data.partnerLocation
+    t: $data.mapCenter.latitude,
+    v: $data.mapCenter.longitude,
+    w: $data.mapScale,
+    x: $data.mapMarkers,
+    y: $data.mapPolyline,
+    z: common_vendor.o((...args) => $options.onMapTap && $options.onMapTap(...args)),
+    A: common_vendor.o((...args) => $options.onMarkerTap && $options.onMarkerTap(...args)),
+    B: !$data.myLocation && !$data.partnerLocation
   }, !$data.myLocation && !$data.partnerLocation ? common_vendor.e({
-    T: common_assets._imports_0$5,
-    U: common_vendor.f($data.trajectoryPoints, (point, index, i0) => {
+    C: common_assets._imports_0$4,
+    D: common_vendor.f($data.trajectoryPoints, (point, index, i0) => {
       return {
         a: common_vendor.t(point.title),
         b: index,
@@ -930,37 +630,38 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         e: common_vendor.o(($event) => $options.showPointDetail(point), index)
       };
     }),
-    V: $data.trajectoryPoints.length > 1
+    E: $data.trajectoryPoints.length > 1
   }, $data.trajectoryPoints.length > 1 ? {} : {}) : {}, {
-    W: $data.showDetail
+    F: $data.showDetail
   }, $data.showDetail ? common_vendor.e({
-    X: common_vendor.t($data.currentPoint.location_name || $data.currentPoint.locationName || $data.currentPoint.title || "未知地点"),
-    Y: common_vendor.t($options.formatPointDate($data.currentPoint)),
-    Z: $data.currentPoint.address
+    G: common_vendor.t($data.currentPoint.location_name || $data.currentPoint.locationName || $data.currentPoint.title || "未知地点"),
+    H: common_vendor.t($options.formatPointDate($data.currentPoint)),
+    I: $data.currentPoint.address
   }, $data.currentPoint.address ? {
-    aa: common_vendor.t($data.currentPoint.address)
+    J: common_vendor.t($data.currentPoint.address)
   } : {}, {
-    ab: $data.currentPoint.photos && $data.currentPoint.photos.length > 0
+    K: $data.currentPoint.photos && $data.currentPoint.photos.length > 0
   }, $data.currentPoint.photos && $data.currentPoint.photos.length > 0 ? {
-    ac: $data.currentPoint.photos[0]
+    L: $data.currentPoint.photos[0]
   } : $data.currentPoint.image ? {
-    ae: $data.currentPoint.image
+    N: $data.currentPoint.image
   } : {}, {
-    ad: $data.currentPoint.image,
-    af: common_vendor.t($data.currentPoint.description || "暂无描述"),
-    ag: $data.currentPoint.visit_count
+    M: $data.currentPoint.image,
+    O: common_vendor.t($data.currentPoint.description || "暂无描述"),
+    P: $data.currentPoint.visit_count
   }, $data.currentPoint.visit_count ? common_vendor.e({
-    ah: common_vendor.t($data.currentPoint.visit_count),
-    ai: $data.currentPoint.stay_duration
+    Q: common_vendor.t($data.currentPoint.visit_count),
+    R: $data.currentPoint.stay_duration
   }, $data.currentPoint.stay_duration ? {
-    aj: common_vendor.t($options.formatDuration($data.currentPoint.stay_duration))
+    S: common_vendor.t($options.formatDuration($data.currentPoint.stay_duration))
   } : {}) : {}, {
-    ak: common_vendor.o((...args) => $options.hidePointDetail && $options.hidePointDetail(...args)),
-    al: common_vendor.o(() => {
+    T: common_vendor.o((...args) => $options.hidePointDetail && $options.hidePointDetail(...args)),
+    U: common_vendor.o(() => {
     }),
-    am: common_vendor.o((...args) => $options.hidePointDetail && $options.hidePointDetail(...args))
+    V: common_vendor.o((...args) => $options.hidePointDetail && $options.hidePointDetail(...args))
   }) : {}, {
-    an: $options.containerPaddingTop
+    W: common_vendor.o((...args) => $options.goToHistoryPage && $options.goToHistoryPage(...args)),
+    X: $options.containerPaddingTop
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-bfa9c4cc"]]);

@@ -134,6 +134,31 @@
 <style>
 	/*每个页面公共css */
 	
+	/* 底部导航栏字体样式 - 与主页导航栏一致 */
+	/* #ifdef MP-WEIXIN */
+	/* 微信小程序底部导航栏字体样式 */
+	/deep/ .uni-tabbar {
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+	}
+	
+	/deep/ .uni-tabbar__bd {
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+		font-weight: 500;
+	}
+	/* #endif */
+	
+	/* #ifdef H5 */
+	/* H5底部导航栏字体样式 */
+	.uni-tabbar {
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+	}
+	
+	.uni-tabbar__bd {
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+		font-weight: 500;
+	}
+	/* #endif */
+	
 	/* 底部导航栏选中图标颜色 - 尝试通过filter实现粉色效果 */
 	/* 注意：原生tabbar的PNG图标可能无法通过CSS直接改变颜色 */
 	/* 如果此方法无效，需要准备粉色版本的图标文件 */

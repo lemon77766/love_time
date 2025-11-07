@@ -9,10 +9,11 @@
       <!-- 导航栏内容 -->
       <view class="navbar-content" :style="{ height: navBarHeight + 'px' }">
         <view class="navbar-title">
-          <text class="title-text">甜蜜小屋</text>
+          <iconify-icon icon="mdi:heart" :size="24" color="#ff6b6b" class="navbar-heart-icon" />
+          <text class="title-text">CoupleTime</text>
         </view>
         <view class="navbar-right" @click="goToProfile">
-          <text class="navbar-icon">👤</text>
+          <iconify-icon icon="mdi:account" :size="24" color="#666" />
         </view>
       </view>
     </view>
@@ -28,7 +29,7 @@
             mode="aspectFill"
           />
           <view class="heart-connector">
-            <text class="heart-icon">❤️</text>
+            <iconify-icon icon="mdi:heart" :size="48" color="#ff6b6b" class="heart-icon" />
           </view>
           <image 
             class="couple-avatar" 
@@ -41,22 +42,19 @@
         </view>
         <view class="couple-stats">
           <view class="stat-item">
-            <text class="stat-icon">💬</text>
+            <iconify-icon icon="mdi:message" :size="32" color="#666" />
             <text class="stat-text">昨日聊天</text>
           </view>
           <view class="stat-item">
-            <text class="stat-icon">🎁</text>
+            <iconify-icon icon="mdi:gift" :size="32" color="#666" />
             <text class="stat-text">纪念礼物</text>
-          </view>
+        </view>
           <view class="stat-item">
-            <text class="stat-icon">📅</text>
+            <iconify-icon icon="mdi:calendar-heart" :size="32" color="#666" />
             <text class="stat-text">{{ nextAnniversaryDays }}天后周年</text>
-          </view>
         </view>
-        <view class="unbind-section">
-          <button class="unbind-btn" @click="handleUnbind">解除关系</button>
-          </view>
-        </view>
+      </view>
+    </view>
 
       <!-- 未绑定时的提示卡片 -->
       <view class="card couple-status-card" v-else>
@@ -67,7 +65,7 @@
             mode="aspectFill"
           />
           <view class="heart-connector">
-            <text class="heart-icon">💕</text>
+            <iconify-icon icon="mdi:heart" :size="48" color="#ff6b6b" class="heart-icon" />
           </view>
           <view class="couple-avatar-placeholder">
             <text class="placeholder-text">?</text>
@@ -78,7 +76,7 @@
         </view>
         <view class="invite-hint" @click="goToInvite">
           <text class="hint-text">点击邀请另一半</text>
-        </view>
+      </view>
     </view>
 
       <!-- 功能卡片网格 -->
@@ -90,31 +88,25 @@
       <view class="grid-container">
             <view class="grid-item" @click="goToSweetQA">
               <view class="grid-icon-wrapper">
-                <image class="grid-icon-image" src="/static/zhuye/qna.png" mode="aspectFit"></image>
+                <iconify-icon icon="mdi:chat-question" :size="48" color="#FF9EBC" />
               </view>
               <text class="grid-text">甜蜜问答</text>
             </view>
             <view class="grid-item" @click="goToHundredThings">
               <view class="grid-icon-wrapper">
-                <view class="grid-icon list-icon">
-                  <view class="list-item-small"></view>
-                  <view class="list-item-large"></view>
-                </view>
+                <iconify-icon icon="mdi:check-all" :size="48" color="#D9ACFF" />
               </view>
               <text class="grid-text">一百件事</text>
             </view>
             <view class="grid-item" @click="goToHeartWall">
               <view class="grid-icon-wrapper">
-                <view class="grid-icon paper-icon">
-                  <view class="paper-body"></view>
-                  <view class="paper-fold"></view>
-                </view>
+                <iconify-icon icon="mdi:heart-box" :size="48" color="#FF6B6B" />
               </view>
               <text class="grid-text">心形墙</text>
             </view>
             <view class="grid-item" @click="goToFutureLetter">
               <view class="grid-icon-wrapper">
-                <view class="grid-icon envelope-icon">✉️</view>
+                <iconify-icon icon="mdi:book-heart" :size="48" color="#FF91A4" />
               </view>
               <text class="grid-text">未来情书</text>
             </view>
@@ -140,7 +132,7 @@
         <view class="card-body">
           <view class="activity-item" v-for="(activity, index) in recentActivities" :key="index">
             <view class="activity-icon-wrapper">
-              <text class="activity-icon">{{ activity.icon }}</text>
+              <iconify-icon :icon="activity.icon" :size="32" :color="activity.color" />
             </view>
             <text class="activity-text">{{ activity.text }}</text>
           </view>
@@ -152,7 +144,7 @@
 
 <script>
 import { getCoupleInfo, getPartnerInfo, isBound as checkIsBound, clearCoupleInfo } from '../../utils/couple.js';
-import { getCoupleStatus, unbindCouple } from '../../api/couple.js';
+import { getCoupleStatus } from '../../api/couple.js';
 import { saveCoupleInfo } from '../../utils/couple.js';
 import { getUserInfo } from '../../utils/auth.js';
 
@@ -314,7 +306,7 @@ export default {
           if (!this.userInfo.displayAvatar) {
             this.userInfo.displayAvatar = this.userInfo.avatarUrl || '/static/zhuye/lanmei_boy.png';
           }
-        } else {
+      } else {
           // 从登录信息中获取
           const loginInfo = uni.getStorageSync('login_info');
           if (loginInfo && loginInfo.userInfo) {
@@ -418,15 +410,18 @@ export default {
       // 模拟动态数据，实际应该从API获取
       this.recentActivities = [
         {
-          icon: '📸',
+          icon: 'mdi:camera',
+          color: '#FF9EBC',
           text: '共同创建了"2024旅行记忆"相册'
         },
         {
-          icon: '🏆',
+          icon: 'mdi:achievement',
+          color: '#FFD93D',
           text: '达成成就"美食探险家"'
         },
         {
-          icon: '📅',
+          icon: 'mdi:calendar',
+          color: '#D9ACFF',
           text: '2025年11月10日 纪念日即将到来'
         }
       ];
@@ -442,47 +437,6 @@ export default {
       uni.navigateTo({
         url: '/pages/we/index'
       });
-    },
-    // 解绑关系
-    async handleUnbind() {
-      uni.showModal({
-        title: '确认解绑',
-        content: '解除关系后，双方将无法共享数据。确定要解除吗？',
-        success: async (res) => {
-          if (res.confirm) {
-            try {
-              uni.showLoading({ title: '解绑中...' });
-              await unbindCouple();
-              uni.hideLoading();
-              
-              // 清除本地信息
-              clearCoupleInfo();
-              
-            uni.showToast({
-                title: '已解除关系', 
-                icon: 'success' 
-              });
-              
-              // 更新页面状态
-              this.isBound = false;
-              this.partnerInfo = null;
-              this.bindTime = '';
-              
-              // 延迟刷新页面
-            setTimeout(() => {
-                this.loadCoupleInfo();
-              }, 1500);
-            } catch (error) {
-              uni.hideLoading();
-              console.error('解绑失败', error);
-              uni.showToast({ 
-                title: error.message || '解绑失败，请重试', 
-                icon: 'none' 
-              });
-            }
-          }
-        }
-      });
     }
   }
 };
@@ -496,7 +450,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: #FFF8E7;
+  background-color: #FFFAF4;
   overflow: hidden;
 }
 
@@ -506,7 +460,9 @@ export default {
   left: 0;
   right: 0;
   height: 200%;
-  background: #FFF8E7;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 
 .status-bar {
@@ -530,15 +486,20 @@ export default {
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
+  justify-content: flex-start;
+  text-align: left;
 }
 
 .title-text {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  margin-left: 16rpx;
+}
+
+.navbar-heart-icon {
+  margin-right: 16rpx;
 }
 
 .navbar-right {
@@ -549,17 +510,13 @@ export default {
   cursor: pointer;
 }
 
-.navbar-icon {
-  font-size: 44rpx;
-  color: #666;
-}
 
 .navbar-right:active {
   opacity: 0.6;
 }
 
 .container {
-  background-color: #FFF8E7;
+  background-color: #FFFAF4;
   min-height: 100vh;
   padding-bottom: 120rpx;
 }
@@ -568,12 +525,14 @@ export default {
   padding: 30rpx 24rpx;
 }
 
-/* 卡片通用样式 */
+/* 卡片通用样式 - glass-card风格 */
 .card {
-  background-color: #ffffff;
-  border-radius: 24rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -592,9 +551,9 @@ export default {
 }
 
 .card-title {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -609,7 +568,7 @@ export default {
 
 .wish-text {
   font-size: 26rpx;
-  color: #9B8FB8;
+  color: #666;
   line-height: 1.9;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -631,10 +590,12 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40rpx 20rpx 32rpx;
-  background-color: #FFFFFF;
-  border-radius: 20rpx;
-  border: 1rpx solid #F3E8FF;
+  padding: 48rpx 20rpx 48rpx;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx;
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
   transition: all 0.2s ease;
   cursor: pointer;
 }
@@ -645,109 +606,19 @@ export default {
 }
 
 .grid-icon-wrapper {
-  margin-bottom: 20rpx;
+  margin-bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.grid-icon {
-  width: 80rpx;
-  height: 80rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 48rpx;
-  position: relative;
-}
-
-/* 心形图标 */
-.heart-icon-purple {
-  color: #DCC7E1;
-  font-size: 52rpx;
-  filter: drop-shadow(0 2rpx 4rpx rgba(220, 199, 225, 0.3));
-}
-
-/* 图片图标 */
-.grid-icon-image {
-  width: 80rpx;
-  height: 80rpx;
-  display: block;
-}
-
-/* 列表图标（两个重叠矩形） */
-.list-icon {
-  position: relative;
-  width: 64rpx;
-  height: 64rpx;
-}
-
-.list-item-small {
-  position: absolute;
-  top: 6rpx;
-  left: 10rpx;
-  width: 48rpx;
-  height: 34rpx;
-  background: #DCC7E1;
-  border-radius: 4rpx;
-  box-shadow: 0 2rpx 4rpx rgba(220, 199, 225, 0.25);
-  z-index: 2;
-}
-
-.list-item-large {
-  position: absolute;
-  top: 18rpx;
-  left: 0;
-  width: 54rpx;
-  height: 38rpx;
-  background: #D8B4FE;
-  border-radius: 4rpx;
-  box-shadow: 0 2rpx 4rpx rgba(216, 180, 254, 0.25);
-  z-index: 1;
-}
-
-/* 纸张图标（右上角折叠） */
-.paper-icon {
-  position: relative;
-  width: 64rpx;
-  height: 64rpx;
-}
-
-.paper-body {
-  position: absolute;
-  top: 4rpx;
-  left: 4rpx;
-  width: 54rpx;
-  height: 56rpx;
-  background: #D8B4FE;
-  border-radius: 2rpx;
-  box-shadow: 0 2rpx 4rpx rgba(216, 180, 254, 0.25);
-}
-
-.paper-fold {
-  position: absolute;
-  top: 4rpx;
-  right: 4rpx;
-  width: 18rpx;
-  height: 18rpx;
-  background: #DCC7E1;
-  border-radius: 0 2rpx 0 12rpx;
-  box-shadow: -1rpx 1rpx 3rpx rgba(220, 199, 225, 0.3);
-  clip-path: polygon(0 0, 100% 0, 100% 100%);
-}
-
-/* 信封图标 */
-.envelope-icon {
-  color: #DCC7E1;
-  font-size: 52rpx;
-  filter: drop-shadow(0 2rpx 4rpx rgba(220, 199, 225, 0.3));
-}
 
 .grid-text {
-  font-size: 26rpx;
-  color: #9B8FB8;
-  font-weight: 400;
+  font-size: 28rpx;
+  color: #4A4A4A;
+  font-weight: 500;
   text-align: center;
+  margin-top: 16rpx;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -797,8 +668,12 @@ export default {
 }
 
 .heart-icon {
-  font-size: 40rpx;
   animation: heartbeat 1.5s ease-in-out infinite;
+  transition: transform 0.3s;
+}
+
+.heart-icon:hover {
+  transform: scale(1.1);
 }
 
 @keyframes heartbeat {
@@ -813,7 +688,7 @@ export default {
 
 .days-together {
   font-size: 36rpx;
-  font-weight: 600;
+  font-weight: 700;
   color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -832,37 +707,12 @@ export default {
   gap: 8rpx;
 }
 
-.stat-icon {
-  font-size: 32rpx;
-}
 
 .stat-text {
   font-size: 24rpx;
   color: #666;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-}
-
-.unbind-section {
-  margin-top: 24rpx;
-  padding-top: 24rpx;
-  border-top: 1rpx solid #F0F0F0;
-  display: flex;
-  justify-content: center;
-}
-
-.unbind-btn {
-  background: #f5f5f5;
-  color: #999;
-  border: none;
-  border-radius: 12rpx;
-  padding: 16rpx 48rpx;
-  font-size: 26rpx;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-}
-
-.unbind-btn:active {
-  opacity: 0.7;
-  background: #e8e8e8;
+  margin-top: 8rpx;
 }
 
 .invite-hint {
@@ -908,10 +758,6 @@ export default {
   justify-content: center;
   margin-right: 16rpx;
   flex-shrink: 0;
-}
-
-.activity-icon {
-  font-size: 32rpx;
 }
 
 .activity-text {

@@ -12,10 +12,19 @@ function updateLocation(locationData) {
 function getCurrentLocations() {
   return utils_http.http.get(utils_config.config.API.TRAJECTORY.LOCATION_CURRENT);
 }
-function getTrajectoryPoints(params = {}) {
-  return utils_http.http.get(utils_config.config.API.TRAJECTORY.POINTS, params);
+function getTrajectoryList(params = {}) {
+  const defaultParams = {
+    showPartnerOnly: true,
+    ...params
+  };
+  if (params.start_date && params.end_date) {
+    delete defaultParams.period;
+  } else if (!defaultParams.period) {
+    defaultParams.period = "30days";
+  }
+  return utils_http.http.get(utils_config.config.API.TRAJECTORY.LIST, defaultParams);
 }
 exports.getCurrentLocations = getCurrentLocations;
-exports.getTrajectoryPoints = getTrajectoryPoints;
+exports.getTrajectoryList = getTrajectoryList;
 exports.updateLocation = updateLocation;
 //# sourceMappingURL=../../.sourcemap/mp-weixin/api/trajectory.js.map

@@ -1,5 +1,7 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
+const api_futureLetter = require("../../api/futureLetter.js");
+const utils_couple = require("../../utils/couple.js");
 const _sfc_main = {
   data() {
     return {
@@ -10,30 +12,11 @@ const _sfc_main = {
       selectedStyle: 1,
       isCustomStyle: false,
       customImage: "",
-      opacity: 100,
-      showOpacityModal: false,
       showPreviewModal: false,
       showLivePreviewModal: false,
-      // 裁剪区域相关
-      cropArea: {
-        left: 0,
-        top: 0,
-        width: 100,
-        height: 100
-      },
-      // 底图缩放比例（100% 为原始大小）
-      imageScale: 100,
-      // 是否从预览打开的调整弹窗
-      fromPreview: false,
-      isDragging: false,
-      isResizing: false,
-      dragStart: { x: 0, y: 0 },
-      imageInfo: { width: 0, height: 0 },
       form: {
         title: "",
         deliveryDate: "",
-        phone: "",
-        wechat: "",
         content: ""
       }
     };
@@ -88,121 +71,13 @@ const _sfc_main = {
         success: (res) => {
           this.customImage = res.tempFilePaths[0];
           this.isCustomStyle = true;
-          this.opacity = 100;
-          this.cropArea = {
-            left: 10,
-            top: 10,
-            width: 80,
-            height: 80
-          };
-          common_vendor.index.getImageInfo({
-            src: res.tempFilePaths[0],
-            success: (info) => {
-              this.imageInfo = {
-                width: info.width,
-                height: info.height
-              };
-            }
-          });
-          this.showOpacityModal = true;
           common_vendor.index.showToast({ title: "自定义底图已选择", icon: "success" });
         }
       });
     },
-    // 调整透明度（滑动中）
-    onOpacityChanging(e) {
-      this.opacity = e.detail.value;
-    },
-    // 调整透明度（松开）
-    onOpacityChange(e) {
-      this.opacity = e.detail.value;
-    },
-    // 调整图片缩放（滑动中）
-    onScaleChanging(e) {
-      this.imageScale = e.detail.value;
-    },
-    // 调整图片缩放（松开）
-    onScaleChange(e) {
-      this.imageScale = e.detail.value;
-    },
-    // 开始拖动裁剪框
-    startDrag(e) {
-      this.isDragging = true;
-      this.dragStart = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY
-      };
-    },
-    // 拖动裁剪框
-    onDrag(e) {
-      if (!this.isDragging)
-        return;
-      const deltaX = e.touches[0].clientX - this.dragStart.x;
-      const deltaY = e.touches[0].clientY - this.dragStart.y;
-      const percentX = deltaX / 600 * 100;
-      const percentY = deltaY / 600 * 100;
-      let newLeft = this.cropArea.left + percentX;
-      let newTop = this.cropArea.top + percentY;
-      newLeft = Math.max(0, Math.min(100 - this.cropArea.width, newLeft));
-      newTop = Math.max(0, Math.min(100 - this.cropArea.height, newTop));
-      this.cropArea.left = newLeft;
-      this.cropArea.top = newTop;
-      this.dragStart = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY
-      };
-    },
-    // 结束拖动
-    endDrag() {
-      this.isDragging = false;
-      this.isResizing = false;
-    },
-    // 开始调整大小
-    startResize(e) {
-      this.isResizing = true;
-      this.dragStart = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY
-      };
-      e.stopPropagation();
-    },
-    // 调整大小
-    onResize(e) {
-      if (!this.isResizing)
-        return;
-      const deltaX = e.touches[0].clientX - this.dragStart.x;
-      const deltaY = e.touches[0].clientY - this.dragStart.y;
-      const percentX = deltaX / 600 * 100;
-      const percentY = deltaY / 600 * 100;
-      let newWidth = this.cropArea.width + percentX;
-      let newHeight = this.cropArea.height + percentY;
-      newWidth = Math.max(20, Math.min(100 - this.cropArea.left, newWidth));
-      newHeight = Math.max(20, Math.min(100 - this.cropArea.top, newHeight));
-      this.cropArea.width = newWidth;
-      this.cropArea.height = newHeight;
-      this.dragStart = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY
-      };
-      e.stopPropagation();
-    },
     // 打开预览弹窗
     openPreview() {
       this.showLivePreviewModal = true;
-    },
-    // 完成调整（智能判断是否需要返回预览）
-    finishAdjust() {
-      this.showOpacityModal = false;
-      if (this.fromPreview) {
-        this.showLivePreviewModal = true;
-        this.fromPreview = false;
-      }
-    },
-    // 从预览打开调整弹窗
-    openAdjustFromPreview() {
-      this.fromPreview = true;
-      this.showLivePreviewModal = false;
-      this.showOpacityModal = true;
     },
     // 日期选择
     onDateChange(e) {
@@ -221,7 +96,8 @@ const _sfc_main = {
       this.currentStep = 1;
     },
     // 提交信件
-    submitLetter() {
+    async submitLetter() {
+      var _a;
       if (!this.form.title) {
         common_vendor.index.showToast({ title: "请填写信件主题", icon: "none" });
         return;
@@ -230,37 +106,145 @@ const _sfc_main = {
         common_vendor.index.showToast({ title: "请选择送达时间", icon: "none" });
         return;
       }
-      if (!this.form.phone) {
-        common_vendor.index.showToast({ title: "请填写手机号", icon: "none" });
-        return;
-      }
-      if (this.form.phone.length !== 11) {
-        common_vendor.index.showToast({ title: "请输入正确的手机号", icon: "none" });
-        return;
-      }
       if (!this.form.content) {
         common_vendor.index.showToast({ title: "请填写信件内容", icon: "none" });
         return;
       }
-      const letterData = {
-        style: this.isCustomStyle ? "custom" : this.selectedStyle,
-        customImage: this.customImage,
-        opacity: this.opacity,
-        cropArea: this.cropArea,
-        title: this.form.title,
-        deliveryDate: this.form.deliveryDate,
-        phone: this.form.phone,
-        wechat: this.form.wechat,
-        content: this.form.content,
-        createTime: (/* @__PURE__ */ new Date()).toLocaleString()
-      };
+      common_vendor.index.showLoading({ title: "正在创建..." });
       try {
-        const letters = common_vendor.index.getStorageSync("xinxiang_letters") || [];
-        letters.unshift(letterData);
-        common_vendor.index.setStorageSync("xinxiang_letters", letters);
-        this.showPreviewModal = true;
-      } catch (e) {
-        common_vendor.index.showToast({ title: "提交失败，请重试", icon: "none" });
+        let receiverId = null;
+        if (utils_couple.isBound()) {
+          try {
+            const coupleInfo = common_vendor.index.getStorageSync("couple_info");
+            common_vendor.index.__f__("log", "at pages/xinxiang/create.vue:335", "👫 [情侣信息]", coupleInfo);
+            if (coupleInfo && coupleInfo.partnerId) {
+              receiverId = coupleInfo.partnerId;
+              common_vendor.index.__f__("log", "at pages/xinxiang/create.vue:340", "✅ [获取对方ID] 从 partnerId 获取:", receiverId);
+            } else {
+              const partnerInfo = utils_couple.getPartnerInfo();
+              if (partnerInfo && partnerInfo.userId) {
+                receiverId = partnerInfo.userId;
+                common_vendor.index.__f__("log", "at pages/xinxiang/create.vue:346", "✅ [获取对方ID] 从 partnerInfo.userId 获取:", receiverId);
+              }
+            }
+          } catch (e) {
+            common_vendor.index.__f__("warn", "at pages/xinxiang/create.vue:350", "⚠️ 获取对方ID失败:", e);
+          }
+        } else {
+          common_vendor.index.__f__("log", "at pages/xinxiang/create.vue:353", "⚠️ 未绑定情侣关系，跳过 receiverId");
+        }
+        let backgroundImage = null;
+        if (this.isCustomStyle && this.customImage) {
+          backgroundImage = this.customImage;
+        } else {
+          backgroundImage = `/static/xinxiang/xin${this.selectedStyle}.jpg`;
+        }
+        if (!this.form.deliveryDate || !/^\d{4}-\d{2}-\d{2}$/.test(this.form.deliveryDate)) {
+          common_vendor.index.hideLoading();
+          common_vendor.index.showToast({ title: "日期格式错误，请重新选择", icon: "none" });
+          return;
+        }
+        const letterData = {
+          title: this.form.title.trim(),
+          content: this.form.content.trim(),
+          deliveryMethod: "PARTNER",
+          // 目前只支持PARTNER
+          scheduledDate: this.form.deliveryDate,
+          // 格式：YYYY-MM-DD
+          scheduledTime: "00:00:00",
+          // 默认时间
+          status: "DRAFT"
+          // 草稿状态
+        };
+        if (receiverId) {
+          letterData.receiverId = Number(receiverId);
+          if (isNaN(letterData.receiverId)) {
+            common_vendor.index.__f__("warn", "at pages/xinxiang/create.vue:388", "receiverId 不是有效数字:", receiverId);
+            delete letterData.receiverId;
+          }
+        }
+        if (backgroundImage && backgroundImage.trim()) {
+          letterData.backgroundImage = backgroundImage.trim();
+        }
+        common_vendor.index.__f__("log", "at pages/xinxiang/create.vue:398", "📤 [创建情书] 最终请求参数:", JSON.stringify(letterData, null, 2));
+        const response = await api_futureLetter.createFutureLetter(letterData);
+        if (response && response.success !== false && ((_a = response.data) == null ? void 0 : _a.id)) {
+          const letterId = response.data.id;
+          common_vendor.index.showLoading({ title: "正在发送..." });
+          try {
+            const sendResponse = await api_futureLetter.sendFutureLetter(letterId);
+            common_vendor.index.hideLoading();
+            if (sendResponse && sendResponse.success !== false) {
+              const localData = {
+                id: letterId,
+                style: this.isCustomStyle ? "custom" : this.selectedStyle,
+                customImage: this.customImage,
+                title: this.form.title,
+                deliveryDate: this.form.deliveryDate,
+                content: this.form.content,
+                createTime: (/* @__PURE__ */ new Date()).toLocaleString(),
+                status: "SENT"
+                // 标记为已发送
+              };
+              try {
+                const letters = common_vendor.index.getStorageSync("xinxiang_letters") || [];
+                letters.unshift(localData);
+                common_vendor.index.setStorageSync("xinxiang_letters", letters);
+              } catch (e) {
+                common_vendor.index.__f__("warn", "at pages/xinxiang/create.vue:434", "保存本地预览数据失败", e);
+              }
+              common_vendor.index.showToast({ title: "发送成功", icon: "success" });
+              this.showPreviewModal = true;
+            } else {
+              common_vendor.index.showToast({
+                title: sendResponse.message || "创建成功，但发送失败",
+                icon: "none",
+                duration: 2e3
+              });
+              this.showPreviewModal = true;
+            }
+          } catch (sendError) {
+            common_vendor.index.hideLoading();
+            common_vendor.index.__f__("error", "at pages/xinxiang/create.vue:454", "发送未来情书失败:", sendError);
+            const localData = {
+              id: letterId,
+              style: this.isCustomStyle ? "custom" : this.selectedStyle,
+              customImage: this.customImage,
+              title: this.form.title,
+              deliveryDate: this.form.deliveryDate,
+              content: this.form.content,
+              createTime: (/* @__PURE__ */ new Date()).toLocaleString(),
+              status: "DRAFT"
+              // 标记为草稿（发送失败）
+            };
+            try {
+              const letters = common_vendor.index.getStorageSync("xinxiang_letters") || [];
+              letters.unshift(localData);
+              common_vendor.index.setStorageSync("xinxiang_letters", letters);
+            } catch (e) {
+              common_vendor.index.__f__("warn", "at pages/xinxiang/create.vue:474", "保存本地预览数据失败", e);
+            }
+            common_vendor.index.showToast({
+              title: sendError.message || "创建成功，但发送失败，请稍后重试",
+              icon: "none",
+              duration: 2e3
+            });
+            this.showPreviewModal = true;
+          }
+        } else {
+          common_vendor.index.showToast({
+            title: response.message || "创建失败，请重试",
+            icon: "none"
+          });
+        }
+      } catch (error) {
+        common_vendor.index.hideLoading();
+        common_vendor.index.__f__("error", "at pages/xinxiang/create.vue:494", "创建未来情书失败:", error);
+        common_vendor.index.showToast({
+          title: error.message || "创建失败，请重试",
+          icon: "none",
+          duration: 2e3
+        });
       }
     },
     // 关闭预览弹窗并返回
@@ -281,7 +265,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     e: $data.currentStep === 2 ? 1 : "",
     f: $data.currentStep === 1
   }, $data.currentStep === 1 ? common_vendor.e({
-    g: common_vendor.f([1, 2, 4, 5, 6, 7], (i, k0, i0) => {
+    g: common_vendor.f([1, 2, 3], (i, k0, i0) => {
       return common_vendor.e({
         a: `/static/xinxiang/xin${i}.jpg`,
         b: $data.selectedStyle === i && !$data.isCustomStyle
@@ -294,167 +278,47 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     h: common_vendor.o((...args) => $options.uploadCustom && $options.uploadCustom(...args)),
     i: $data.customImage
   }, $data.customImage ? {
-    j: $data.customImage,
-    k: 1 - $data.opacity / 100,
-    l: $data.cropArea.top + "%",
-    m: $data.cropArea.left + "%",
-    n: $data.cropArea.width + "%",
-    o: 100 - $data.cropArea.left - $data.cropArea.width + "%",
-    p: $data.cropArea.top + "%",
-    q: $data.cropArea.height + "%",
-    r: $data.cropArea.top + $data.cropArea.height + "%",
-    s: 100 - $data.cropArea.top - $data.cropArea.height + "%",
-    t: $data.cropArea.left + "%",
-    v: $data.cropArea.top + "%",
-    w: $data.cropArea.width + "%",
-    x: $data.cropArea.height + "%",
-    y: common_vendor.o(($event) => $data.showOpacityModal = true)
+    j: $data.customImage
   } : {}, {
-    z: common_vendor.o((...args) => $options.nextStep && $options.nextStep(...args))
+    k: common_vendor.o((...args) => $options.nextStep && $options.nextStep(...args))
   }) : {}, {
-    A: $data.showOpacityModal
-  }, $data.showOpacityModal ? {
-    B: $data.customImage,
-    C: "scale(" + $data.imageScale / 100 + ")",
-    D: 1 - $data.opacity / 100,
-    E: $data.cropArea.top + "%",
-    F: $data.cropArea.left + "%",
-    G: $data.cropArea.width + "%",
-    H: 100 - $data.cropArea.left - $data.cropArea.width + "%",
-    I: $data.cropArea.top + "%",
-    J: $data.cropArea.height + "%",
-    K: $data.cropArea.top + $data.cropArea.height + "%",
-    L: 100 - $data.cropArea.top - $data.cropArea.height + "%",
-    M: common_vendor.o((...args) => $options.startResize && $options.startResize(...args)),
-    N: common_vendor.o((...args) => $options.onResize && $options.onResize(...args)),
-    O: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args)),
-    P: $data.cropArea.left + "%",
-    Q: $data.cropArea.top + "%",
-    R: $data.cropArea.width + "%",
-    S: $data.cropArea.height + "%",
-    T: common_vendor.o((...args) => $options.startDrag && $options.startDrag(...args)),
-    U: common_vendor.o((...args) => $options.onDrag && $options.onDrag(...args)),
-    V: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args)),
-    W: common_vendor.o((...args) => $options.onDrag && $options.onDrag(...args)),
-    X: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args)),
-    Y: $data.opacity,
-    Z: common_vendor.o((...args) => $options.onOpacityChange && $options.onOpacityChange(...args)),
-    aa: common_vendor.o((...args) => $options.onOpacityChanging && $options.onOpacityChanging(...args)),
-    ab: common_vendor.t($data.opacity),
-    ac: $data.imageScale,
-    ad: common_vendor.o((...args) => $options.onScaleChange && $options.onScaleChange(...args)),
-    ae: common_vendor.o((...args) => $options.onScaleChanging && $options.onScaleChanging(...args)),
-    af: common_vendor.t($data.imageScale),
-    ag: common_vendor.o((...args) => $options.finishAdjust && $options.finishAdjust(...args)),
-    ah: common_vendor.o(() => {
-    }),
-    ai: common_vendor.o(($event) => $data.showOpacityModal = false)
-  } : {}, {
-    aj: $data.currentStep === 2
+    l: $data.currentStep === 2
   }, $data.currentStep === 2 ? {
-    ak: $data.form.title,
-    al: common_vendor.o(($event) => $data.form.title = $event.detail.value),
-    am: common_vendor.t($data.form.deliveryDate || "请选择日期"),
-    an: $data.form.deliveryDate,
-    ao: common_vendor.o((...args) => $options.onDateChange && $options.onDateChange(...args)),
-    ap: $options.minDate,
-    aq: $data.form.phone,
-    ar: common_vendor.o(($event) => $data.form.phone = $event.detail.value),
-    as: $data.form.wechat,
-    at: common_vendor.o(($event) => $data.form.wechat = $event.detail.value),
-    av: $data.form.content,
-    aw: common_vendor.o(($event) => $data.form.content = $event.detail.value),
-    ax: common_vendor.t($data.form.content.length),
-    ay: common_vendor.o((...args) => $options.prevStep && $options.prevStep(...args)),
-    az: common_vendor.o((...args) => $options.openPreview && $options.openPreview(...args)),
-    aA: common_vendor.o((...args) => $options.submitLetter && $options.submitLetter(...args))
+    m: $data.form.title,
+    n: common_vendor.o(($event) => $data.form.title = $event.detail.value),
+    o: common_vendor.t($data.form.deliveryDate || "请选择日期"),
+    p: $data.form.deliveryDate,
+    q: common_vendor.o((...args) => $options.onDateChange && $options.onDateChange(...args)),
+    r: $options.minDate,
+    s: $data.form.content,
+    t: common_vendor.o(($event) => $data.form.content = $event.detail.value),
+    v: common_vendor.t($data.form.content.length),
+    w: common_vendor.o((...args) => $options.prevStep && $options.prevStep(...args)),
+    x: common_vendor.o((...args) => $options.openPreview && $options.openPreview(...args)),
+    y: common_vendor.o((...args) => $options.submitLetter && $options.submitLetter(...args))
   } : {}, {
-    aB: $data.showLivePreviewModal
-  }, $data.showLivePreviewModal ? common_vendor.e({
-    aC: $options.letterBackground,
-    aD: "scale(" + $data.imageScale / 100 + ")",
-    aE: 1 - $data.opacity / 100,
-    aF: common_vendor.t($data.form.title || "信件主题"),
-    aG: common_vendor.t($data.form.deliveryDate || "未选择"),
-    aH: common_vendor.t($data.form.content || "信件内容..."),
-    aI: $data.form.phone
-  }, $data.form.phone ? {
-    aJ: common_vendor.t($data.form.phone.slice(0, 3)),
-    aK: common_vendor.t($data.form.phone.slice(-4))
-  } : {}, {
-    aL: $data.opacity,
-    aM: common_vendor.o((...args) => $options.onOpacityChange && $options.onOpacityChange(...args)),
-    aN: common_vendor.o((...args) => $options.onOpacityChanging && $options.onOpacityChanging(...args)),
-    aO: common_vendor.t($data.opacity),
-    aP: $data.imageScale,
-    aQ: common_vendor.o((...args) => $options.onScaleChange && $options.onScaleChange(...args)),
-    aR: common_vendor.o((...args) => $options.onScaleChanging && $options.onScaleChanging(...args)),
-    aS: common_vendor.t($data.imageScale),
-    aT: common_vendor.o((...args) => $options.openAdjustFromPreview && $options.openAdjustFromPreview(...args)),
-    aU: common_vendor.o(($event) => $data.showLivePreviewModal = false),
-    aV: common_vendor.o(() => {
+    z: $data.showLivePreviewModal
+  }, $data.showLivePreviewModal ? {
+    A: $options.letterBackground,
+    B: common_vendor.t($data.form.title || "信件主题"),
+    C: common_vendor.t($data.form.deliveryDate || "未选择"),
+    D: common_vendor.t($data.form.content || "信件内容..."),
+    E: common_vendor.o(($event) => $data.showLivePreviewModal = false),
+    F: common_vendor.o(() => {
     }),
-    aW: common_vendor.o(($event) => $data.showLivePreviewModal = false)
-  }) : {}, {
-    aX: $data.showOpacityModal
-  }, $data.showOpacityModal ? common_vendor.e({
-    aY: $options.letterBackground,
-    aZ: "scale(" + $data.imageScale / 100 + ")",
-    ba: 1 - $data.opacity / 100,
-    bb: $data.isCustomStyle
-  }, $data.isCustomStyle ? {
-    bc: $data.cropArea.top + "%",
-    bd: $data.cropArea.left + "%",
-    be: $data.cropArea.width + "%",
-    bf: 100 - $data.cropArea.left - $data.cropArea.width + "%",
-    bg: $data.cropArea.top + "%",
-    bh: $data.cropArea.height + "%",
-    bi: $data.cropArea.top + $data.cropArea.height + "%",
-    bj: 100 - $data.cropArea.top - $data.cropArea.height + "%"
+    G: common_vendor.o(($event) => $data.showLivePreviewModal = false)
   } : {}, {
-    bk: $data.isCustomStyle
-  }, $data.isCustomStyle ? {
-    bl: common_vendor.o((...args) => $options.startResize && $options.startResize(...args)),
-    bm: common_vendor.o((...args) => $options.onResize && $options.onResize(...args)),
-    bn: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args)),
-    bo: $data.cropArea.left + "%",
-    bp: $data.cropArea.top + "%",
-    bq: $data.cropArea.width + "%",
-    br: $data.cropArea.height + "%",
-    bs: common_vendor.o((...args) => $options.startDrag && $options.startDrag(...args)),
-    bt: common_vendor.o((...args) => $options.onDrag && $options.onDrag(...args)),
-    bv: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args))
-  } : {}, {
-    bw: common_vendor.o((...args) => $options.onDrag && $options.onDrag(...args)),
-    bx: common_vendor.o((...args) => $options.endDrag && $options.endDrag(...args)),
-    by: $data.opacity,
-    bz: common_vendor.o((...args) => $options.onOpacityChange && $options.onOpacityChange(...args)),
-    bA: common_vendor.o((...args) => $options.onOpacityChanging && $options.onOpacityChanging(...args)),
-    bB: common_vendor.t($data.opacity),
-    bC: $data.imageScale,
-    bD: common_vendor.o((...args) => $options.onScaleChange && $options.onScaleChange(...args)),
-    bE: common_vendor.o((...args) => $options.onScaleChanging && $options.onScaleChanging(...args)),
-    bF: common_vendor.t($data.imageScale),
-    bG: common_vendor.o((...args) => $options.finishAdjust && $options.finishAdjust(...args)),
-    bH: common_vendor.o(() => {
-    }),
-    bI: common_vendor.o(($event) => $data.showOpacityModal = false)
-  }) : {}, {
-    bJ: $data.showPreviewModal
+    H: $data.showPreviewModal
   }, $data.showPreviewModal ? {
-    bK: $options.letterBackground,
-    bL: $data.isCustomStyle ? `inset(${$data.cropArea.top}% ${100 - $data.cropArea.left - $data.cropArea.width}% ${100 - $data.cropArea.top - $data.cropArea.height}% ${$data.cropArea.left}%)` : "none",
-    bM: 1 - $data.opacity / 100,
-    bN: common_vendor.t($data.form.title),
-    bO: common_vendor.t($data.form.deliveryDate),
-    bP: common_vendor.t($data.form.content),
-    bQ: common_vendor.t($data.form.phone.slice(0, 3)),
-    bR: common_vendor.t($data.form.phone.slice(-4)),
-    bS: common_vendor.o((...args) => $options.closePreviewAndBack && $options.closePreviewAndBack(...args)),
-    bT: common_vendor.o(() => {
+    I: $options.letterBackground,
+    J: common_vendor.t($data.form.title),
+    K: common_vendor.t($data.form.deliveryDate),
+    L: common_vendor.t($data.form.content),
+    M: common_vendor.o((...args) => $options.closePreviewAndBack && $options.closePreviewAndBack(...args)),
+    N: common_vendor.o(() => {
     })
   } : {}, {
-    bU: $options.containerPaddingTop
+    O: $options.containerPaddingTop
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

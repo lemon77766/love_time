@@ -508,7 +508,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     a: $data.statusBarHeight + "px",
     b: common_vendor.o((...args) => $options.goBack && $options.goBack(...args)),
     c: $data.navBarHeight + "px",
-    d: common_assets._imports_0$3,
+    d: common_assets._imports_0$2,
     e: $options.progressPercent + "%",
     f: common_vendor.t($options.doneCount),
     g: common_vendor.t($options.filterText),

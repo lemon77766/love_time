@@ -832,7 +832,7 @@ export default {
 <style>
 .qna-page { 
   min-height: 100vh; 
-  background: #F8F0FC; 
+  background: #FFFAF4; 
   padding-bottom: 60rpx; 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -844,7 +844,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: #F8F0FC;
+  background-color: #FFFAF4;
   overflow: hidden;
 }
 
@@ -854,8 +854,9 @@ export default {
   left: 0;
   right: 0;
   height: 200%;
-  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
-  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 
 .status-bar {
@@ -885,8 +886,8 @@ export default {
 
 .title-text {
   font-size: 32rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-weight: 500;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -900,7 +901,7 @@ export default {
 .back-icon {
   font-size: 50rpx;
   font-weight: 600;
-  color: #6B5B95;
+  color: #4A4A4A;
   line-height: 1;
   cursor: pointer;
   transition: opacity 0.3s;
@@ -920,7 +921,7 @@ export default {
 .title { 
   font-size: 34rpx; 
   font-weight: 600; 
-  color: #6B5B95; 
+  color: #4A4A4A; 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .subtitle { 
@@ -933,7 +934,7 @@ export default {
 }
 .header-actions { margin-top: 16rpx; }
 .btn-custom { 
-  background: #DCC7E1; 
+  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
   color: #ffffff; 
   border-radius: 24rpx; 
   padding: 14rpx 28rpx; 
@@ -943,30 +944,34 @@ export default {
 
 .question-card { 
   margin: 24rpx; 
-  background: #ffffff; 
-  border-radius: 24rpx; 
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx; 
   padding: 24rpx; 
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06); 
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
 }
 .q-label { font-size: 24rpx; color: #9B8FB8; }
 .q-text { 
   margin-top: 8rpx; 
   font-size: 34rpx; 
-  color: #6B5B95; 
+  color: #4A4A4A; 
   font-weight: 600; 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .answer-card { 
   margin: 0 24rpx; 
-  background: #ffffff; 
-  border-radius: 24rpx; 
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx; 
   padding: 24rpx; 
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06); 
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
 }
 .a-label { 
   font-size: 28rpx; 
-  color: #6B5B95; 
+  color: #4A4A4A; 
   font-weight: 600;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -988,7 +993,7 @@ export default {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .btn.primary { 
-  background: #DCC7E1; 
+  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
   color: #ffffff; 
 }
 .btn.secondary { 
@@ -998,14 +1003,16 @@ export default {
 
 .partner-card { 
   margin: 16rpx 24rpx; 
-  background: #ffffff; 
-  border-radius: 24rpx; 
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx; 
   padding: 24rpx; 
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06); 
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
 }
 .p-label { 
   font-size: 28rpx; 
-  color: #6B5B95; 
+  color: #4A4A4A; 
   font-weight: 600;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -1022,14 +1029,14 @@ export default {
   position: fixed; 
   right: 24rpx; 
   bottom: 120rpx; 
-  background: #DCC7E1; 
+  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
   color: #ffffff; 
   border-radius: 999rpx; 
   padding: 16rpx 20rpx; 
   display: flex; 
   align-items: center; 
   gap: 10rpx; 
-  box-shadow: 0 10rpx 24rpx rgba(220, 199, 225, 0.35); 
+  box-shadow: 0 8rpx 24rpx rgba(255, 158, 188, 0.3); 
   z-index: 99; 
 }
 .custom-floating { bottom: 200rpx; }
@@ -1058,7 +1065,7 @@ export default {
 .modal-title { 
   font-size: 34rpx; 
   font-weight: 600; 
-  color: #6B5B95; 
+  color: #4A4A4A; 
   margin-bottom: 16rpx; 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -1066,7 +1073,7 @@ export default {
 .history-item { padding: 16rpx 0; border-bottom: 1rpx solid #F3E8FF; }
 .h-q { 
   font-size: 26rpx; 
-  color: #6B5B95; 
+  color: #4A4A4A; 
   font-weight: 600;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -1103,7 +1110,7 @@ export default {
 .question-list { flex: 1; overflow-y: auto; }
 .section-title { 
   font-size: 26rpx; 
-  color: #6B5B95; 
+  color: #4A4A4A; 
   margin-bottom: 12rpx; 
   padding-left: 4rpx; 
   font-weight: 600;
@@ -1113,18 +1120,20 @@ export default {
   display: flex; 
   align-items: flex-start; 
   padding: 14rpx 12rpx; 
-  background: #F8F0FC; 
+  background: rgba(255, 255, 255, 0.5); 
   border-radius: 12rpx; 
   margin-bottom: 8rpx; 
-  border: 1rpx solid #F3E8FF;
+  border: 1rpx solid rgba(255, 255, 255, 0.8);
 }
 .question-item.custom { 
-  background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%); 
-  border: 1rpx solid #D8B4FE;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1rpx solid rgba(255, 255, 255, 0.8);
 }
 .q-num { 
   font-size: 24rpx; 
-  color: #DCC7E1; 
+  color: #FF9EBC; 
   font-weight: 600; 
   margin-right: 8rpx; 
   flex-shrink: 0; 
@@ -1132,7 +1141,7 @@ export default {
 .q-content { 
   flex: 1; 
   font-size: 26rpx; 
-  color: #6B5B95; 
+  color: #4A4A4A; 
   word-break: break-all; 
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;

@@ -98,7 +98,7 @@ const _sfc_main = {
           this.customNickname = this.useWechatNickname ? "" : this.userInfo.displayName;
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/we/index.vue:297", "加载用户信息失败", error);
+        common_vendor.index.__f__("error", "at pages/we/index.vue:305", "加载用户信息失败", error);
       }
     },
     // 切换个人资料设置展开/收起
@@ -133,7 +133,7 @@ const _sfc_main = {
               this.bindTime = "";
             }
           } catch (e) {
-            common_vendor.index.__f__("error", "at pages/we/index.vue:337", "同步绑定状态失败", e);
+            common_vendor.index.__f__("error", "at pages/we/index.vue:345", "同步绑定状态失败", e);
           }
           return;
         }
@@ -155,7 +155,7 @@ const _sfc_main = {
             });
           }
         } catch (e) {
-          common_vendor.index.__f__("error", "at pages/we/index.vue:364", "查询绑定状态失败", e);
+          common_vendor.index.__f__("error", "at pages/we/index.vue:372", "查询绑定状态失败", e);
           this.isBound = utils_couple.isBound();
           if (this.isBound) {
             this.partnerInfo = utils_couple.getPartnerInfo();
@@ -164,7 +164,7 @@ const _sfc_main = {
           }
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/we/index.vue:374", "加载情侣信息失败", e);
+        common_vendor.index.__f__("error", "at pages/we/index.vue:382", "加载情侣信息失败", e);
         this.isBound = utils_couple.isBound();
         if (this.isBound) {
           this.partnerInfo = utils_couple.getPartnerInfo();
@@ -200,14 +200,14 @@ const _sfc_main = {
           var _a;
           const originalFilePath = res.tempFilePaths[0];
           if (!originalFilePath) {
-            common_vendor.index.__f__("error", "at pages/we/index.vue:414", "❌ [头像选择] 未获取到图片路径");
+            common_vendor.index.__f__("error", "at pages/we/index.vue:422", "❌ [头像选择] 未获取到图片路径");
             common_vendor.index.showToast({
               title: "选择图片失败",
               icon: "none"
             });
             return;
           }
-          common_vendor.index.__f__("log", "at pages/we/index.vue:422", "📸 [头像选择] 原始路径:", originalFilePath);
+          common_vendor.index.__f__("log", "at pages/we/index.vue:430", "📸 [头像选择] 原始路径:", originalFilePath);
           let loadingShown = false;
           try {
             common_vendor.index.showLoading({
@@ -217,22 +217,22 @@ const _sfc_main = {
             loadingShown = true;
             let imagePath = originalFilePath;
             try {
-              common_vendor.index.__f__("log", "at pages/we/index.vue:435", "🔄 [头像选择] 开始压缩图片，路径:", originalFilePath);
+              common_vendor.index.__f__("log", "at pages/we/index.vue:443", "🔄 [头像选择] 开始压缩图片，路径:", originalFilePath);
               const compressedPath = await this.compressImage(originalFilePath);
               if (compressedPath && compressedPath.trim() !== "" && compressedPath !== originalFilePath) {
-                common_vendor.index.__f__("log", "at pages/we/index.vue:440", "✅ [头像选择] 压缩成功，新路径:", compressedPath);
+                common_vendor.index.__f__("log", "at pages/we/index.vue:448", "✅ [头像选择] 压缩成功，新路径:", compressedPath);
                 imagePath = compressedPath;
               } else {
-                common_vendor.index.__f__("log", "at pages/we/index.vue:443", "ℹ️ [头像选择] 压缩后路径相同或无效，使用原图");
+                common_vendor.index.__f__("log", "at pages/we/index.vue:451", "ℹ️ [头像选择] 压缩后路径相同或无效，使用原图");
                 imagePath = originalFilePath;
               }
             } catch (compressError) {
-              common_vendor.index.__f__("warn", "at pages/we/index.vue:447", "⚠️ [头像选择] 图片压缩失败，使用原图", compressError);
+              common_vendor.index.__f__("warn", "at pages/we/index.vue:455", "⚠️ [头像选择] 图片压缩失败，使用原图", compressError);
               imagePath = originalFilePath;
             }
             let avatarUrl = originalFilePath;
             try {
-              common_vendor.index.__f__("log", "at pages/we/index.vue:454", "📤 [头像选择] 开始上传，路径:", imagePath);
+              common_vendor.index.__f__("log", "at pages/we/index.vue:462", "📤 [头像选择] 开始上传，路径:", imagePath);
               const uploadResult = await utils_http.http.upload({
                 url: utils_config.config.API.USER.AVATAR_UPLOAD,
                 filePath: imagePath,
@@ -240,14 +240,14 @@ const _sfc_main = {
                 formData: { type: "avatar" }
               });
               avatarUrl = uploadResult.url || ((_a = uploadResult.data) == null ? void 0 : _a.url) || originalFilePath;
-              common_vendor.index.__f__("log", "at pages/we/index.vue:464", "✅ [头像选择] 上传成功，服务器URL:", avatarUrl);
+              common_vendor.index.__f__("log", "at pages/we/index.vue:472", "✅ [头像选择] 上传成功，服务器URL:", avatarUrl);
               this.userInfo.displayAvatar = avatarUrl;
               try {
                 const currentNickName = this.useWechatNickname ? this.userInfo.nickName : this.customNickname || this.userInfo.displayName || this.userInfo.nickName;
                 await api_user.updateUserProfile(currentNickName, avatarUrl);
-                common_vendor.index.__f__("log", "at pages/we/index.vue:474", "✅ [头像选择] 头像已更新到后端数据库");
+                common_vendor.index.__f__("log", "at pages/we/index.vue:482", "✅ [头像选择] 头像已更新到后端数据库");
               } catch (updateError) {
-                common_vendor.index.__f__("error", "at pages/we/index.vue:476", "❌ [头像选择] 更新头像到后端数据库失败:", updateError);
+                common_vendor.index.__f__("error", "at pages/we/index.vue:484", "❌ [头像选择] 更新头像到后端数据库失败:", updateError);
               }
               const loginInfo = common_vendor.index.getStorageSync("login_info") || {};
               if (loginInfo.userInfo) {
@@ -261,7 +261,7 @@ const _sfc_main = {
                 duration: 1500
               });
             } catch (uploadError) {
-              common_vendor.index.__f__("warn", "at pages/we/index.vue:496", "⚠️ [头像选择] 头像上传失败，使用本地图片", uploadError);
+              common_vendor.index.__f__("warn", "at pages/we/index.vue:504", "⚠️ [头像选择] 头像上传失败，使用本地图片", uploadError);
               this.userInfo.displayAvatar = originalFilePath;
               const loginInfo = common_vendor.index.getStorageSync("login_info") || {};
               if (loginInfo.userInfo) {
@@ -275,7 +275,7 @@ const _sfc_main = {
               });
             }
           } catch (error) {
-            common_vendor.index.__f__("error", "at pages/we/index.vue:514", "❌ [头像选择] 处理头像失败", error);
+            common_vendor.index.__f__("error", "at pages/we/index.vue:522", "❌ [头像选择] 处理头像失败", error);
             common_vendor.index.showToast({
               title: "头像处理失败",
               icon: "none"
@@ -288,7 +288,7 @@ const _sfc_main = {
         },
         fail: (err) => {
           if (err && err.errMsg && !err.errMsg.includes("cancel")) {
-            common_vendor.index.__f__("error", "at pages/we/index.vue:527", "选择图片失败", err);
+            common_vendor.index.__f__("error", "at pages/we/index.vue:535", "选择图片失败", err);
             common_vendor.index.showToast({
               title: "选择图片失败",
               icon: "none"
@@ -307,7 +307,7 @@ const _sfc_main = {
             resolve(res.tempFilePath);
           },
           fail: (error) => {
-            common_vendor.index.__f__("warn", "at pages/we/index.vue:547", "图片压缩失败，使用原图", error);
+            common_vendor.index.__f__("warn", "at pages/we/index.vue:555", "图片压缩失败，使用原图", error);
             resolve(tempFilePath);
           }
         });
@@ -335,9 +335,9 @@ const _sfc_main = {
         const displayAvatar = this.userInfo.displayAvatar || this.userInfo.avatarUrl;
         try {
           await api_user.updateUserProfile(displayName, displayAvatar);
-          common_vendor.index.__f__("log", "at pages/we/index.vue:586", "✅ 用户资料已更新到后端");
+          common_vendor.index.__f__("log", "at pages/we/index.vue:594", "✅ 用户资料已更新到后端");
         } catch (apiError) {
-          common_vendor.index.__f__("error", "at pages/we/index.vue:588", "❌ 更新用户资料到后端失败:", apiError);
+          common_vendor.index.__f__("error", "at pages/we/index.vue:596", "❌ 更新用户资料到后端失败:", apiError);
           common_vendor.index.showToast({
             title: "后端更新失败，已保存到本地",
             icon: "none",
@@ -364,7 +364,7 @@ const _sfc_main = {
           duration: 1500
         });
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/we/index.vue:621", "保存失败", error);
+        common_vendor.index.__f__("error", "at pages/we/index.vue:629", "保存失败", error);
         common_vendor.index.showToast({
           title: "保存失败，请重试",
           icon: "none"
@@ -383,6 +383,40 @@ const _sfc_main = {
       common_vendor.index.showToast({
         title: settingMap[key] + "（待开发）",
         icon: "none"
+      });
+    },
+    // 解绑关系
+    async handleUnbind() {
+      common_vendor.index.showModal({
+        title: "确认解绑",
+        content: "解除关系后，双方将无法共享数据。确定要解除吗？",
+        success: async (res) => {
+          if (res.confirm) {
+            try {
+              common_vendor.index.showLoading({ title: "解绑中..." });
+              await api_couple.unbindCouple();
+              common_vendor.index.hideLoading();
+              utils_couple.clearCoupleInfo();
+              common_vendor.index.showToast({
+                title: "已解除关系",
+                icon: "success"
+              });
+              this.isBound = false;
+              this.partnerInfo = null;
+              this.bindTime = "";
+              setTimeout(() => {
+                this.loadCoupleInfo();
+              }, 1500);
+            } catch (error) {
+              common_vendor.index.hideLoading();
+              common_vendor.index.__f__("error", "at pages/we/index.vue:683", "解绑失败", error);
+              common_vendor.index.showToast({
+                title: error.message || "解绑失败，请重试",
+                icon: "none"
+              });
+            }
+          }
+        }
       });
     }
   }
@@ -416,26 +450,30 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     n: common_vendor.o(($event) => $options.handleSetting("notification")),
     o: common_vendor.o(($event) => $options.handleSetting("privacy")),
     p: common_vendor.o(($event) => $options.handleSetting("sync")),
-    q: $data.showProfileSettings ? 1 : "",
-    r: common_vendor.o((...args) => $options.toggleProfileSettings && $options.toggleProfileSettings(...args)),
-    s: $data.showProfileSettings
-  }, $data.showProfileSettings ? common_vendor.e({
-    t: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/zhuye/lanmei_boy.png",
-    v: common_vendor.o((...args) => $options.selectWechatAvatar && $options.selectWechatAvatar(...args)),
-    w: common_vendor.o((...args) => $options.uploadCustomAvatar && $options.uploadCustomAvatar(...args)),
-    x: $data.useWechatNickname ? 1 : "",
-    y: common_vendor.t($data.userInfo.nickName),
-    z: common_vendor.o((...args) => $options.toggleUseWechatNickname && $options.toggleUseWechatNickname(...args)),
-    A: !$data.useWechatNickname
-  }, !$data.useWechatNickname ? {
-    B: $data.customNickname,
-    C: common_vendor.o(($event) => $data.customNickname = $event.detail.value),
-    D: common_vendor.t($data.customNickname.length)
+    q: $data.isBound && $data.partnerInfo
+  }, $data.isBound && $data.partnerInfo ? {
+    r: common_vendor.o((...args) => $options.handleUnbind && $options.handleUnbind(...args))
   } : {}, {
-    E: common_vendor.o((...args) => $options.saveProfile && $options.saveProfile(...args)),
-    F: $data.isLoading
+    s: $data.showProfileSettings ? 1 : "",
+    t: common_vendor.o((...args) => $options.toggleProfileSettings && $options.toggleProfileSettings(...args)),
+    v: $data.showProfileSettings
+  }, $data.showProfileSettings ? common_vendor.e({
+    w: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/zhuye/lanmei_boy.png",
+    x: common_vendor.o((...args) => $options.selectWechatAvatar && $options.selectWechatAvatar(...args)),
+    y: common_vendor.o((...args) => $options.uploadCustomAvatar && $options.uploadCustomAvatar(...args)),
+    z: $data.useWechatNickname ? 1 : "",
+    A: common_vendor.t($data.userInfo.nickName),
+    B: common_vendor.o((...args) => $options.toggleUseWechatNickname && $options.toggleUseWechatNickname(...args)),
+    C: !$data.useWechatNickname
+  }, !$data.useWechatNickname ? {
+    D: $data.customNickname,
+    E: common_vendor.o(($event) => $data.customNickname = $event.detail.value),
+    F: common_vendor.t($data.customNickname.length)
+  } : {}, {
+    G: common_vendor.o((...args) => $options.saveProfile && $options.saveProfile(...args)),
+    H: $data.isLoading
   }) : {}, {
-    G: $options.containerPaddingTop
+    I: $options.containerPaddingTop
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-5f4b3cd0"]]);

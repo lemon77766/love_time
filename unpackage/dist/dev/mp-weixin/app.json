@@ -11,9 +11,11 @@
     "pages/xinxiang/index",
     "pages/xinxiang/create",
     "pages/xinxiang/history",
+    "pages/xinxiang/received",
     "pages/we/index",
     "pages/we/profile",
     "pages/trajectory/index",
+    "pages/trajectory/history",
     "pages/invite/index"
   ],
   "window": {
@@ -22,26 +24,26 @@
     "backgroundColor": "#F8F0FC"
   },
   "tabBar": {
-    "color": "#333333",
+    "color": "#4A4A4A",
     "selectedColor": "#C084FC",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "主页",
+        "text": "Home",
         "iconPath": "static/love.png",
         "selectedIconPath": "static/love.png"
       },
       {
         "pagePath": "pages/trajectory/index",
-        "text": "轨迹",
+        "text": "Trajectory",
         "iconPath": "static/trajectory.png",
         "selectedIconPath": "static/trajectory.png"
       },
       {
         "pagePath": "pages/we/index",
-        "text": "我们",
+        "text": "We",
         "iconPath": "static/we.png",
         "selectedIconPath": "static/we.png"
       }

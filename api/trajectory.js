@@ -136,6 +136,73 @@ export function getTrajectoryPoints(params = {}) {
 }
 
 /**
+ * 获取历史轨迹列表（支持只显示对方轨迹）
+ * @param {Object} params - 查询参数
+ * @param {string} params.period - 时间范围：'30days'（30天），默认 '30days'（与start_date/end_date二选一）
+ * @param {string} params.start_date - 开始日期（格式：YYYY-MM-DD），与end_date一起使用
+ * @param {string} params.end_date - 结束日期（格式：YYYY-MM-DD），与start_date一起使用
+ * @param {boolean} params.showPartnerOnly - 是否只显示对方轨迹，默认 true
+ * @param {number} params.page - 页码（可选，默认1）
+ * @param {number} params.limit - 每页数量（可选，默认50）
+ * @returns {Promise<Object>} 返回轨迹点列表
+ * 
+ * 后端接口要求：
+ * - 请求方法：GET
+ * - 请求地址：/api/trajectory/list
+ * - 请求头：需携带 Authorization token
+ * - 请求参数：
+ *   {
+ *     period: string,         // '30days'（可选，与start_date/end_date二选一）
+ *     start_date: string,     // 开始日期（格式：YYYY-MM-DD），与end_date一起使用
+ *     end_date: string,       // 结束日期（格式：YYYY-MM-DD），与start_date一起使用
+ *     showPartnerOnly: boolean, // 是否只显示对方轨迹，默认 true
+ *     page: number,          // 页码（可选，默认1）
+ *     limit: number          // 每页数量（可选，默认50）
+ *   }
+ * - 返回数据：
+ *   {
+ *     success: true,
+ *     data: {
+ *       points: [
+ *         {
+ *           id: number,
+ *           user_id: number,
+ *           latitude: number,
+ *           longitude: number,
+ *           address: string,
+ *           location_name: string,
+ *           visit_time: string,        // ISO时间格式
+ *           stay_duration: number,      // 停留时长（分钟）
+ *           importance_score: number,    // 重要性评分（0-10）
+ *           visit_count: number,        // 到访次数
+ *           is_manual: boolean,         // 是否手动添加
+ *           description: string,         // 描述
+ *           photos: string[]             // 照片列表
+ *         }
+ *       ]
+ *     }
+ *   }
+ */
+export function getTrajectoryList(params = {}) {
+  // 如果用户提供了 start_date 和 end_date，则使用自定义时间区间，不使用 period
+  // 否则使用默认的 period=30days
+  const defaultParams = {
+    showPartnerOnly: true,
+    ...params
+  };
+  
+  // 如果提供了 start_date 和 end_date，则移除 period 参数
+  if (params.start_date && params.end_date) {
+    delete defaultParams.period;
+  } else if (!defaultParams.period) {
+    // 如果没有提供 start_date/end_date 且没有 period，则使用默认值
+    defaultParams.period = '30days';
+  }
+  
+  return http.get(config.API.TRAJECTORY.LIST, defaultParams);
+}
+
+/**
  * 手动添加轨迹点
  * @param {Object} pointData - 轨迹点数据
  * @param {number} pointData.latitude - 纬度（必填）

@@ -76,6 +76,39 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
+/* 分类标签 */
+.category-tabs {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+  background: #ffffff;
+  padding: 16rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+.tab-item {
+  flex: 1;
+  padding: 16rpx 24rpx;
+  text-align: center;
+  border-radius: 12rpx;
+  background: #F8F0FC;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+.tab-item text {
+  font-size: 28rpx;
+  color: #9B8FB8;
+  font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.tab-item.active {
+  background: #DCC7E1;
+}
+.tab-item.active text {
+  color: #ffffff;
+  font-weight: 600;
+}
+
 /* 信件列表 */
 .letter-list {
   display: flex;
@@ -147,6 +180,26 @@
   color: #9B8FB8;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.status-badge {
+  display: inline-block;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  margin-top: 8rpx;
+}
+.status-draft {
+  background: #FFF3CD;
+  color: #856404;
+}
+.status-scheduled {
+  background: #D1ECF1;
+  color: #0C5460;
+}
+.status-sent {
+  background: #D4EDDA;
+  color: #155724;
 }
 .card-preview-content {
   margin-top: 8rpx;

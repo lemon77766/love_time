@@ -2,5 +2,7 @@
   "navigationBarTitleText": "甜蜜小屋",
   "navigationStyle": "custom",
   "navigationBarTextStyle": "black",
-  "usingComponents": {}
+  "usingComponents": {
+    "iconify-icon": "../../components/iconify-icon/iconify-icon"
+  }
 }

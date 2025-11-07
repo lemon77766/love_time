@@ -25,7 +25,7 @@
 /* 文章场景相关 */
 .profile-page.data-v-5f4b3cd0 {
   min-height: 100vh;
-  background: #F8F0FC;
+  background: #FFFAF4;
   padding-bottom: 120rpx;
 }
 
@@ -36,7 +36,7 @@
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: #F8F0FC;
+  background-color: #FFFAF4;
   overflow: hidden;
 }
 .navbar-gradient-bg.data-v-5f4b3cd0 {
@@ -45,8 +45,9 @@
   left: 0;
   right: 0;
   height: 200%;
-  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
-  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 .status-bar.data-v-5f4b3cd0 {
   width: 100%;
@@ -72,8 +73,8 @@
 }
 .title-text.data-v-5f4b3cd0 {
   font-size: 32rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-weight: 500;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 .navbar-right.data-v-5f4b3cd0 {
@@ -120,7 +121,7 @@
 }
 .user-days.data-v-5f4b3cd0 {
   font-size: 24rpx;
-  color: #999;
+  color: #000000;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 .edit-icon.data-v-5f4b3cd0 {
@@ -173,7 +174,7 @@
 }
 .couple-name.data-v-5f4b3cd0 {
   font-size: 24rpx;
-  color: #666;
+  color: #000000;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 .heart-connector.data-v-5f4b3cd0 {
@@ -214,7 +215,7 @@
 }
 .achievement-name.data-v-5f4b3cd0 {
   font-size: 22rpx;
-  color: #666;
+  color: #000000;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 
@@ -250,7 +251,7 @@
 }
 .setting-text.data-v-5f4b3cd0 {
   font-size: 28rpx;
-  color: #666;
+  color: #000000;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 .setting-arrow.data-v-5f4b3cd0 {
@@ -262,6 +263,33 @@
 }
 .setting-arrow.expanded.data-v-5f4b3cd0 {
   transform: rotate(90deg);
+}
+
+/* 解除关系区域 */
+.unbind-section.data-v-5f4b3cd0 {
+  margin-top: 30rpx;
+  padding-top: 30rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+.unbind-content.data-v-5f4b3cd0 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 24rpx 0;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+.unbind-content.data-v-5f4b3cd0:active {
+  opacity: 0.6;
+}
+.unbind-icon.data-v-5f4b3cd0 {
+  font-size: 28rpx;
+}
+.unbind-text.data-v-5f4b3cd0 {
+  font-size: 26rpx;
+  color: #999;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 .account-section.data-v-5f4b3cd0 {
   padding-bottom: 0;
@@ -283,7 +311,7 @@
   display: block;
   font-size: 26rpx;
   font-weight: 600;
-  color: #333;
+  color: #000000;
   margin-bottom: 20rpx;
 }
 
@@ -307,7 +335,7 @@
 }
 .avatar-label.data-v-5f4b3cd0 {
   font-size: 24rpx;
-  color: #999;
+  color: #000000;
 }
 .avatar-options.data-v-5f4b3cd0 {
   display: flex;
@@ -375,12 +403,12 @@
 .option-text.data-v-5f4b3cd0 {
   flex: 1;
   font-size: 28rpx;
-  color: #333;
+  color: #000000;
   font-weight: 500;
 }
 .current-nickname.data-v-5f4b3cd0 {
   font-size: 24rpx;
-  color: #999;
+  color: #000000;
 }
 .custom-nickname.data-v-5f4b3cd0 {
   background: #f8f8f8;
@@ -400,7 +428,7 @@
 .char-count.data-v-5f4b3cd0 {
   display: block;
   font-size: 22rpx;
-  color: #999;
+  color: #000000;
   text-align: right;
 }
 
@@ -448,6 +476,6 @@
   display: block;
   font-size: 28rpx;
   font-weight: 600;
-  color: #333;
+  color: #000000;
   margin-bottom: 20rpx;
 }

@@ -1,7 +1,7 @@
 
 .trajectory-page.data-v-bfa9c4cc {
   min-height: 100vh;
-  background-color: #F8F0FC;
+  background-color: #FFFAF4;
   padding-bottom: 40rpx;
 }
 
@@ -12,7 +12,7 @@
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: #F8F0FC;
+  background-color: #FFFAF4;
   overflow: hidden;
 }
 .navbar-gradient-bg.data-v-bfa9c4cc {
@@ -21,8 +21,9 @@
   left: 0;
   right: 0;
   height: 200%;
-  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
-  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 .status-bar.data-v-bfa9c4cc {
   width: 100%;
@@ -48,8 +49,8 @@
 }
 .title-text.data-v-bfa9c4cc {
   font-size: 32rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-weight: 500;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .content-area.data-v-bfa9c4cc {
@@ -64,81 +65,6 @@
   display: block;
 }
 
-/* 历史轨迹查询卡片 */
-.history-card.data-v-bfa9c4cc {
-  background: #ffffff;
-  border-radius: 24rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
-}
-.history-card-header.data-v-bfa9c4cc {
-  margin-bottom: 24rpx;
-}
-.history-title.data-v-bfa9c4cc {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #2b2b2b;
-}
-.date-range-selector.data-v-bfa9c4cc {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  margin-bottom: 24rpx;
-}
-.date-item.data-v-bfa9c4cc {
-  flex: 1;
-  padding: 20rpx;
-  background: #f8f8f8;
-  border-radius: 12rpx;
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-}
-.date-label.data-v-bfa9c4cc {
-  font-size: 24rpx;
-  color: #999;
-}
-.date-value.data-v-bfa9c4cc {
-  font-size: 28rpx;
-  color: #333;
-  font-weight: 500;
-}
-.date-value.placeholder.data-v-bfa9c4cc {
-  color: #999;
-}
-.date-separator.data-v-bfa9c4cc {
-  font-size: 26rpx;
-  color: #666;
-  padding: 0 8rpx;
-}
-.history-actions.data-v-bfa9c4cc {
-  display: flex;
-  gap: 16rpx;
-  margin-bottom: 16rpx;
-}
-.btn-query.data-v-bfa9c4cc {
-  flex: 1;
-  padding: 20rpx;
-  background: #2bad81;
-  color: #ffffff;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-  font-weight: 500;
-  border: none;
-}
-.btn-query.data-v-bfa9c4cc:disabled {
-  background: #cccccc;
-  color: #999;
-}
-.btn-clear.data-v-bfa9c4cc {
-  padding: 20rpx 32rpx;
-  background: #f5f5f5;
-  color: #666;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-  border: none;
-}
 /* 实时位置卡片 */
 .location-card.data-v-bfa9c4cc {
   background: #ffffff;
@@ -169,7 +95,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
+  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
   border-radius: 30rpx;
 }
 .refresh-icon.data-v-bfa9c4cc {
@@ -183,7 +109,7 @@
   color: #666;
 }
 .toggle-btn.active.data-v-bfa9c4cc {
-  background: #2bad81;
+  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
   color: #ffffff;
 }
 .toggle-text.data-v-bfa9c4cc {
@@ -242,7 +168,7 @@
 .distance-value.data-v-bfa9c4cc {
   font-size: 36rpx;
   font-weight: 600;
-  color: #2bad81;
+  color: #FF9EBC;
 }
 .location-error.data-v-bfa9c4cc {
   margin-top: 16rpx;
@@ -446,10 +372,41 @@
   border: none;
 }
 .btn.primary.data-v-bfa9c4cc {
-  background: #2bad81;
+  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
   color: #ffffff;
 }
 .btn.secondary.data-v-bfa9c4cc {
   background: #f0f0f0;
   color: #333;
+}
+
+/* 历史轨迹浮动按钮 */
+.history-float-btn.data-v-bfa9c4cc {
+  position: fixed;
+  right: 30rpx;
+  bottom: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 20rpx 32rpx;
+  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
+  border-radius: 50rpx;
+  box-shadow: 0 8rpx 24rpx rgba(255, 158, 188, 0.3);
+  z-index: 999;
+  transition: all 0.3s ease;
+}
+.history-float-btn.data-v-bfa9c4cc:active {
+  transform: scale(0.95);
+  box-shadow: 0 4rpx 12rpx rgba(255, 158, 188, 0.2);
+}
+.history-btn-icon.data-v-bfa9c4cc {
+  font-size: 32rpx;
+  line-height: 1;
+}
+.history-btn-text.data-v-bfa9c4cc {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #ffffff;
+  line-height: 1;
 }

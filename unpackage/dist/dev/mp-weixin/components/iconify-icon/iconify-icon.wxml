@@ -1,0 +1,1 @@
+<view class="iconify-icon-wrapper data-v-dd9ce4c8" style="{{f}}"><image wx:if="{{a}}" src="{{b}}" mode="aspectFit" class="iconify-icon-image data-v-dd9ce4c8" style="{{c}}"/><text wx:else class="iconify-icon data-v-dd9ce4c8" style="{{e}}">{{d}}</text></view>

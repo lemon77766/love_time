@@ -74,7 +74,14 @@
     {
       "path": "pages/xinxiang/history",
       "style": {
-        "navigationBarTitleText": "信件记录",
+        "navigationBarTitleText": "写信记录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/xinxiang/received",
+      "style": {
+        "navigationBarTitleText": "收信记录",
         "navigationStyle": "custom"
       }
     },
@@ -103,6 +110,14 @@
       }
     },
     {
+      "path": "pages/trajectory/history",
+      "style": {
+        "navigationBarTitleText": "历史轨迹",
+        "navigationStyle": "custom",
+        "navigationBarTextStyle": "black"
+      }
+    },
+    {
       "path": "pages/invite/index",
       "style": {
         "navigationBarTitleText": "邀请另一半",
@@ -112,14 +127,17 @@
     }
   ],
   "tabBar": {
-    "color": "#333333",
+    "color": "#4A4A4A",
     "selectedColor": "#C084FC",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
+    "fontSize": "18rpx",
+    "iconWidth": "48rpx",
+    "spacing": "4rpx",
     "list": [
-      { "pagePath": "pages/index/index", "text": "主页", "iconPath": "static/love.png", "selectedIconPath": "static/love.png" },
-      { "pagePath": "pages/trajectory/index", "text": "轨迹", "iconPath": "static/trajectory.png", "selectedIconPath": "static/trajectory.png" },
-      { "pagePath": "pages/we/index", "text": "我们", "iconPath": "static/we.png", "selectedIconPath": "static/we.png" }
+      { "pagePath": "pages/index/index", "text": "Home", "iconPath": "static/love.png", "selectedIconPath": "static/love.png" },
+      { "pagePath": "pages/trajectory/index", "text": "Trajectory", "iconPath": "static/trajectory.png", "selectedIconPath": "static/trajectory.png" },
+      { "pagePath": "pages/we/index", "text": "We", "iconPath": "static/we.png", "selectedIconPath": "static/we.png" }
     ]
   },
   "globalStyle": {
@@ -136,5 +154,11 @@
   "requiredPrivateInfos": [
     "getLocation"
   ],
-  "uniIdRouter": {}
+  "uniIdRouter": {},
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^iconify-icon$": "@/components/iconify-icon/iconify-icon.vue"
+    }
+  }
 }

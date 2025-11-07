@@ -109,7 +109,7 @@ const _sfc_main = {
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: common_assets._imports_0$2,
+    a: common_assets._imports_0$1,
     b: $data.showAdd && $data.selectPosMode
   }, $data.showAdd && $data.selectPosMode ? {} : {}, {
     c: $data.tempPos

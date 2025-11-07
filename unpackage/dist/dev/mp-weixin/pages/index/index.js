@@ -3,7 +3,6 @@ const common_vendor = require("../../common/vendor.js");
 const utils_couple = require("../../utils/couple.js");
 const api_couple = require("../../api/couple.js");
 const utils_auth = require("../../utils/auth.js");
-const common_assets = require("../../common/assets.js");
 const _sfc_main = {
   data() {
     return {
@@ -137,7 +136,7 @@ const _sfc_main = {
           }
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:325", "加载用户信息失败", error);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:317", "加载用户信息失败", error);
       }
     },
     // 加载情侣信息
@@ -164,7 +163,7 @@ const _sfc_main = {
                 this.partnerInfo = response.data.partnerInfo || {};
                 this.bindTime = response.data.bindTime || "";
               } else {
-                common_vendor.index.__f__("log", "at pages/index/index.vue:356", "⚠️ 服务器返回未绑定，清除本地状态");
+                common_vendor.index.__f__("log", "at pages/index/index.vue:348", "⚠️ 服务器返回未绑定，清除本地状态");
                 utils_couple.clearCoupleInfo();
                 this.isBound = false;
                 this.partnerInfo = null;
@@ -172,7 +171,7 @@ const _sfc_main = {
               }
             }
           } catch (e) {
-            common_vendor.index.__f__("error", "at pages/index/index.vue:364", "同步绑定状态失败", e);
+            common_vendor.index.__f__("error", "at pages/index/index.vue:356", "同步绑定状态失败", e);
           }
           return;
         }
@@ -201,7 +200,7 @@ const _sfc_main = {
             }
           }
         } catch (e) {
-          common_vendor.index.__f__("error", "at pages/index/index.vue:399", "查询绑定状态失败", e);
+          common_vendor.index.__f__("error", "at pages/index/index.vue:391", "查询绑定状态失败", e);
           this.isBound = utils_couple.isBound();
           if (this.isBound) {
             this.partnerInfo = utils_couple.getPartnerInfo();
@@ -210,7 +209,7 @@ const _sfc_main = {
           }
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:409", "加载情侣信息失败", e);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:401", "加载情侣信息失败", e);
         this.isBound = utils_couple.isBound();
         if (this.isBound) {
           this.partnerInfo = utils_couple.getPartnerInfo();
@@ -221,15 +220,18 @@ const _sfc_main = {
     loadRecentActivities() {
       this.recentActivities = [
         {
-          icon: "📸",
+          icon: "mdi:camera",
+          color: "#FF9EBC",
           text: '共同创建了"2024旅行记忆"相册'
         },
         {
-          icon: "🏆",
+          icon: "mdi:achievement",
+          color: "#FFD93D",
           text: '达成成就"美食探险家"'
         },
         {
-          icon: "📅",
+          icon: "mdi:calendar",
+          color: "#D9ACFF",
           text: "2025年11月10日 纪念日即将到来"
         }
       ];
@@ -245,76 +247,108 @@ const _sfc_main = {
       common_vendor.index.navigateTo({
         url: "/pages/we/index"
       });
-    },
-    // 解绑关系
-    async handleUnbind() {
-      common_vendor.index.showModal({
-        title: "确认解绑",
-        content: "解除关系后，双方将无法共享数据。确定要解除吗？",
-        success: async (res) => {
-          if (res.confirm) {
-            try {
-              common_vendor.index.showLoading({ title: "解绑中..." });
-              await api_couple.unbindCouple();
-              common_vendor.index.hideLoading();
-              utils_couple.clearCoupleInfo();
-              common_vendor.index.showToast({
-                title: "已解除关系",
-                icon: "success"
-              });
-              this.isBound = false;
-              this.partnerInfo = null;
-              this.bindTime = "";
-              setTimeout(() => {
-                this.loadCoupleInfo();
-              }, 1500);
-            } catch (error) {
-              common_vendor.index.hideLoading();
-              common_vendor.index.__f__("error", "at pages/index/index.vue:477", "解绑失败", error);
-              common_vendor.index.showToast({
-                title: error.message || "解绑失败，请重试",
-                icon: "none"
-              });
-            }
-          }
-        }
-      });
     }
   }
 };
+if (!Array) {
+  const _easycom_iconify_icon2 = common_vendor.resolveComponent("iconify-icon");
+  _easycom_iconify_icon2();
+}
+const _easycom_iconify_icon = () => "../../components/iconify-icon/iconify-icon.js";
+if (!Math) {
+  _easycom_iconify_icon();
+}
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
     a: $data.statusBarHeight + "px",
-    b: common_vendor.o((...args) => $options.goToProfile && $options.goToProfile(...args)),
-    c: $data.navBarHeight + "px",
-    d: $data.isBound && $data.partnerInfo
+    b: common_vendor.p({
+      icon: "mdi:heart",
+      size: 24,
+      color: "#ff6b6b"
+    }),
+    c: common_vendor.p({
+      icon: "mdi:account",
+      size: 24,
+      color: "#666"
+    }),
+    d: common_vendor.o((...args) => $options.goToProfile && $options.goToProfile(...args)),
+    e: $data.navBarHeight + "px",
+    f: $data.isBound && $data.partnerInfo
   }, $data.isBound && $data.partnerInfo ? {
-    e: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/zhuye/lanmei_boy.png",
-    f: $data.partnerInfo.displayAvatar || $data.partnerInfo.avatarUrl || "/static/zhuye/lanmei_boy.png",
-    g: common_vendor.t($options.daysTogether),
-    h: common_vendor.t($options.nextAnniversaryDays),
-    i: common_vendor.o((...args) => $options.handleUnbind && $options.handleUnbind(...args))
+    g: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/zhuye/lanmei_boy.png",
+    h: common_vendor.p({
+      icon: "mdi:heart",
+      size: 48,
+      color: "#ff6b6b"
+    }),
+    i: $data.partnerInfo.displayAvatar || $data.partnerInfo.avatarUrl || "/static/zhuye/lanmei_boy.png",
+    j: common_vendor.t($options.daysTogether),
+    k: common_vendor.p({
+      icon: "mdi:message",
+      size: 32,
+      color: "#666"
+    }),
+    l: common_vendor.p({
+      icon: "mdi:gift",
+      size: 32,
+      color: "#666"
+    }),
+    m: common_vendor.p({
+      icon: "mdi:calendar-heart",
+      size: 32,
+      color: "#666"
+    }),
+    n: common_vendor.t($options.nextAnniversaryDays)
   } : {
-    j: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/zhuye/lanmei_boy.png",
-    k: common_vendor.o((...args) => $options.goToInvite && $options.goToInvite(...args))
+    o: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/zhuye/lanmei_boy.png",
+    p: common_vendor.p({
+      icon: "mdi:heart",
+      size: 48,
+      color: "#ff6b6b"
+    }),
+    q: common_vendor.o((...args) => $options.goToInvite && $options.goToInvite(...args))
   }, {
-    l: common_assets._imports_0$1,
-    m: common_vendor.o((...args) => $options.goToSweetQA && $options.goToSweetQA(...args)),
-    n: common_vendor.o((...args) => $options.goToHundredThings && $options.goToHundredThings(...args)),
-    o: common_vendor.o((...args) => $options.goToHeartWall && $options.goToHeartWall(...args)),
-    p: common_vendor.o((...args) => $options.goToFutureLetter && $options.goToFutureLetter(...args)),
-    q: common_vendor.t($data.wishText),
-    r: $data.recentActivities.length > 0
+    r: common_vendor.p({
+      icon: "mdi:chat-question",
+      size: 48,
+      color: "#FF9EBC"
+    }),
+    s: common_vendor.o((...args) => $options.goToSweetQA && $options.goToSweetQA(...args)),
+    t: common_vendor.p({
+      icon: "mdi:check-all",
+      size: 48,
+      color: "#D9ACFF"
+    }),
+    v: common_vendor.o((...args) => $options.goToHundredThings && $options.goToHundredThings(...args)),
+    w: common_vendor.p({
+      icon: "mdi:heart-box",
+      size: 48,
+      color: "#FF6B6B"
+    }),
+    x: common_vendor.o((...args) => $options.goToHeartWall && $options.goToHeartWall(...args)),
+    y: common_vendor.p({
+      icon: "mdi:book-heart",
+      size: 48,
+      color: "#FF91A4"
+    }),
+    z: common_vendor.o((...args) => $options.goToFutureLetter && $options.goToFutureLetter(...args)),
+    A: common_vendor.t($data.wishText),
+    B: $data.recentActivities.length > 0
   }, $data.recentActivities.length > 0 ? {
-    s: common_vendor.f($data.recentActivities, (activity, index, i0) => {
+    C: common_vendor.f($data.recentActivities, (activity, index, i0) => {
       return {
-        a: common_vendor.t(activity.icon),
-        b: common_vendor.t(activity.text),
-        c: index
+        a: "141f41a3-11-" + i0,
+        b: common_vendor.p({
+          icon: activity.icon,
+          size: 32,
+          color: activity.color
+        }),
+        c: common_vendor.t(activity.text),
+        d: index
       };
     })
   } : {}, {
-    t: $options.containerPaddingTop
+    D: $options.containerPaddingTop
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

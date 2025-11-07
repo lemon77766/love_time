@@ -97,9 +97,17 @@
               <text class="setting-text">云同步</text>
             </view>
             <text class="setting-arrow">›</text>
+          </view>
+        </view>
+        
+        <!-- 解除关系区域（仅在已绑定时显示） -->
+        <view class="unbind-section" v-if="isBound && partnerInfo">
+          <view class="unbind-content" @click="handleUnbind">
+            <text class="unbind-icon">🔗</text>
+            <text class="unbind-text">解除关系</text>
+          </view>
+        </view>
       </view>
-      </view>
-    </view>
 
       <!-- 账号与安全 -->
       <view class="section account-section">
@@ -133,8 +141,8 @@
                   <text class="btn-text">上传自定义头像</text>
                 </button>
               </view>
-        </view>
-      </view>
+            </view>
+          </view>
 
           <!-- 昵称设置 -->
           <view class="profile-setting-block">
@@ -155,8 +163,8 @@
                 />
                 <text class="char-count">{{ customNickname.length }}/20</text>
               </view>
-      </view>
-    </view>
+            </view>
+          </view>
 
           <!-- 保存按钮 -->
           <view class="save-section">
@@ -174,8 +182,8 @@
 <script>
 import http from '@/utils/http.js';
 import config from '@/utils/config.js';
-import { getCoupleInfo, getPartnerInfo, isBound as checkIsBound } from '../../utils/couple.js';
-import { getCoupleStatus } from '../../api/couple.js';
+import { getCoupleInfo, getPartnerInfo, isBound as checkIsBound, clearCoupleInfo } from '../../utils/couple.js';
+import { getCoupleStatus, unbindCouple } from '../../api/couple.js';
 import { saveCoupleInfo } from '../../utils/couple.js';
 import { updateUserProfile } from '../../api/user.js';
 
@@ -639,6 +647,48 @@ export default {
         title: settingMap[key] + '（待开发）',
         icon: 'none'
       });
+    },
+    
+    // 解绑关系
+    async handleUnbind() {
+      uni.showModal({
+        title: '确认解绑',
+        content: '解除关系后，双方将无法共享数据。确定要解除吗？',
+        success: async (res) => {
+          if (res.confirm) {
+            try {
+              uni.showLoading({ title: '解绑中...' });
+              await unbindCouple();
+              uni.hideLoading();
+              
+              // 清除本地信息
+              clearCoupleInfo();
+              
+              uni.showToast({
+                title: '已解除关系', 
+                icon: 'success' 
+              });
+              
+              // 更新页面状态
+              this.isBound = false;
+              this.partnerInfo = null;
+              this.bindTime = '';
+              
+              // 延迟刷新页面
+              setTimeout(() => {
+                this.loadCoupleInfo();
+              }, 1500);
+            } catch (error) {
+              uni.hideLoading();
+              console.error('解绑失败', error);
+              uni.showToast({ 
+                title: error.message || '解绑失败，请重试', 
+                icon: 'none' 
+              });
+            }
+          }
+        }
+      });
     }
   }
 };
@@ -647,7 +697,7 @@ export default {
 <style lang="scss" scoped>
 .profile-page {
   min-height: 100vh;
-  background: #F8F0FC;
+  background: #FFFAF4;
   padding-bottom: 120rpx;
 }
 
@@ -658,7 +708,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: #F8F0FC;
+  background-color: #FFFAF4;
   overflow: hidden;
 }
 
@@ -668,8 +718,9 @@ export default {
   left: 0;
   right: 0;
   height: 200%;
-  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
-  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 
 .status-bar {
@@ -699,8 +750,8 @@ export default {
 
 .title-text {
   font-size: 32rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-weight: 500;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -752,7 +803,7 @@ export default {
 
 .user-days {
   font-size: 24rpx;
-  color: #999;
+  color: #000000;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -812,7 +863,7 @@ export default {
 
 .couple-name {
   font-size: 24rpx;
-  color: #666;
+  color: #000000;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -860,7 +911,7 @@ export default {
 
 .achievement-name {
   font-size: 22rpx;
-  color: #666;
+  color: #000000;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -903,7 +954,7 @@ export default {
 
 .setting-text {
   font-size: 28rpx;
-  color: #666;
+  color: #000000;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -917,6 +968,37 @@ export default {
 
 .setting-arrow.expanded {
   transform: rotate(90deg);
+}
+
+/* 解除关系区域 */
+.unbind-section {
+  margin-top: 30rpx;
+  padding-top: 30rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.unbind-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 24rpx 0;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.unbind-content:active {
+  opacity: 0.6;
+}
+
+.unbind-icon {
+  font-size: 28rpx;
+}
+
+.unbind-text {
+  font-size: 26rpx;
+  color: #999;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .account-section {
@@ -942,7 +1024,7 @@ export default {
   display: block;
   font-size: 26rpx;
   font-weight: 600;
-  color: #333;
+  color: #000000;
   margin-bottom: 20rpx;
 }
 
@@ -969,7 +1051,7 @@ export default {
 
 .avatar-label {
   font-size: 24rpx;
-  color: #999;
+  color: #000000;
 }
 
 .avatar-options {
@@ -1046,13 +1128,13 @@ export default {
 .option-text {
   flex: 1;
   font-size: 28rpx;
-  color: #333;
+  color: #000000;
   font-weight: 500;
 }
 
 .current-nickname {
   font-size: 24rpx;
-  color: #999;
+  color: #000000;
 }
 
 .custom-nickname {
@@ -1075,7 +1157,7 @@ export default {
 .char-count {
   display: block;
   font-size: 22rpx;
-  color: #999;
+  color: #000000;
   text-align: right;
 }
 
@@ -1129,7 +1211,7 @@ export default {
   display: block;
   font-size: 28rpx;
   font-weight: 600;
-  color: #333;
+  color: #000000;
   margin-bottom: 20rpx;
 }
 

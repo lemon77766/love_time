@@ -23,10 +23,16 @@
     
     <!-- 内容层 -->
     <view class="content-layer">
-      <!-- 顶部信件记录按钮 -->
-      <view class="top-menu" @click="openHistory">
-        <text class="menu-icon">📋</text>
-        <text class="menu-text">信件记录</text>
+      <!-- 顶部菜单 -->
+      <view class="top-menu-container">
+        <view class="top-menu" @click="openHistory">
+          <text class="menu-icon">📋</text>
+          <text class="menu-text">写信记录</text>
+        </view>
+        <view class="top-menu" @click="openReceived" style="margin-top: 20rpx;">
+          <text class="menu-icon">📬</text>
+          <text class="menu-text">收信记录</text>
+        </view>
       </view>
 
       <!-- 文字描述 -->
@@ -86,6 +92,9 @@ export default {
     },
     openHistory() {
       uni.navigateTo({ url: '/pages/xinxiang/history' });
+    },
+    openReceived() {
+      uni.navigateTo({ url: '/pages/xinxiang/received' });
     },
     createLetter() {
       uni.navigateTo({ url: '/pages/xinxiang/create' });
@@ -200,16 +209,20 @@ export default {
   overflow: hidden;
 }
 
-/* 顶部订单记录 */
-.top-menu {
+/* 顶部菜单容器 */
+.top-menu-container {
   position: absolute;
   top: 40rpx;
   left: 40rpx;
+  z-index: 10;
+}
+
+/* 顶部菜单项 */
+.top-menu {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8rpx;
-  z-index: 10;
 }
 
 .menu-icon {

@@ -38,7 +38,7 @@
       <!-- 预设样式网格 -->
       <view class="style-grid">
         <view 
-          v-for="i in [1, 2, 4, 5, 6, 7]" 
+          v-for="i in [1, 2, 3]" 
           :key="i" 
           class="style-item"
           :class="{ selected: selectedStyle === i && !isCustomStyle }"
@@ -56,144 +56,16 @@
           <text>自定义信件底图</text>
         </button>
         
-        <view v-if="customImage" class="custom-preview" @click="showOpacityModal = true">
+        <view v-if="customImage" class="custom-preview">
           <view class="preview-wrapper">
             <image class="preview-bg" :src="customImage" mode="aspectFill"></image>
-            <view class="preview-overlay" :style="{ opacity: 1 - opacity / 100 }"></view>
-            <!-- 遮罩层：使未选中区域变暗 -->
-            <view class="mask-layer">
-              <!-- 上部遮罩 -->
-              <view class="mask-top" :style="{ height: cropArea.top + '%' }"></view>
-              <!-- 中间部分 -->
-              <view class="mask-middle" :style="{ top: cropArea.top + '%', height: cropArea.height + '%' }">
-                <!-- 左边遮罩 -->
-                <view class="mask-left" :style="{ width: cropArea.left + '%' }"></view>
-                <!-- 选中区域（透明） -->
-                <view class="mask-center" :style="{ width: cropArea.width + '%' }"></view>
-                <!-- 右边遮罩 -->
-                <view class="mask-right" :style="{ width: (100 - cropArea.left - cropArea.width) + '%' }"></view>
-              </view>
-              <!-- 下部遮罩 -->
-              <view class="mask-bottom" :style="{ top: (cropArea.top + cropArea.height) + '%', height: (100 - cropArea.top - cropArea.height) + '%' }"></view>
-            </view>
-            <!-- 裁剪框边框 -->
-            <view class="crop-preview" :style="{
-              left: cropArea.left + '%',
-              top: cropArea.top + '%',
-              width: cropArea.width + '%',
-              height: cropArea.height + '%'
-            }"></view>
           </view>
-          <text class="preview-tip">点击调整透明度和选定区域</text>
         </view>
       </view>
 
       <button class="next-btn" @click="nextStep">下一步</button>
     </view>
 
-    <!-- 透明度调整弹窗 -->
-    <view v-if="showOpacityModal" class="modal-overlay" @click="showOpacityModal = false">
-      <view class="modal-content" @click.stop>
-        <text class="modal-title">调整图片</text>
-        
-        <view class="modal-preview">
-          <view 
-            class="preview-wrapper"
-            @touchmove="onDrag"
-            @touchend="endDrag"
-          >
-            <image 
-              class="preview-bg" 
-              :src="customImage" 
-              mode="aspectFill"
-              :style="{
-                transform: 'scale(' + (imageScale / 100) + ')',
-                transformOrigin: 'center center'
-              }"
-            ></image>
-            <view class="preview-overlay" :style="{ opacity: 1 - opacity / 100 }"></view>
-            
-            <!-- 遮罩层：使未选中区域变暗 -->
-            <view class="mask-layer">
-              <!-- 上部遮罩 -->
-              <view class="mask-top" :style="{ height: cropArea.top + '%' }"></view>
-              <!-- 中间部分 -->
-              <view class="mask-middle" :style="{ top: cropArea.top + '%', height: cropArea.height + '%' }">
-                <!-- 左边遮罩 -->
-                <view class="mask-left" :style="{ width: cropArea.left + '%' }"></view>
-                <!-- 选中区域（透明） -->
-                <view class="mask-center" :style="{ width: cropArea.width + '%' }"></view>
-                <!-- 右边遮罩 -->
-                <view class="mask-right" :style="{ width: (100 - cropArea.left - cropArea.width) + '%' }"></view>
-              </view>
-              <!-- 下部遮罩 -->
-              <view class="mask-bottom" :style="{ top: (cropArea.top + cropArea.height) + '%', height: (100 - cropArea.top - cropArea.height) + '%' }"></view>
-            </view>
-            
-            <!-- 可拖动的裁剪框 -->
-            <view 
-              class="crop-box"
-              :style="{
-                left: cropArea.left + '%',
-                top: cropArea.top + '%',
-                width: cropArea.width + '%',
-                height: cropArea.height + '%'
-              }"
-              @touchstart="startDrag"
-              @touchmove.stop="onDrag"
-              @touchend="endDrag"
-            >
-              <view class="crop-border"></view>
-              <view class="crop-corner corner-tl"></view>
-              <view class="crop-corner corner-tr"></view>
-              <view class="crop-corner corner-bl"></view>
-              <view 
-                class="crop-corner corner-br"
-                @touchstart.stop="startResize"
-                @touchmove.stop="onResize"
-                @touchend="endDrag"
-              ></view>
-              <text class="crop-hint">拖动移动，右下角调整大小</text>
-            </view>
-          </view>
-        </view>
-
-        <view class="opacity-control">
-          <text class="control-label">透明度</text>
-          <slider 
-            class="slider"
-            :value="opacity" 
-            @change="onOpacityChange" 
-            @changing="onOpacityChanging"
-            min="0" 
-            max="100"
-            activeColor="#DCC7E1"
-            block-size="20"
-          />
-          <text class="control-value">{{ opacity }}%</text>
-        </view>
-
-        <!-- 新增：图片缩放控制 -->
-        <view class="opacity-control">
-          <text class="control-label">底图大小</text>
-          <slider 
-            class="slider"
-            :value="imageScale" 
-            @change="onScaleChange" 
-            @changing="onScaleChanging"
-            min="50" 
-            max="200"
-            activeColor="#DCC7E1"
-            block-size="20"
-          />
-          <text class="control-value">{{ imageScale }}%</text>
-        </view>
-
-        <view class="modal-actions">
-          <button class="modal-btn cancel" @click="finishAdjust">完成</button>
-        </view>
-      </view>
-    </view>
 
     <!-- 第二步：填写信息 -->
     <view v-if="currentStep === 2" class="step-content">
@@ -224,28 +96,6 @@
               {{ form.deliveryDate || '请选择日期' }}
             </view>
           </picker>
-        </view>
-
-        <!-- 对方手机号 -->
-        <view class="form-item">
-          <text class="form-label">对方手机号</text>
-          <input 
-            class="form-input" 
-            v-model="form.phone" 
-            placeholder="请输入手机号"
-            type="number"
-            maxlength="11"
-          />
-        </view>
-
-        <!-- 对方微信号 -->
-        <view class="form-item">
-          <text class="form-label">对方微信号</text>
-          <input 
-            class="form-input" 
-            v-model="form.wechat" 
-            placeholder="请输入微信号（选填）"
-          />
         </view>
 
         <!-- 信件内容 -->
@@ -281,14 +131,7 @@
               class="letter-bg" 
               :src="letterBackground" 
               mode="aspectFill"
-              :style="{
-                transform: 'scale(' + (imageScale / 100) + ')',
-                transformOrigin: 'center center'
-              }"
             ></image>
-            
-            <!-- 透明度遮罩 -->
-            <view class="letter-overlay" :style="{ opacity: 1 - opacity / 100 }"></view>
             
             <!-- 信件内容层 -->
             <view class="letter-content">
@@ -302,150 +145,18 @@
               </view>
               
               <view class="letter-footer">
-                <text class="letter-sign" v-if="form.phone">—— 给 {{ form.phone.slice(0, 3) }}****{{ form.phone.slice(-4) }}</text>
+                <text class="letter-sign">—— 给未来的你</text>
               </view>
             </view>
           </view>
         </view>
 
-        <!-- 调整控制区域 -->
-        <view class="preview-controls">
-          <view class="opacity-control">
-            <text class="control-label">透明度</text>
-            <slider 
-              class="slider"
-              :value="opacity" 
-              @change="onOpacityChange" 
-              @changing="onOpacityChanging"
-              min="0" 
-              max="100"
-              activeColor="#DCC7E1"
-              block-size="20"
-            />
-            <text class="control-value">{{ opacity }}%</text>
-          </view>
-
-          <view class="opacity-control">
-            <text class="control-label">底图大小</text>
-            <slider 
-              class="slider"
-              :value="imageScale" 
-              @change="onScaleChange" 
-              @changing="onScaleChanging"
-              min="50" 
-              max="200"
-              activeColor="#DCC7E1"
-              block-size="20"
-            />
-            <text class="control-value">{{ imageScale }}%</text>
-          </view>
-        </view>
-
         <view class="preview-modal-actions">
-          <button class="preview-modal-btn adjust" @click="openAdjustFromPreview">调整底图</button>
           <button class="preview-modal-btn close" @click="showLivePreviewModal = false">关闭</button>
         </view>
       </view>
     </view>
 
-    <!-- 调整弹窗（透明度+裁剪） -->
-    <view v-if="showOpacityModal" class="modal-overlay" @click="showOpacityModal = false">
-      <view class="modal-content" @click.stop>
-        <text class="modal-title">调整底图</text>
-        
-        <view class="modal-preview">
-          <view 
-            class="preview-wrapper"
-            @touchmove="onDrag"
-            @touchend="endDrag"
-          >
-            <image 
-              class="preview-bg" 
-              :src="letterBackground" 
-              mode="aspectFill"
-              :style="{
-                transform: 'scale(' + (imageScale / 100) + ')',
-                transformOrigin: 'center center'
-              }"
-            ></image>
-            <view class="preview-overlay" :style="{ opacity: 1 - opacity / 100 }"></view>
-            
-            <!-- 遮罩层：使未选中区域变暗 -->
-            <view class="mask-layer" v-if="isCustomStyle">
-              <view class="mask-top" :style="{ height: cropArea.top + '%' }"></view>
-              <view class="mask-middle" :style="{ top: cropArea.top + '%', height: cropArea.height + '%' }">
-                <view class="mask-left" :style="{ width: cropArea.left + '%' }"></view>
-                <view class="mask-center" :style="{ width: cropArea.width + '%' }"></view>
-                <view class="mask-right" :style="{ width: (100 - cropArea.left - cropArea.width) + '%' }"></view>
-              </view>
-              <view class="mask-bottom" :style="{ top: (cropArea.top + cropArea.height) + '%', height: (100 - cropArea.top - cropArea.height) + '%' }"></view>
-            </view>
-            
-            <!-- 可拖动的裁剪框 -->
-            <view 
-              v-if="isCustomStyle"
-              class="crop-box"
-              :style="{
-                left: cropArea.left + '%',
-                top: cropArea.top + '%',
-                width: cropArea.width + '%',
-                height: cropArea.height + '%'
-              }"
-              @touchstart="startDrag"
-              @touchmove.stop="onDrag"
-              @touchend="endDrag"
-            >
-              <view class="crop-border"></view>
-              <view class="crop-corner corner-tl"></view>
-              <view class="crop-corner corner-tr"></view>
-              <view class="crop-corner corner-bl"></view>
-              <view 
-                class="crop-corner corner-br"
-                @touchstart.stop="startResize"
-                @touchmove.stop="onResize"
-                @touchend="endDrag"
-              ></view>
-              <text class="crop-hint">拖动移动，右下角调整大小</text>
-            </view>
-          </view>
-        </view>
-
-        <view class="opacity-control">
-          <text class="control-label">透明度</text>
-          <slider 
-            class="slider"
-            :value="opacity" 
-            @change="onOpacityChange" 
-            @changing="onOpacityChanging"
-            min="0" 
-            max="100"
-            activeColor="#DCC7E1"
-            block-size="20"
-          />
-          <text class="control-value">{{ opacity }}%</text>
-        </view>
-
-        <!-- 新增：图片缩放控制 -->
-        <view class="opacity-control">
-          <text class="control-label">底图大小</text>
-          <slider 
-            class="slider"
-            :value="imageScale" 
-            @change="onScaleChange" 
-            @changing="onScaleChanging"
-            min="50" 
-            max="200"
-            activeColor="#DCC7E1"
-            block-size="20"
-          />
-          <text class="control-value">{{ imageScale }}%</text>
-        </view>
-
-        <view class="modal-actions">
-          <button class="modal-btn cancel" @click="finishAdjust">完成</button>
-        </view>
-      </view>
-    </view>
 
     <!-- 信件预览弹窗 -->
     <view v-if="showPreviewModal" class="preview-modal-overlay">
@@ -460,13 +171,7 @@
               class="letter-bg" 
               :src="letterBackground" 
               mode="aspectFill"
-              :style="{
-                clipPath: isCustomStyle ? `inset(${cropArea.top}% ${100-cropArea.left-cropArea.width}% ${100-cropArea.top-cropArea.height}% ${cropArea.left}%)` : 'none'
-              }"
             ></image>
-            
-            <!-- 透明度遮罩 -->
-            <view class="letter-overlay" :style="{ opacity: 1 - opacity / 100 }"></view>
             
             <!-- 信件内容层 -->
             <view class="letter-content">
@@ -480,7 +185,7 @@
               </view>
               
               <view class="letter-footer">
-                <text class="letter-sign">—— 给 {{ form.phone.slice(0, 3) }}****{{ form.phone.slice(-4) }}</text>
+                <text class="letter-sign">—— 给未来的你</text>
               </view>
             </view>
           </view>
@@ -495,6 +200,9 @@
 </template>
 
 <script>
+import { createFutureLetter, sendFutureLetter } from '@/api/futureLetter.js';
+import { getPartnerInfo, isBound } from '@/utils/couple.js';
+
 export default {
   data() {
     return {
@@ -505,30 +213,11 @@ export default {
       selectedStyle: 1,
       isCustomStyle: false,
       customImage: '',
-      opacity: 100,
-      showOpacityModal: false,
       showPreviewModal: false,
       showLivePreviewModal: false,
-      // 裁剪区域相关
-      cropArea: {
-        left: 0,
-        top: 0,
-        width: 100,
-        height: 100
-      },
-      // 底图缩放比例（100% 为原始大小）
-      imageScale: 100,
-      // 是否从预览打开的调整弹窗
-      fromPreview: false,
-      isDragging: false,
-      isResizing: false,
-      dragStart: { x: 0, y: 0 },
-      imageInfo: { width: 0, height: 0 },
       form: {
         title: '',
         deliveryDate: '',
-        phone: '',
-        wechat: '',
         content: ''
       }
     };
@@ -589,150 +278,14 @@ export default {
         success: (res) => {
           this.customImage = res.tempFilePaths[0];
           this.isCustomStyle = true;
-          this.opacity = 100;
-          // 重置裁剪区域
-          this.cropArea = {
-            left: 10,
-            top: 10,
-            width: 80,
-            height: 80
-          };
-          // 获取图片信息
-          uni.getImageInfo({
-            src: res.tempFilePaths[0],
-            success: (info) => {
-              this.imageInfo = {
-                width: info.width,
-                height: info.height
-              };
-            }
-          });
-          this.showOpacityModal = true;
           uni.showToast({ title: '自定义底图已选择', icon: 'success' });
         }
       });
     },
     
-    // 调整透明度（滑动中）
-    onOpacityChanging(e) {
-      this.opacity = e.detail.value;
-    },
-    
-    // 调整透明度（松开）
-    onOpacityChange(e) {
-      this.opacity = e.detail.value;
-    },
-    
-    // 调整图片缩放（滑动中）
-    onScaleChanging(e) {
-      this.imageScale = e.detail.value;
-    },
-    
-    // 调整图片缩放（松开）
-    onScaleChange(e) {
-      this.imageScale = e.detail.value;
-    },
-    
-    // 开始拖动裁剪框
-    startDrag(e) {
-      this.isDragging = true;
-      this.dragStart = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY
-      };
-    },
-    
-    // 拖动裁剪框
-    onDrag(e) {
-      if (!this.isDragging) return;
-      
-      const deltaX = e.touches[0].clientX - this.dragStart.x;
-      const deltaY = e.touches[0].clientY - this.dragStart.y;
-      
-      // 转换为百分比（假设预览区域宽度为 600rpx）
-      const percentX = (deltaX / 600) * 100;
-      const percentY = (deltaY / 600) * 100;
-      
-      let newLeft = this.cropArea.left + percentX;
-      let newTop = this.cropArea.top + percentY;
-      
-      // 边界限制
-      newLeft = Math.max(0, Math.min(100 - this.cropArea.width, newLeft));
-      newTop = Math.max(0, Math.min(100 - this.cropArea.height, newTop));
-      
-      this.cropArea.left = newLeft;
-      this.cropArea.top = newTop;
-      
-      this.dragStart = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY
-      };
-    },
-    
-    // 结束拖动
-    endDrag() {
-      this.isDragging = false;
-      this.isResizing = false;
-    },
-    
-    // 开始调整大小
-    startResize(e) {
-      this.isResizing = true;
-      this.dragStart = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY
-      };
-      e.stopPropagation();
-    },
-    
-    // 调整大小
-    onResize(e) {
-      if (!this.isResizing) return;
-      
-      const deltaX = e.touches[0].clientX - this.dragStart.x;
-      const deltaY = e.touches[0].clientY - this.dragStart.y;
-      
-      const percentX = (deltaX / 600) * 100;
-      const percentY = (deltaY / 600) * 100;
-      
-      let newWidth = this.cropArea.width + percentX;
-      let newHeight = this.cropArea.height + percentY;
-      
-      // 边界限制
-      newWidth = Math.max(20, Math.min(100 - this.cropArea.left, newWidth));
-      newHeight = Math.max(20, Math.min(100 - this.cropArea.top, newHeight));
-      
-      this.cropArea.width = newWidth;
-      this.cropArea.height = newHeight;
-      
-      this.dragStart = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY
-      };
-      
-      e.stopPropagation();
-    },
-    
     // 打开预览弹窗
     openPreview() {
       this.showLivePreviewModal = true;
-    },
-    
-    // 完成调整（智能判断是否需要返回预览）
-    finishAdjust() {
-      this.showOpacityModal = false;
-      // 如果是从预览打开的，返回预览；否则关闭modal
-      if (this.fromPreview) {
-        this.showLivePreviewModal = true;
-        this.fromPreview = false;
-      }
-    },
-    
-    // 从预览打开调整弹窗
-    openAdjustFromPreview() {
-      this.fromPreview = true;
-      this.showLivePreviewModal = false;
-      this.showOpacityModal = true;
     },
     
     // 日期选择
@@ -755,7 +308,7 @@ export default {
     },
     
     // 提交信件
-    submitLetter() {
+    async submitLetter() {
       // 验证必填项
       if (!this.form.title) {
         uni.showToast({ title: '请填写信件主题', icon: 'none' });
@@ -765,43 +318,185 @@ export default {
         uni.showToast({ title: '请选择送达时间', icon: 'none' });
         return;
       }
-      if (!this.form.phone) {
-        uni.showToast({ title: '请填写手机号', icon: 'none' });
-        return;
-      }
-      if (this.form.phone.length !== 11) {
-        uni.showToast({ title: '请输入正确的手机号', icon: 'none' });
-        return;
-      }
       if (!this.form.content) {
         uni.showToast({ title: '请填写信件内容', icon: 'none' });
         return;
       }
 
-      // 构建信件数据
-      const letterData = {
-        style: this.isCustomStyle ? 'custom' : this.selectedStyle,
-        customImage: this.customImage,
-        opacity: this.opacity,
-        cropArea: this.cropArea,
-        title: this.form.title,
-        deliveryDate: this.form.deliveryDate,
-        phone: this.form.phone,
-        wechat: this.form.wechat,
-        content: this.form.content,
-        createTime: new Date().toLocaleString()
-      };
+      // 显示加载提示
+      uni.showLoading({ title: '正在创建...' });
 
-      // 保存到本地存储
       try {
-        const letters = uni.getStorageSync('xinxiang_letters') || [];
-        letters.unshift(letterData);
-        uni.setStorageSync('xinxiang_letters', letters);
-        
-        // 显示预览弹窗
-        this.showPreviewModal = true;
-      } catch (e) {
-        uni.showToast({ title: '提交失败，请重试', icon: 'none' });
+        // 获取对方ID（如果已绑定）
+        let receiverId = null;
+        if (isBound()) {
+          try {
+            const coupleInfo = uni.getStorageSync('couple_info');
+            console.log('👫 [情侣信息]', coupleInfo);
+            
+            // 优先使用 partnerId（如果存在）
+            if (coupleInfo && coupleInfo.partnerId) {
+              receiverId = coupleInfo.partnerId;
+              console.log('✅ [获取对方ID] 从 partnerId 获取:', receiverId);
+            } else {
+              // 否则从 partnerInfo.userId 获取
+              const partnerInfo = getPartnerInfo();
+              if (partnerInfo && partnerInfo.userId) {
+                receiverId = partnerInfo.userId;
+                console.log('✅ [获取对方ID] 从 partnerInfo.userId 获取:', receiverId);
+              }
+            }
+          } catch (e) {
+            console.warn('⚠️ 获取对方ID失败:', e);
+          }
+        } else {
+          console.log('⚠️ 未绑定情侣关系，跳过 receiverId');
+        }
+
+        // 构建背景图片URL（如果是自定义图片，需要先上传）
+        let backgroundImage = null;
+        if (this.isCustomStyle && this.customImage) {
+          // 如果是自定义图片，这里需要上传到服务器获取URL
+          // 暂时使用本地路径，后续可以集成图片上传功能
+          backgroundImage = this.customImage;
+        } else {
+          // 预设样式可以转换为完整URL或使用样式ID
+          backgroundImage = `/static/xinxiang/xin${this.selectedStyle}.jpg`;
+        }
+
+        // 验证日期格式
+        if (!this.form.deliveryDate || !/^\d{4}-\d{2}-\d{2}$/.test(this.form.deliveryDate)) {
+          uni.hideLoading();
+          uni.showToast({ title: '日期格式错误，请重新选择', icon: 'none' });
+          return;
+        }
+
+        // 构建后端API请求数据
+        const letterData = {
+          title: this.form.title.trim(),
+          content: this.form.content.trim(),
+          deliveryMethod: 'PARTNER', // 目前只支持PARTNER
+          scheduledDate: this.form.deliveryDate, // 格式：YYYY-MM-DD
+          scheduledTime: '00:00:00', // 默认时间
+          status: 'DRAFT' // 草稿状态
+        };
+
+        // 如果已绑定且获取到对方ID，添加receiverId（确保是数字类型）
+        if (receiverId) {
+          letterData.receiverId = Number(receiverId);
+          if (isNaN(letterData.receiverId)) {
+            console.warn('receiverId 不是有效数字:', receiverId);
+            delete letterData.receiverId;
+          }
+        }
+
+        // 只有当背景图片存在时才添加（避免null值导致后端错误）
+        if (backgroundImage && backgroundImage.trim()) {
+          letterData.backgroundImage = backgroundImage.trim();
+        }
+
+        console.log('📤 [创建情书] 最终请求参数:', JSON.stringify(letterData, null, 2));
+
+        // 调用后端API创建情书
+        const response = await createFutureLetter(letterData);
+
+        if (response && response.success !== false && response.data?.id) {
+          const letterId = response.data.id;
+          
+          // 创建成功后立即发送信件
+          uni.showLoading({ title: '正在发送...' });
+          
+          try {
+            // 调用发送接口
+            const sendResponse = await sendFutureLetter(letterId);
+            
+            uni.hideLoading();
+            
+            if (sendResponse && sendResponse.success !== false) {
+              // 保存本地预览数据（用于预览显示）
+              const localData = {
+                id: letterId,
+                style: this.isCustomStyle ? 'custom' : this.selectedStyle,
+                customImage: this.customImage,
+                title: this.form.title,
+                deliveryDate: this.form.deliveryDate,
+                content: this.form.content,
+                createTime: new Date().toLocaleString(),
+                status: 'SENT' // 标记为已发送
+              };
+
+              // 保存到本地存储（用于预览）
+              try {
+                const letters = uni.getStorageSync('xinxiang_letters') || [];
+                letters.unshift(localData);
+                uni.setStorageSync('xinxiang_letters', letters);
+              } catch (e) {
+                console.warn('保存本地预览数据失败', e);
+              }
+
+              uni.showToast({ title: '发送成功', icon: 'success' });
+              
+              // 显示预览弹窗
+              this.showPreviewModal = true;
+            } else {
+              // 发送失败，但创建成功
+              uni.showToast({ 
+                title: sendResponse.message || '创建成功，但发送失败', 
+                icon: 'none',
+                duration: 2000
+              });
+              
+              // 即使发送失败也显示预览弹窗
+              this.showPreviewModal = true;
+            }
+          } catch (sendError) {
+            uni.hideLoading();
+            console.error('发送未来情书失败:', sendError);
+            
+            // 发送失败，但创建成功，仍然保存数据
+            const localData = {
+              id: letterId,
+              style: this.isCustomStyle ? 'custom' : this.selectedStyle,
+              customImage: this.customImage,
+              title: this.form.title,
+              deliveryDate: this.form.deliveryDate,
+              content: this.form.content,
+              createTime: new Date().toLocaleString(),
+              status: 'DRAFT' // 标记为草稿（发送失败）
+            };
+
+            // 保存到本地存储（用于预览）
+            try {
+              const letters = uni.getStorageSync('xinxiang_letters') || [];
+              letters.unshift(localData);
+              uni.setStorageSync('xinxiang_letters', letters);
+            } catch (e) {
+              console.warn('保存本地预览数据失败', e);
+            }
+            
+            uni.showToast({ 
+              title: sendError.message || '创建成功，但发送失败，请稍后重试', 
+              icon: 'none',
+              duration: 2000
+            });
+            
+            // 即使发送失败也显示预览弹窗
+            this.showPreviewModal = true;
+          }
+        } else {
+          uni.showToast({ 
+            title: response.message || '创建失败，请重试', 
+            icon: 'none' 
+          });
+        }
+      } catch (error) {
+        uni.hideLoading();
+        console.error('创建未来情书失败:', error);
+        uni.showToast({ 
+          title: error.message || '创建失败，请重试', 
+          icon: 'none',
+          duration: 2000
+        });
       }
     },
     

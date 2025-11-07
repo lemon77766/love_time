@@ -64,7 +64,20 @@ const devConfig = {
       LOCATION_CURRENT: '/api/trajectory/location/current', // 获取双方实时位置
       // 轨迹点相关接口
       POINTS: '/api/trajectory/points',                     // 获取轨迹点列表、添加轨迹点
+      LIST: '/api/trajectory/list',                        // 获取历史轨迹列表（支持筛选）
       STATISTICS: '/api/trajectory/statistics'              // 获取轨迹统计信息
+    },
+    FUTURE_LETTER: {
+      BASE: '/api/future-letter',                          // 基础路径
+      LIST: '/api/future-letter',                          // 获取未来情书列表
+      CREATE: '/api/future-letter',                        // 创建未来情书
+      DETAIL: '/api/future-letter',                        // 获取情书详情 (需要拼接id)
+      UPDATE: '/api/future-letter',                        // 更新未来情书 (需要拼接id)
+      DELETE: '/api/future-letter',                        // 删除未来情书 (需要拼接id)
+      SENT: '/api/future-letter/sent',                     // 获取已发送情书列表
+      RECEIVED: '/api/future-letter/received',             // 获取收到情书列表
+      STATS: '/api/future-letter/stats',                   // 获取统计信息
+      SEND: '/api/future-letter'                           // 发送未来情书 (需要拼接id/send)
     }
   }
 }

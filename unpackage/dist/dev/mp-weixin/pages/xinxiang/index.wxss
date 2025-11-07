@@ -95,16 +95,20 @@
   overflow: hidden;
 }
 
-/* 顶部订单记录 */
-.top-menu {
+/* 顶部菜单容器 */
+.top-menu-container {
   position: absolute;
   top: 40rpx;
   left: 40rpx;
+  z-index: 10;
+}
+
+/* 顶部菜单项 */
+.top-menu {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8rpx;
-  z-index: 10;
 }
 .menu-icon {
   font-size: 48rpx;

@@ -20,34 +20,6 @@
       <text class="subtitle">记录你们一起走过的点点滴滴</text>
     </view>
 
-      <!-- 历史轨迹查询卡片 -->
-      <view class="history-card">
-        <view class="history-card-header">
-          <text class="history-title">历史轨迹</text>
-        </view>
-        <view class="date-range-selector">
-          <picker mode="date" :value="startDate" :start="startDateMin" :end="startDateMax" @change="onStartDateChange">
-            <view class="date-item">
-              <text class="date-label">开始日期</text>
-              <text class="date-value" :class="{ placeholder: !startDate }">{{ startDate || '请选择' }}</text>
-            </view>
-          </picker>
-          <text class="date-separator">至</text>
-          <picker mode="date" :value="endDate" :start="endDateMin" :end="endDateMax" @change="onEndDateChange">
-            <view class="date-item">
-              <text class="date-label">结束日期</text>
-              <text class="date-value" :class="{ placeholder: !endDate }">{{ endDate || '请选择' }}</text>
-            </view>
-          </picker>
-        </view>
-        <view class="history-actions">
-          <button class="btn-query" @click="loadHistoryTrajectory" :disabled="!startDate || !endDate || isLoadingHistory">
-            {{ isLoadingHistory ? '加载中...' : '查询轨迹' }}
-          </button>
-          <button class="btn-clear" @click="clearHistory" v-if="historyPoints.length > 0">清除</button>
-        </view>
-      </view>
-
       <!-- 实时位置卡片 -->
       <view class="location-card" v-if="myLocation || partnerLocation">
         <view class="location-card-header">
@@ -168,11 +140,17 @@
         </view>
       </view>
     </view>
+
+    <!-- 历史轨迹浮动按钮 -->
+    <view class="history-float-btn" @click="goToHistoryPage">
+      <text class="history-btn-icon">📜</text>
+      <text class="history-btn-text">历史轨迹</text>
+    </view>
   </view>
 </template>
 
 <script>
-import { updateLocation, getCurrentLocations, getTrajectoryPoints } from '@/api/trajectory.js';
+import { updateLocation, getCurrentLocations } from '@/api/trajectory.js';
 
 export default {
   data() {
@@ -183,11 +161,6 @@ export default {
       trajectoryPoints: [],  // 静态轨迹点（已废弃，保留兼容性）
       showDetail: false,
       currentPoint: {},
-      // 历史轨迹相关
-      startDate: '',  // 开始日期
-      endDate: '',    // 结束日期
-      historyPoints: [],  // 历史轨迹点列表
-      isLoadingHistory: false,  // 是否正在加载历史轨迹
       // 定位相关
       isLocationTracking: false,  // 是否开启定位追踪
       locationTimer: null,         // 定时器ID
@@ -203,8 +176,7 @@ export default {
       },
       mapScale: 13,  // 地图缩放级别
       mapMarkers: [],  // 地图标记点
-      mapPolyline: [],  // 地图路线
-      showHistoryMode: false  // 是否显示历史轨迹模式
+      mapPolyline: []  // 地图路线
     };
   },
   computed: {
@@ -215,48 +187,19 @@ export default {
       const pxToRpx = 750 / this.screenWidth;
       const totalHeightRpx = totalHeightPx * pxToRpx;
       return totalHeightRpx + 20 + 'rpx';
-    },
-    // 开始日期选择器的最小日期
-    startDateMin() {
-      return '2020-01-01';
-    },
-    // 开始日期选择器的最大日期
-    startDateMax() {
-      return this.endDate || this.formatDate(new Date());
-    },
-    // 结束日期选择器的最小日期
-    endDateMin() {
-      return this.startDate || '2020-01-01';
-    },
-    // 结束日期选择器的最大日期
-    endDateMax() {
-      return this.formatDate(new Date());
     }
   },
   watch: {
     // 监听位置变化，更新地图
     myLocation: {
       handler() {
-        if (!this.showHistoryMode) {
-          this.updateMap();
-        }
+        this.updateMap();
       },
       deep: true
     },
     partnerLocation: {
       handler() {
-        if (!this.showHistoryMode) {
-          this.updateMap();
-        }
-      },
-      deep: true
-    },
-    // 监听历史轨迹点变化，更新地图
-    historyPoints: {
-      handler() {
-        if (this.showHistoryMode && this.historyPoints.length > 0) {
-          this.updateHistoryMap();
-        }
+        this.updateMap();
       },
       deep: true
     }
@@ -284,6 +227,15 @@ export default {
     hidePointDetail() {
       this.showDetail = false;
       this.currentPoint = {};
+    },
+    
+    /**
+     * 跳转到历史轨迹页面
+     */
+    goToHistoryPage() {
+      uni.navigateTo({
+        url: '/pages/trajectory/history'
+      });
     },
     
     // ========== 定位相关方法 ==========
@@ -834,300 +786,6 @@ export default {
      */
     onMarkerTap(e) {
       console.log('标记点点击:', e);
-      if (this.showHistoryMode && e.detail) {
-        const markerId = e.detail.markerId;
-        // 找到对应的轨迹点
-        const marker = this.mapMarkers.find(m => m.id === markerId);
-        if (marker && marker.pointData) {
-          this.showPointDetail(marker.pointData);
-        }
-      }
-    },
-    
-    // ========== 历史轨迹相关方法 ==========
-    
-    /**
-     * 开始日期改变
-     */
-    onStartDateChange(e) {
-      const selectedDate = e.detail.value;
-      if (this.endDate && selectedDate > this.endDate) {
-        uni.showToast({
-          title: '开始日期不能晚于结束日期',
-          icon: 'none'
-        });
-        return;
-      }
-      this.startDate = selectedDate;
-    },
-    
-    /**
-     * 结束日期改变
-     */
-    onEndDateChange(e) {
-      const selectedDate = e.detail.value;
-      if (this.startDate && selectedDate < this.startDate) {
-        uni.showToast({
-          title: '结束日期不能早于开始日期',
-          icon: 'none'
-        });
-        return;
-      }
-      this.endDate = selectedDate;
-    },
-    
-    /**
-     * 格式化日期为 YYYY-MM-DD
-     */
-    formatDate(date) {
-      if (typeof date === 'string') {
-        return date;
-      }
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    },
-    
-    /**
-     * 加载历史轨迹点
-     */
-    async loadHistoryTrajectory() {
-      if (!this.startDate || !this.endDate) {
-        uni.showToast({
-          title: '请选择时间区间',
-          icon: 'none'
-        });
-        return;
-      }
-      
-      if (this.startDate > this.endDate) {
-        uni.showToast({
-          title: '开始日期不能晚于结束日期',
-          icon: 'none'
-        });
-        return;
-      }
-      
-      this.isLoadingHistory = true;
-      
-      try {
-        const res = await getTrajectoryPoints({
-          start_date: this.startDate,
-          end_date: this.endDate,
-          limit: 1000  // 获取更多轨迹点
-        });
-        
-        console.log('轨迹点查询响应:', res);
-        console.log('选择的日期范围:', this.startDate, '至', this.endDate);
-        
-        if (res.success && res.data) {
-          // 兼容两种数据格式：
-          // 1. res.data.points (标准格式)
-          // 2. res.data 直接是数组 (后端返回格式)
-          let points = [];
-          if (Array.isArray(res.data)) {
-            points = res.data;
-          } else if (res.data.points && Array.isArray(res.data.points)) {
-            points = res.data.points;
-          }
-          
-          console.log('解析后的轨迹点数量:', points.length);
-          console.log('轨迹点数据示例:', points[0]);
-          
-          this.historyPoints = points;
-          this.showHistoryMode = true;
-          
-          // 更新地图显示
-          if (this.historyPoints.length > 0) {
-            this.updateHistoryMap();
-            uni.showToast({
-              title: `加载了 ${this.historyPoints.length} 个轨迹点`,
-              icon: 'success',
-              duration: 2000
-            });
-          } else {
-            uni.showToast({
-              title: '该时间段内没有轨迹点',
-              icon: 'none'
-            });
-            this.showHistoryMode = false;
-          }
-        } else {
-          throw new Error(res.message || '加载失败');
-        }
-      } catch (error) {
-        console.error('加载历史轨迹失败:', error);
-        uni.showToast({
-          title: error.message || '加载历史轨迹失败',
-          icon: 'none',
-          duration: 2000
-        });
-        this.showHistoryMode = false;
-      } finally {
-        this.isLoadingHistory = false;
-      }
-    },
-    
-    /**
-     * 清除历史轨迹
-     */
-    clearHistory() {
-      this.historyPoints = [];
-      this.showHistoryMode = false;
-      this.startDate = '';
-      this.endDate = '';
-      // 恢复实时位置地图显示
-      this.updateMap();
-    },
-    
-    /**
-     * 更新历史轨迹地图显示
-     */
-    updateHistoryMap() {
-      if (this.historyPoints.length === 0) {
-        return;
-      }
-      
-      // 按时间排序轨迹点
-      const sortedPoints = [...this.historyPoints].sort((a, b) => {
-        const timeA = this.parseTimeString(a.visit_time || a.visitTime);
-        const timeB = this.parseTimeString(b.visit_time || b.visitTime);
-        
-        if (!timeA && !timeB) return 0;
-        if (!timeA) return 1;
-        if (!timeB) return -1;
-        
-        return timeA.getTime() - timeB.getTime();
-      });
-      
-      // 创建地图标记点
-      const markers = sortedPoints.map((point, index) => {
-        const latitude = point.latitude;
-        const longitude = point.longitude;
-        const locationName = point.location_name || point.locationName || point.address || '未知地点';
-        const visitTime = point.visit_time || point.visitTime;
-        
-        return {
-          id: index + 100,  // 使用100+避免与实时位置标记冲突
-          latitude: latitude,
-          longitude: longitude,
-          width: 30,
-          height: 30,
-          title: locationName,
-          callout: {
-            content: `${locationName}\n${this.formatVisitTime(visitTime)}`,
-            color: '#333',
-            fontSize: 12,
-            borderRadius: 4,
-            bgColor: '#fff',
-            padding: 8,
-            display: 'BYCLICK'
-          },
-          // 添加点击事件数据
-          pointData: point
-        };
-      });
-      
-      this.mapMarkers = markers;
-      
-      // 计算地图中心点和缩放级别
-      if (markers.length > 0) {
-        // 计算所有点的边界
-        const latitudes = markers.map(m => m.latitude);
-        const longitudes = markers.map(m => m.longitude);
-        const minLat = Math.min(...latitudes);
-        const maxLat = Math.max(...latitudes);
-        const minLon = Math.min(...longitudes);
-        const maxLon = Math.max(...longitudes);
-        
-        // 中心点
-        this.mapCenter = {
-          latitude: (minLat + maxLat) / 2,
-          longitude: (minLon + maxLon) / 2
-        };
-        
-        // 根据覆盖范围调整缩放级别
-        const latDiff = maxLat - minLat;
-        const lonDiff = maxLon - minLon;
-        const maxDiff = Math.max(latDiff, lonDiff);
-        
-        if (maxDiff < 0.01) {
-          this.mapScale = 16;  // 很小范围，放大
-        } else if (maxDiff < 0.1) {
-          this.mapScale = 14;  // 小范围
-        } else if (maxDiff < 1) {
-          this.mapScale = 12;  // 中等范围
-        } else {
-          this.mapScale = 10;  // 大范围
-        }
-        
-        // 创建轨迹连线（按时间顺序）
-        if (sortedPoints.length > 1) {
-          const points = sortedPoints.map(point => ({
-            latitude: point.latitude,
-            longitude: point.longitude
-          }));
-          
-          this.mapPolyline = [{
-            points: points,
-            color: '#2bad81',
-            width: 4,
-            borderColor: '#fff',
-            borderWidth: 1,
-            arrowLine: true,
-            dottedLine: false
-          }];
-        } else {
-          this.mapPolyline = [];
-        }
-      }
-    },
-    
-    /**
-     * 解析时间字符串（兼容多种格式）
-     */
-    parseTimeString(timeStr) {
-      if (!timeStr) return null;
-      
-      // 如果是 Date 对象，直接返回
-      if (timeStr instanceof Date) {
-        return timeStr;
-      }
-      
-      // 尝试直接解析
-      let date = new Date(timeStr);
-      
-      // 如果解析失败，尝试处理特殊格式 "Nov 5, 2025, 3:13:02 PM"
-      if (isNaN(date.getTime())) {
-        // 处理 "Nov 5, 2025, 3:13:02 PM" 格式
-        // 将第二个逗号替换为空格: "Nov 5, 2025 3:13:02 PM"
-        const normalized = timeStr.replace(/,\s*(\d{1,2}:\d{2}:\d{2})/, ' $1');
-        date = new Date(normalized);
-      }
-      
-      // 如果还是失败，返回 null
-      if (isNaN(date.getTime())) {
-        console.warn('无法解析时间字符串:', timeStr);
-        return null;
-      }
-      
-      return date;
-    },
-    
-    /**
-     * 格式化访问时间
-     */
-    formatVisitTime(timeStr) {
-      if (!timeStr) return '';
-      const date = this.parseTimeString(timeStr);
-      if (!date) return timeStr; // 如果解析失败，返回原始字符串
-      
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      const hour = date.getHours();
-      const minute = date.getMinutes();
-      return `${month}-${day} ${hour}:${minute.toString().padStart(2, '0')}`;
     },
     
     /**
@@ -1135,8 +793,8 @@ export default {
      */
     formatPointDate(point) {
       if (point.visit_time || point.visitTime) {
-        const date = this.parseTimeString(point.visit_time || point.visitTime);
-        if (!date) return '';
+        const date = new Date(point.visit_time || point.visitTime);
+        if (isNaN(date.getTime())) return '';
         
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -1172,7 +830,7 @@ export default {
 <style scoped>
 .trajectory-page {
   min-height: 100vh;
-  background-color: #F8F0FC;
+  background-color: #FFFAF4;
   padding-bottom: 40rpx;
 }
 
@@ -1183,7 +841,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: #F8F0FC;
+  background-color: #FFFAF4;
   overflow: hidden;
 }
 .navbar-gradient-bg {
@@ -1192,8 +850,9 @@ export default {
   left: 0;
   right: 0;
   height: 200%;
-  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
-  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 .status-bar {
   width: 100%;
@@ -1219,8 +878,8 @@ export default {
 }
 .title-text {
   font-size: 32rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-weight: 500;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .content-area {
@@ -1235,81 +894,6 @@ export default {
   display: block;
 }
 
-/* 历史轨迹查询卡片 */
-.history-card {
-  background: #ffffff;
-  border-radius: 24rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
-}
-.history-card-header {
-  margin-bottom: 24rpx;
-}
-.history-title {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #2b2b2b;
-}
-.date-range-selector {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  margin-bottom: 24rpx;
-}
-.date-item {
-  flex: 1;
-  padding: 20rpx;
-  background: #f8f8f8;
-  border-radius: 12rpx;
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-}
-.date-label {
-  font-size: 24rpx;
-  color: #999;
-}
-.date-value {
-  font-size: 28rpx;
-  color: #333;
-  font-weight: 500;
-}
-.date-value.placeholder {
-  color: #999;
-}
-.date-separator {
-  font-size: 26rpx;
-  color: #666;
-  padding: 0 8rpx;
-}
-.history-actions {
-  display: flex;
-  gap: 16rpx;
-  margin-bottom: 16rpx;
-}
-.btn-query {
-  flex: 1;
-  padding: 20rpx;
-  background: #2bad81;
-  color: #ffffff;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-  font-weight: 500;
-  border: none;
-}
-.btn-query:disabled {
-  background: #cccccc;
-  color: #999;
-}
-.btn-clear {
-  padding: 20rpx 32rpx;
-  background: #f5f5f5;
-  color: #666;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-  border: none;
-}
 /* 实时位置卡片 */
 .location-card {
   background: #ffffff;
@@ -1340,7 +924,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
+  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
   border-radius: 30rpx;
 }
 .refresh-icon {
@@ -1354,7 +938,7 @@ export default {
   color: #666;
 }
 .toggle-btn.active {
-  background: #2bad81;
+  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
   color: #ffffff;
 }
 .toggle-text {
@@ -1413,7 +997,7 @@ export default {
 .distance-value {
   font-size: 36rpx;
   font-weight: 600;
-  color: #2bad81;
+  color: #FF9EBC;
 }
 .location-error {
   margin-top: 16rpx;
@@ -1617,11 +1201,45 @@ export default {
   border: none;
 }
 .btn.primary {
-  background: #2bad81;
+  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
   color: #ffffff;
 }
 .btn.secondary {
   background: #f0f0f0;
   color: #333;
+}
+
+/* 历史轨迹浮动按钮 */
+.history-float-btn {
+  position: fixed;
+  right: 30rpx;
+  bottom: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 20rpx 32rpx;
+  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
+  border-radius: 50rpx;
+  box-shadow: 0 8rpx 24rpx rgba(255, 158, 188, 0.3);
+  z-index: 999;
+  transition: all 0.3s ease;
+}
+
+.history-float-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 4rpx 12rpx rgba(255, 158, 188, 0.2);
+}
+
+.history-btn-icon {
+  font-size: 32rpx;
+  line-height: 1;
+}
+
+.history-btn-text {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #ffffff;
+  line-height: 1;
 }
 </style>
