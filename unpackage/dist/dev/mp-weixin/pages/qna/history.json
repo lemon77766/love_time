@@ -1,4 +1,5 @@
 {
   "navigationBarTitleText": "甜蜜小问答",
+  "navigationStyle": "custom",
   "usingComponents": {}
 }

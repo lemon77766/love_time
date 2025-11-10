@@ -261,6 +261,73 @@ export function completeTask(completeData) {
 }
 
 /**
+ * 上传任务完成照片
+ * @param {string} filePath - 本地文件路径（必填）
+ * @returns {Promise<Object>} 返回包含 photoUrl 的结果
+ *
+ * 后端接口要求：
+ * - 请求方法：POST
+ * - 请求地址：/api/challenge/upload
+ * - 请求格式：multipart/form-data
+ * - 请求参数：file（文件字段，必需）
+ * - 响应格式：
+ *   {
+ *     success: true,
+ *     message: "照片上传成功",
+ *     photoUrl: "http://.../challenge/xxx.jpg"
+ *   }
+ */
+export function uploadChallengePhoto(filePath) {
+  if (!filePath) {
+    return Promise.reject(new Error('上传照片失败：filePath 不能为空'));
+  }
+
+  const url = config.API.CHALLENGE.UPLOAD;
+  const fullUrl = config.baseURL + url;
+
+  console.log('🔗 [一百件事API] 开始上传任务完成照片');
+  console.log('📍 请求地址:', fullUrl);
+  console.log('📋 请求方法: POST (multipart/form-data)');
+  console.log('📁 文件路径:', filePath);
+  console.log('⏰ 请求时间:', new Date().toLocaleString());
+
+  return http.upload({
+    url: url,
+    filePath: filePath,
+    name: 'file'
+  }).then(response => {
+    console.log('✅ [一百件事API] 上传任务完成照片成功');
+    console.log('📦 响应数据:', response);
+
+    const photoUrl =
+      response?.photoUrl ||
+      response?.url ||
+      response?.data?.photoUrl ||
+      response?.data?.url ||
+      response?.data?.photo?.url ||
+      (typeof response === 'string' ? response : null);
+
+    if (!photoUrl) {
+      console.error('❌ [一百件事API] 上传成功但未返回 photoUrl，响应：', response);
+      const error = new Error('上传成功但未返回照片地址');
+      error.response = response;
+      throw error;
+    }
+
+    return {
+      success: true,
+      photoUrl,
+      message: response?.message || '照片上传成功',
+      raw: response
+    };
+  }).catch(error => {
+    console.error('❌ [一百件事API] 上传任务完成照片失败');
+    console.error('🔴 错误信息:', error);
+    throw error;
+  });
+}
+
+/**
  * 收藏/取消收藏任务
  * @param {Object} favoriteData - 收藏数据
  * @param {number} favoriteData.taskId - 任务ID（必填）

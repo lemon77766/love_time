@@ -1,11 +1,27 @@
 <template>
-  <view class="history-page">
-    <!-- 顶部栏（系统风格简洁） -->
+  <view class="history-page" :style="{ paddingTop: containerPaddingTop }">
+    <!-- 自定义导航栏 -->
+    <view class="custom-navbar">
+      <!-- 渐变背景 -->
+      <view class="navbar-gradient-bg"></view>
+      <!-- 状态栏占位 -->
+      <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
+      <!-- 导航栏内容 -->
+      <view class="navbar-content" :style="{ height: navBarHeight + 'px' }">
+        <view class="navbar-left" @click="goBack">
+          <text class="back-icon">←</text>
+        </view>
+        <view class="navbar-title">
+          <text class="title-text">问答记录</text>
+        </view>
+        <view class="navbar-right"></view>
+      </view>
+    </view>
 
     <!-- 分隔与徽标 -->
     <view class="divider-row">
       <view class="divider"></view>
-      <text class="heart">💚</text>
+      <text class="heart">💛</text>
       <view class="divider"></view>
     </view>
 
@@ -36,12 +52,28 @@ import { getQuestions } from '@/api/qna.js';
 export default {
   data() {
     return { 
+      statusBarHeight: 0,
+      navBarHeight: 54,
+      screenWidth: 375,
       history: [],
       defaultQuestions: [],
       customQuestions: []
     };
   },
-  async onLoad() {
+  computed: {
+    containerPaddingTop() {
+      const totalHeightPx = this.statusBarHeight + this.navBarHeight;
+      const pxToRpx = 750 / this.screenWidth;
+      const totalHeightRpx = totalHeightPx * pxToRpx;
+      return totalHeightRpx + 20 + 'rpx';
+    }
+  },
+  onLoad() {
+    // 获取系统信息
+    const systemInfo = uni.getSystemInfoSync();
+    this.statusBarHeight = systemInfo.statusBarHeight || 0;
+    this.screenWidth = systemInfo.screenWidth || 375;
+    
     // 检查登录状态
     const loginInfo = uni.getStorageSync('login_info');
     if (!loginInfo || !loginInfo.token) {
@@ -57,10 +89,13 @@ export default {
     }
     
     // 先加载问题列表，再加载历史记录
-    await this.loadQuestions();
-    await this.loadHistory();
+    this.loadQuestions();
+    this.loadHistory();
   },
   methods: {
+    goBack() {
+      uni.navigateBack();
+    },
     // 从后端加载问题列表
     async loadQuestions() {
       try {
@@ -201,28 +236,169 @@ export default {
 </script>
 
 <style>
-.history-page { min-height: 100vh; background: #ffffff; }
+/* 导航栏样式 */
+.custom-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background-color: #FFFAF4;
+  overflow: hidden;
+}
+
+.navbar-gradient-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200%;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+}
+
+.status-bar {
+  width: 100%;
+}
+
+.navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24rpx;
+  position: relative;
+  z-index: 10;
+}
+
+.navbar-left {
+  width: 80rpx;
+  height: 54rpx;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.back-icon {
+  font-size: 50rpx;
+  font-weight: 600;
+  color: #4A4A4A;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.navbar-title {
+  flex: 1;
+  height: 54rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title-text {
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #4A4A4A;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.navbar-right {
+  width: 80rpx;
+  height: 54rpx;
+}
+
+.history-page { 
+  min-height: 100vh; 
+  background: #FFFAF4; 
+}
 .topbar { position: relative; height: 96rpx; display: flex; align-items: center; justify-content: center; background: #ffffff; }
 .topbar-title { font-size: 32rpx; color: #2b2b2b; font-weight: 600; }
 .topbar-actions { position: absolute; right: 24rpx; top: 50%; transform: translateY(-50%); display: flex; gap: 12rpx; }
 .icon-btn { width: 64rpx; height: 64rpx; border-radius: 32rpx; background: #f7f7f7; color: #2bad81; font-size: 28rpx; display: flex; align-items: center; justify-content: center; }
 
-.divider-row { margin: 12rpx 24rpx; display: flex; align-items: center; gap: 16rpx; }
-.divider { flex: 1; height: 2rpx; background: #e8f5f1; }
-.heart { color: #2bad81; font-size: 26rpx; }
+.divider-row { 
+  margin: 12rpx 24rpx; 
+  display: flex; 
+  align-items: center; 
+  gap: 16rpx; 
+}
+.divider { 
+  flex: 1; 
+  height: 2rpx; 
+  background: linear-gradient(90deg, transparent 0%, #FFC94D 50%, transparent 100%);
+  opacity: 0.6;
+}
+.heart { 
+  color: #FFC94D; 
+  font-size: 32rpx;
+  text-shadow: 0 2rpx 4rpx rgba(255, 181, 194, 0.3);
+}
 
-.list { padding: 12rpx 24rpx; }
-.list-item { display: flex; align-items: center; padding: 18rpx 0; border-bottom: 1rpx solid #f5f5f5; }
-.list-item:last-child { border-bottom: none; }
+.list { 
+  padding: 24rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+.list-item { 
+  display: flex; 
+  align-items: center; 
+  padding: 24rpx;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx;
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 .left { width: 64rpx; }
-.index { font-size: 30rpx; color: #2bad81; font-weight: 700; }
-.center { flex: 1; }
-.question { font-size: 28rpx; color: #2b2b2b; }
+.index { 
+  font-size: 30rpx; 
+  color: #FFB5C2; 
+  font-weight: 700; 
+}
+.center { flex: 1; padding: 0 16rpx; }
+.question { 
+  font-size: 28rpx; 
+  color: #4A4A4A;
+  font-weight: 500;
+  line-height: 1.4;
+}
 .right { width: 60rpx; display: flex; justify-content: flex-end; }
-.status { width: 32rpx; height: 32rpx; border-radius: 16rpx; border: 3rpx solid #2bad81; }
-.status.done { background: #2bad81; }
-.status.todo { background: #ffffff; }
+.status { 
+  width: 32rpx; 
+  height: 32rpx; 
+  border-radius: 16rpx; 
+  border: 3rpx solid #FFB5C2;
+  transition: all 0.3s ease;
+}
+.status.done { 
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%);
+  border-color: #FFB5C2;
+  box-shadow: 0 2rpx 8rpx rgba(255, 181, 194, 0.3);
+}
+.status.todo { 
+  background: #ffffff; 
+  border-color: #FFB5C2;
+}
 
-.empty { padding: 40rpx; display: flex; justify-content: center; }
-.empty-text { color: #9aa0a6; font-size: 26rpx; }
+.empty { 
+  padding: 80rpx 40rpx; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx;
+  margin: 24rpx;
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
+}
+.empty-text { 
+  color: #666; 
+  font-size: 28rpx;
+  font-weight: 500;
+}
 </style>

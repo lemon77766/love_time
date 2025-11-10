@@ -377,7 +377,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: #F8F0FC;
+  background-color: #FFFAF4;
   overflow: hidden;
 }
 
@@ -387,8 +387,9 @@ export default {
   left: 0;
   right: 0;
   height: 200%;
-  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
-  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 
 .status-bar {
@@ -417,9 +418,9 @@ export default {
 }
 
 .title-text {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -433,7 +434,7 @@ export default {
 .back-icon {
   font-size: 50rpx;
   font-weight: 600;
-  color: #6B5B95;
+  color: #4A4A4A;
   line-height: 1;
   cursor: pointer;
   transition: opacity 0.3s;
@@ -452,7 +453,7 @@ export default {
 
 .heartwall-page { 
   min-height: 100vh; 
-  background: #F8F0FC; 
+  background: #FFFAF4; 
   padding-bottom: 120rpx; 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -460,20 +461,25 @@ export default {
 .card { 
   margin-bottom: 24rpx; 
   padding: 20rpx; 
-  background: #ffffff; 
-  border-radius: 24rpx; 
-  box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.06); 
-  border: 1rpx solid #F3E8FF; 
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx; 
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
   display: flex; 
   gap: 20rpx; 
   position: relative; 
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.card:active { opacity: 0.8; }
+.card:active { 
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
 .cover { 
   width: 160rpx; 
   height: 160rpx; 
-  border-radius: 24rpx; 
-  background: #F3E8FF; 
+  border-radius: 16rpx; 
+  background: rgba(255, 255, 255, 0.5); 
   display: flex; 
   align-items: center; 
   justify-content: center; 
@@ -482,11 +488,11 @@ export default {
 }
 .cover-img { width: 100%; height: 100%; }
 .no-image { 
-  background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%); 
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%); 
 }
 .cover-placeholder { 
   font-size: 60rpx; 
-  color: #DCC7E1; 
+  color: rgba(255, 255, 255, 0.8); 
 }
 .meta { 
   flex: 1; 
@@ -501,20 +507,20 @@ export default {
   gap: 8rpx; 
 }
 .label { 
-  color: #6B5B95; 
+  color: #4A4A4A; 
   font-size: 26rpx; 
-  font-weight: 600;
+  font-weight: 500;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .value { 
-  color: #9B8FB8; 
+  color: #666; 
   font-size: 26rpx; 
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .bold { 
   font-weight: 600; 
-  color: #6B5B95;
+  color: #4A4A4A;
 }
 .actions-cell { 
   position: absolute; 
@@ -530,7 +536,7 @@ export default {
 }
 .content-tip { 
   margin: 32rpx 24rpx; 
-  color: #9B8FB8; 
+  color: #666; 
   font-size: 26rpx; 
   text-align: center; 
   font-weight: 400;
@@ -548,10 +554,10 @@ export default {
   width: 80%; 
   border-radius: 999rpx; 
   padding: 18rpx 0; 
-  background: #DCC7E1; 
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%);
   color: #ffffff; 
   font-size: 28rpx; 
-  box-shadow: 0 10rpx 24rpx rgba(220, 199, 225, 0.35); 
+  box-shadow: 0 8rpx 24rpx rgba(255, 181, 194, 0.4); 
   font-weight: 600;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }

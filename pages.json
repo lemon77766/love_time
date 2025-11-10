@@ -31,7 +31,8 @@
     {
       "path": "pages/qna/history",
       "style": {
-        "navigationBarTitleText": "甜蜜小问答"
+        "navigationBarTitleText": "甜蜜小问答",
+        "navigationStyle": "custom"
       }
     },
     {
@@ -51,7 +52,8 @@
     {
       "path": "pages/heartwall/create",
       "style": {
-        "navigationBarTitleText": "爱心照片墙"
+        "navigationBarTitleText": "爱心照片墙",
+        "navigationStyle": "custom"
       }
     },
     {

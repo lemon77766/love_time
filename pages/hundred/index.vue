@@ -108,7 +108,7 @@
 </template>
 
 <script>
-import { getTasks, addTask, deleteTask, completeTask, favoriteTask } from '@/api/hundred.js';
+import { getTasks, addTask, deleteTask, completeTask, favoriteTask, uploadChallengePhoto } from '@/api/hundred.js';
 import config from '@/utils/config.js';
 
 export default {
@@ -263,9 +263,17 @@ export default {
         // 检查是否是HTML错误页面（通常是404）
         const isHtmlError = typeof errorData === 'string' && errorData.includes('<!doctype html>');
         
+        // 检查是否是"用户不存在"错误（可能是接口不存在导致的误判）
+        const isUserNotFoundError = errorMsg.includes('用户不存在');
+        
         if (statusCode === 404 || errorMsg.includes('404') || isHtmlError) {
           console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          console.error('❌ [错误类型] 接口不存在 (404)');
+          if (isUserNotFoundError) {
+            console.error('❌ [错误类型] 接口不存在 (404) - 后端返回"用户不存在"');
+            console.error('⚠️ 注意：这可能是后端接口未实现导致的通用错误消息');
+          } else {
+            console.error('❌ [错误类型] 接口不存在 (404)');
+          }
           console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
           console.error('📍 [请求URL]', `${config.baseURL}${config.API.CHALLENGE.LIST}`);
           console.error('💡 [解决方案]');
@@ -273,6 +281,11 @@ export default {
           console.error('    2. 确认接口路径是否正确（当前: /api/challenge/tasks）');
           console.error('    3. 联系后端开发确认接口是否已部署');
           console.error('    4. 如果是路径问题，可能需要修改 utils/config.js 中的配置');
+          if (isUserNotFoundError) {
+            console.error('    5. 如果后端已实现接口但仍返回"用户不存在"，请检查：');
+            console.error('       - Token是否有效');
+            console.error('       - 后端用户认证逻辑是否正确');
+          }
           console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         } else if (statusCode === 401 || errorMsg.includes('401')) {
           console.error('🔐 [错误类型] 未授权 (401)');
@@ -280,6 +293,10 @@ export default {
         } else if (errorMsg.includes('timeout')) {
           console.error('⏱️ [错误类型] 请求超时');
           console.error('💡 [解决方案] 检查网络连接或后端服务是否正常');
+        } else if (isUserNotFoundError && statusCode !== 404) {
+          // 非404的"用户不存在"错误
+          console.error('🔐 [错误类型] 用户不存在');
+          console.error('💡 [解决方案] 用户信息可能已失效，请重新登录');
         } else {
           console.error('📋 [错误] 错误消息:', errorMsg || '未知错误');
           console.error('📍 [错误] 可能原因:');
@@ -309,15 +326,39 @@ export default {
      * 前端: { id, text, done, image, favorite, ... }
      */
     convertBackendToFrontend(task) {
+      const record = task.userRecord || task.user_record || task.record || task.taskRecord || task.task_record || null;
+
+      const rawPhoto =
+        record?.photoUrl ||
+        record?.photo_url ||
+        record?.photo ||
+        record?.photoPath ||
+        record?.photo_path ||
+        task.photoUrl ||
+        task.photo_url ||
+        task.photo ||
+        task.photoPath ||
+        task.photo_path ||
+        (typeof record?.photo === 'object'
+          ? record.photo.url || record.photo.fullUrl || record.photo.path
+          : typeof task.photo === 'object'
+            ? task.photo.url || task.photo.fullUrl || task.photo.path
+            : null);
+
+      const status = record?.status || task.status || task.completedStatus || '';
+      const completedFlag = typeof status === 'string'
+        ? status.toLowerCase() === 'completed' || status.toLowerCase() === 'done'
+        : Boolean(status);
+
       return {
         id: task.id,
         text: task.taskName || task.taskDescription || '',
-        done: task.status === 'completed',
-        image: task.photoUrl || '',
-        favorite: task.isFavorited || false,
+        done: completedFlag || record?.completed === true || task.completed === true,
+        image: this.normalizePhotoUrl(rawPhoto),
+        favorite: record?.isFavorited ?? record?.favorited ?? task.isFavorited ?? false,
         category: task.category || 'preset',
-        note: task.note || '',
-        completedAt: task.completedAt || null
+        note: record?.note || task.note || '',
+        completedAt: record?.completedAt || task.completedAt || null
       };
     },
     
@@ -329,9 +370,50 @@ export default {
         taskId: item.id,
         taskName: item.text,
         completed: item.done,
-        photoUrl: item.image || null,
+        photoUrl: this.stripBaseFromPhotoUrl(item.image),
         favorited: item.favorite
       };
+    },
+
+    normalizePhotoUrl(url) {
+      if (!url) return '';
+
+      if (Array.isArray(url)) {
+        url = url[0];
+      }
+
+      if (typeof url === 'object') {
+        url = url.url || url.fullUrl || url.path || url.previewUrl || '';
+      }
+
+      if (!url) return '';
+
+      if (/^https?:\/\//i.test(url)) {
+        return url;
+      }
+
+      const base = (config.baseURL || '').replace(/\/$/, '');
+      if (!base) {
+        return url;
+      }
+
+      if (url.startsWith('/')) {
+        return `${base}${url}`;
+      }
+
+      return `${base}/${url}`;
+    },
+
+    stripBaseFromPhotoUrl(url) {
+      if (!url) return null;
+
+      const base = (config.baseURL || '').replace(/\/$/, '');
+      if (base && url.startsWith(base)) {
+        const stripped = url.slice(base.length);
+        return stripped.startsWith('/') ? stripped : `/${stripped}`;
+      }
+
+      return url;
     },
     
     /**
@@ -397,22 +479,77 @@ export default {
           console.log('✅ [图片选择] 成功，临时路径:', tempFilePath);
           
           // 更新本地显示
+          const previousImage = item.image;
+          const previousDoneState = item.done;
           item.image = tempFilePath;
+          this.saveItemsToLocal();
           
-          // 同步到后端：标记任务完成并上传图片
+          let loadingShown = false;
+          
           try {
-            console.log('📡 [后端] 同步图片到服务器...');
-            await this.syncTaskComplete(item, true, tempFilePath);
+            uni.showLoading({
+              title: '上传中...',
+              mask: true
+            });
+            loadingShown = true;
+            
+            console.log('📡 [后端] 上传图片到服务器...');
+            const uploadResult = await uploadChallengePhoto(tempFilePath);
+            const uploadedPhotoUrl = uploadResult?.photoUrl;
+            const successMessage = uploadResult?.message || '图片已上传';
+            
+            if (uploadedPhotoUrl) {
+              item.image = uploadedPhotoUrl;
+            }
+            item.done = true;
+            this.saveItemsToLocal();
+            
+            await this.syncTaskComplete(item, true, uploadedPhotoUrl);
             console.log('✅ [后端] 图片同步成功');
-          uni.showToast({ title: '图片已上传', icon: 'success' });
+            
+            if (loadingShown) {
+              uni.hideLoading();
+              loadingShown = false;
+            }
+            
+            const toastTitle = successMessage && successMessage.length <= 7 ? successMessage : '图片已上传';
+            uni.showToast({ title: toastTitle, icon: 'success' });
           } catch (error) {
-            console.error('❌ [后端] 图片同步失败:', error);
-            // 即使后端失败，也保留本地图片
-            uni.showToast({ title: '图片已保存（未同步）', icon: 'none' });
+            console.error('❌ [后端] 图片上传或同步失败:', error);
+            
+            // 回滚完成状态和图片，提示用户重新尝试
+            item.image = previousImage;
+            item.done = previousDoneState;
+            this.saveItemsToLocal();
+            
+            if (loadingShown) {
+              uni.hideLoading();
+              loadingShown = false;
+            }
+            
+            const statusCode = error?.statusCode || error?.data?.statusCode;
+            const errorMsg = error?.message || error?.errMsg || '';
+            const isHtmlError = typeof error?.data === 'string' && error?.data?.includes('<!doctype html>');
+            
+            let toastTitle = '图片上传失败，请稍后重试';
+            
+            if (statusCode === 404 || errorMsg.includes('404') || isHtmlError) {
+              toastTitle = '上传接口不存在，请联系管理员';
+            } else if (statusCode === 401 || errorMsg.includes('401')) {
+              toastTitle = '登录信息已过期，请重新登录';
+            } else if (errorMsg.includes('timeout')) {
+              toastTitle = '上传超时，请检查网络';
+            } else if (errorMsg) {
+              toastTitle = errorMsg.length <= 10 ? errorMsg : '图片上传失败';
+            }
+            
+            uni.showToast({ title: toastTitle, icon: 'none' });
+          } finally {
+            if (loadingShown) {
+              uni.hideLoading();
+            }
           }
           
-          // 保存到本地缓存
-          this.saveItemsToLocal();
         },
         fail: (err) => {
           // 如果是用户取消操作，不显示错误提示

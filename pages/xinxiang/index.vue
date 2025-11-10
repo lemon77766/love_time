@@ -109,6 +109,7 @@ export default {
   position: relative;
   overflow: hidden;
   touch-action: none;
+  background-color: #FFFAF4;
 }
 
 /* 自定义导航栏样式 */
@@ -118,7 +119,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: #F8F0FC;
+  background-color: #FFFAF4;
   overflow: hidden;
 }
 
@@ -128,8 +129,9 @@ export default {
   left: 0;
   right: 0;
   height: 200%;
-  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
-  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 
 .status-bar {
@@ -158,9 +160,9 @@ export default {
 }
 
 .title-text {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -174,7 +176,7 @@ export default {
 .back-icon {
   font-size: 50rpx;
   font-weight: 600;
-  color: #6B5B95;
+  color: #4A4A4A;
   line-height: 1;
   cursor: pointer;
   transition: opacity 0.3s;

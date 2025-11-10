@@ -297,7 +297,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: #F8F0FC;
+  background-color: #FFFAF4;
   overflow: hidden;
 }
 
@@ -307,8 +307,9 @@ export default {
   left: 0;
   right: 0;
   height: 200%;
-  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
-  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 
 .status-bar {
@@ -339,7 +340,7 @@ export default {
 .title-text {
   font-size: 32rpx;
   font-weight: 600;
-  color: #6B5B95;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -353,7 +354,7 @@ export default {
 .back-icon {
   font-size: 50rpx;
   font-weight: 600;
-  color: #6B5B95;
+  color: #4A4A4A;
   line-height: 1;
   cursor: pointer;
   transition: opacity 0.3s;
@@ -372,7 +373,7 @@ export default {
 
 .received-page {
   min-height: 100vh;
-  background: #F8F0FC;
+  background: #FFFAF4;
   padding: 24rpx;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -389,7 +390,7 @@ export default {
   border-radius: 24rpx;
   overflow: hidden;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
-  border: 1rpx solid #F3E8FF;
+  border: 1rpx solid #FFE6D0;
 }
 
 /* 缩略图预览 */
@@ -418,7 +419,7 @@ export default {
   position: absolute;
   top: 16rpx;
   right: 16rpx;
-  background: rgba(220, 199, 225, 0.9);
+  background: rgba(255, 181, 194, 0.9);
   padding: 8rpx 16rpx;
   border-radius: 8rpx;
 }
@@ -441,7 +442,7 @@ export default {
 .card-title {
   font-size: 34rpx;
   font-weight: 600;
-  color: #6B5B95;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -453,7 +454,7 @@ export default {
 
 .meta-item {
   font-size: 24rpx;
-  color: #9B8FB8;
+  color: #888888;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -475,14 +476,14 @@ export default {
 .card-preview-content {
   margin-top: 8rpx;
   padding: 16rpx;
-  background: #F8F0FC;
+  background: #FFFAF4;
   border-radius: 12rpx;
-  border: 1rpx solid #F3E8FF;
+  border: 1rpx solid #FFE6D0;
 }
 
 .preview-text {
   font-size: 26rpx;
-  color: #9B8FB8;
+  color: #888888;
   line-height: 1.6;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -491,7 +492,7 @@ export default {
 /* 操作按钮 */
 .card-actions {
   display: flex;
-  border-top: 1rpx solid #F3E8FF;
+  border-top: 1rpx solid #FFE6D0;
 }
 
 .action-btn {
@@ -503,12 +504,12 @@ export default {
 }
 
 .action-btn.view {
-  color: #DCC7E1;
+  color: #FFB5C2;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .action-btn:active {
-  background: #F8F0FC;
+  background: #FFFAF4;
 }
 
 /* 空状态 */
@@ -527,7 +528,7 @@ export default {
 
 .empty-text {
   font-size: 28rpx;
-  color: #9B8FB8;
+  color: #888888;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -561,7 +562,7 @@ export default {
 .detail-modal-title {
   font-size: 34rpx;
   font-weight: 600;
-  color: #6B5B95;
+  color: #4A4A4A;
   display: block;
   text-align: center;
   margin-bottom: 24rpx;
@@ -628,13 +629,13 @@ export default {
 .letter-title {
   font-size: 36rpx;
   font-weight: 600;
-  color: #6B5B95;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-date {
   font-size: 24rpx;
-  color: #9B8FB8;
+  color: #888888;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -648,7 +649,7 @@ export default {
 .letter-text {
   font-size: 28rpx;
   line-height: 2;
-  color: #6B5B95;
+  color: #4A4A4A;
   white-space: pre-wrap;
   word-break: break-all;
   font-weight: 400;
@@ -665,14 +666,14 @@ export default {
 
 .letter-info {
   font-size: 24rpx;
-  color: #9B8FB8;
+  color: #888888;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-time {
   font-size: 22rpx;
-  color: #9B8FB8;
+  color: #888888;
   margin-top: 8rpx;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -692,8 +693,8 @@ export default {
 }
 
 .detail-modal-btn.close {
-  background: #DCC7E1;
-  color: #ffffff;
+  background: linear-gradient(90deg, #FFB5C2 0%, #FFD4A3 100%);
+  color: #3d2a00;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 </style>

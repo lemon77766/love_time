@@ -330,18 +330,27 @@ function request(options) {
           }
           if (res.statusCode === 404 && errorMessage && errorMessage.includes("用户不存在")) {
             const isLocationApi = options.url.includes("/api/trajectory/location/");
+            const isChallengeApi2 = options.url.includes("/api/challenge/");
             if (isLocationApi) {
-              common_vendor.index.__f__("warn", "at utils/http.js:454", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-              common_vendor.index.__f__("warn", "at utils/http.js:455", '⚠️ [HTTP响应] 检测到"用户不存在"错误（位置API）');
-              common_vendor.index.__f__("warn", "at utils/http.js:456", "⚠️ 这通常表示用户信息已失效或token中的用户在后端不存在");
-              common_vendor.index.__f__("warn", "at utils/http.js:457", "⚠️ 位置功能将无法使用，但不会影响页面其他功能");
-              common_vendor.index.__f__("warn", "at utils/http.js:458", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+              common_vendor.index.__f__("warn", "at utils/http.js:455", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+              common_vendor.index.__f__("warn", "at utils/http.js:456", '⚠️ [HTTP响应] 检测到"用户不存在"错误（位置API）');
+              common_vendor.index.__f__("warn", "at utils/http.js:457", "⚠️ 这通常表示用户信息已失效或token中的用户在后端不存在");
+              common_vendor.index.__f__("warn", "at utils/http.js:458", "⚠️ 位置功能将无法使用，但不会影响页面其他功能");
+              common_vendor.index.__f__("warn", "at utils/http.js:459", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            } else if (isChallengeApi2) {
+              common_vendor.index.__f__("warn", "at utils/http.js:463", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+              common_vendor.index.__f__("warn", "at utils/http.js:464", '⚠️ [HTTP响应] 检测到"用户不存在"错误（一百件事API）');
+              common_vendor.index.__f__("warn", "at utils/http.js:465", "⚠️ 可能原因：");
+              common_vendor.index.__f__("warn", "at utils/http.js:466", "   1. 接口不存在（后端未实现此接口）");
+              common_vendor.index.__f__("warn", "at utils/http.js:467", "   2. 用户信息已失效或token中的用户在后端不存在");
+              common_vendor.index.__f__("warn", "at utils/http.js:468", "⚠️ 不会自动跳转登录，请检查接口是否已实现");
+              common_vendor.index.__f__("warn", "at utils/http.js:469", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             } else {
-              common_vendor.index.__f__("warn", "at utils/http.js:461", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-              common_vendor.index.__f__("warn", "at utils/http.js:462", '⚠️ [HTTP响应] 检测到"用户不存在"错误');
-              common_vendor.index.__f__("warn", "at utils/http.js:463", "⚠️ 这通常表示用户信息已失效或token中的用户在后端不存在");
-              common_vendor.index.__f__("warn", "at utils/http.js:464", "⚠️ 将清除登录信息并跳转到登录页");
-              common_vendor.index.__f__("warn", "at utils/http.js:465", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+              common_vendor.index.__f__("warn", "at utils/http.js:472", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+              common_vendor.index.__f__("warn", "at utils/http.js:473", '⚠️ [HTTP响应] 检测到"用户不存在"错误');
+              common_vendor.index.__f__("warn", "at utils/http.js:474", "⚠️ 这通常表示用户信息已失效或token中的用户在后端不存在");
+              common_vendor.index.__f__("warn", "at utils/http.js:475", "⚠️ 将清除登录信息并跳转到登录页");
+              common_vendor.index.__f__("warn", "at utils/http.js:476", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
               handleUnauthorized("用户信息已失效，请重新登录");
             }
           }
@@ -374,31 +383,31 @@ function request(options) {
           } else if (urlForCheck2.includes("/api/letter/")) {
             apiType = "情书API";
           }
-          common_vendor.index.__f__("error", "at utils/http.js:510", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("error", "at utils/http.js:511", "❌ [HTTP错误]", apiType, "请求失败");
-          common_vendor.index.__f__("error", "at utils/http.js:512", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("error", "at utils/http.js:513", "📍 [URL]", options.url);
-          common_vendor.index.__f__("error", "at utils/http.js:514", "📋 [方法]", options.method || "GET");
-          common_vendor.index.__f__("error", "at utils/http.js:515", "🔴 [错误详情]", error);
-          common_vendor.index.__f__("error", "at utils/http.js:516", "📋 [错误消息]", error.errMsg || error.message || "未知错误");
-          common_vendor.index.__f__("error", "at utils/http.js:517", "📊 [状态码]", error.statusCode || "无");
+          common_vendor.index.__f__("error", "at utils/http.js:521", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          common_vendor.index.__f__("error", "at utils/http.js:522", "❌ [HTTP错误]", apiType, "请求失败");
+          common_vendor.index.__f__("error", "at utils/http.js:523", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          common_vendor.index.__f__("error", "at utils/http.js:524", "📍 [URL]", options.url);
+          common_vendor.index.__f__("error", "at utils/http.js:525", "📋 [方法]", options.method || "GET");
+          common_vendor.index.__f__("error", "at utils/http.js:526", "🔴 [错误详情]", error);
+          common_vendor.index.__f__("error", "at utils/http.js:527", "📋 [错误消息]", error.errMsg || error.message || "未知错误");
+          common_vendor.index.__f__("error", "at utils/http.js:528", "📊 [状态码]", error.statusCode || "无");
           if (error.errMsg) {
             if (error.errMsg.includes("timeout")) {
-              common_vendor.index.__f__("error", "at utils/http.js:522", "⏱️ [错误类型] 请求超时");
+              common_vendor.index.__f__("error", "at utils/http.js:533", "⏱️ [错误类型] 请求超时");
             } else if (error.errMsg.includes("fail")) {
-              common_vendor.index.__f__("error", "at utils/http.js:524", "🔌 [错误类型] 网络连接失败");
-              common_vendor.index.__f__("error", "at utils/http.js:525", "💡 [提示] 请检查：");
-              common_vendor.index.__f__("error", "at utils/http.js:526", "   1. 后端服务是否已启动");
-              common_vendor.index.__f__("error", "at utils/http.js:527", "   2. 请求地址是否正确:", options.url);
-              common_vendor.index.__f__("error", "at utils/http.js:528", "   3. 网络是否连通");
+              common_vendor.index.__f__("error", "at utils/http.js:535", "🔌 [错误类型] 网络连接失败");
+              common_vendor.index.__f__("error", "at utils/http.js:536", "💡 [提示] 请检查：");
+              common_vendor.index.__f__("error", "at utils/http.js:537", "   1. 后端服务是否已启动");
+              common_vendor.index.__f__("error", "at utils/http.js:538", "   2. 请求地址是否正确:", options.url);
+              common_vendor.index.__f__("error", "at utils/http.js:539", "   3. 网络是否连通");
             } else if (error.errMsg.includes("404")) {
-              common_vendor.index.__f__("error", "at utils/http.js:530", "🔍 [错误类型] 接口不存在 (404)");
+              common_vendor.index.__f__("error", "at utils/http.js:541", "🔍 [错误类型] 接口不存在 (404)");
             } else if (error.errMsg.includes("401")) {
-              common_vendor.index.__f__("error", "at utils/http.js:532", "🔐 [错误类型] 未授权 (401)，可能是Token过期");
+              common_vendor.index.__f__("error", "at utils/http.js:543", "🔐 [错误类型] 未授权 (401)，可能是Token过期");
             }
           }
-          common_vendor.index.__f__("error", "at utils/http.js:536", "⏰ [时间]", (/* @__PURE__ */ new Date()).toLocaleString());
-          common_vendor.index.__f__("error", "at utils/http.js:537", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+          common_vendor.index.__f__("error", "at utils/http.js:547", "⏰ [时间]", (/* @__PURE__ */ new Date()).toLocaleString());
+          common_vendor.index.__f__("error", "at utils/http.js:548", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         }
         handleRequestError(error, options).then(resolve).catch(reject);
       }
@@ -419,7 +428,7 @@ function upload(options) {
     return Promise.reject(new Error("未找到上传的文件：filePath 参数为空"));
   }
   const originalFilePath = options.filePath;
-  common_vendor.index.__f__("log", "at utils/http.js:566", "📁 [上传] 原始文件路径:", originalFilePath);
+  common_vendor.index.__f__("log", "at utils/http.js:577", "📁 [上传] 原始文件路径:", originalFilePath);
   let validFilePath = originalFilePath;
   if (validFilePath && typeof validFilePath === "string") {
     if (validFilePath.startsWith("http://") || validFilePath.startsWith("https://")) {
@@ -427,10 +436,10 @@ function upload(options) {
         const pathMatch = validFilePath.match(/:\/\/tmp[\/_](.+)$/);
         if (pathMatch) {
           pathMatch[1];
-          common_vendor.index.__f__("warn", "at utils/http.js:584", "⚠️ [上传] 检测到临时文件URL格式，尝试直接使用:", validFilePath);
+          common_vendor.index.__f__("warn", "at utils/http.js:595", "⚠️ [上传] 检测到临时文件URL格式，尝试直接使用:", validFilePath);
         }
       } else {
-        common_vendor.index.__f__("warn", "at utils/http.js:589", "⚠️ [上传] 文件路径已经是URL格式，跳过上传:", validFilePath);
+        common_vendor.index.__f__("warn", "at utils/http.js:600", "⚠️ [上传] 文件路径已经是URL格式，跳过上传:", validFilePath);
         return Promise.reject(new Error("文件路径已经是URL格式，无需上传"));
       }
     }
@@ -443,41 +452,42 @@ function upload(options) {
   if (token) {
     options.header["Authorization"] = `Bearer ${token}`;
   } else {
-    common_vendor.index.__f__("warn", "at utils/http.js:608", "⚠️ 上传请求未携带Authorization头，可能导致401错误");
+    common_vendor.index.__f__("warn", "at utils/http.js:619", "⚠️ 上传请求未携带Authorization头，可能导致401错误");
   }
   const uploadOptions = {
     ...options,
     filePath: validFilePath
   };
   return new Promise((resolve, reject) => {
-    common_vendor.index.__f__("log", "at utils/http.js:618", "📤 [上传] 开始上传文件，路径:", validFilePath);
+    common_vendor.index.__f__("log", "at utils/http.js:629", "📤 [上传] 开始上传文件，路径:", validFilePath);
     common_vendor.index.uploadFile({
       ...uploadOptions,
       success: (uploadRes) => {
         try {
           const result = JSON.parse(uploadRes.data);
           if (result.success) {
-            common_vendor.index.__f__("log", "at utils/http.js:625", "✅ [上传] 文件上传成功");
-            resolve(result.data);
+            common_vendor.index.__f__("log", "at utils/http.js:636", "✅ [上传] 文件上传成功");
+            const normalizedData = result.data !== void 0 && result.data !== null ? result.data : result;
+            resolve(normalizedData);
           } else {
             const errorMsg = result.message || "上传失败";
-            common_vendor.index.__f__("error", "at utils/http.js:629", "❌ [上传] 服务器返回失败:", errorMsg);
+            common_vendor.index.__f__("error", "at utils/http.js:643", "❌ [上传] 服务器返回失败:", errorMsg);
             reject(new Error(errorMsg));
           }
         } catch (e) {
-          common_vendor.index.__f__("error", "at utils/http.js:633", "❌ [上传] 解析响应失败:", e);
+          common_vendor.index.__f__("error", "at utils/http.js:647", "❌ [上传] 解析响应失败:", e);
           reject(new Error("解析上传响应失败"));
         }
       },
       fail: (error) => {
-        common_vendor.index.__f__("error", "at utils/http.js:638", "❌ [上传] 上传失败:", error);
-        common_vendor.index.__f__("error", "at utils/http.js:639", "❌ [上传] 原始路径:", originalFilePath);
-        common_vendor.index.__f__("error", "at utils/http.js:640", "❌ [上传] 使用路径:", validFilePath);
+        common_vendor.index.__f__("error", "at utils/http.js:652", "❌ [上传] 上传失败:", error);
+        common_vendor.index.__f__("error", "at utils/http.js:653", "❌ [上传] 原始路径:", originalFilePath);
+        common_vendor.index.__f__("error", "at utils/http.js:654", "❌ [上传] 使用路径:", validFilePath);
         if (error.errMsg && (error.errMsg.includes("未找到") || error.errMsg.includes("file not found") || error.errMsg.includes("no such file") || error.errMsg.includes("file doesn't exist"))) {
           if (validFilePath !== originalFilePath && originalFilePath) {
-            common_vendor.index.__f__("warn", "at utils/http.js:646", "⚠️ [上传] 转换后的路径无效，尝试使用原始路径:", originalFilePath);
+            common_vendor.index.__f__("warn", "at utils/http.js:660", "⚠️ [上传] 转换后的路径无效，尝试使用原始路径:", originalFilePath);
           }
-          common_vendor.index.__f__("error", "at utils/http.js:649", "❌ [上传] 文件路径无效，无法找到文件");
+          common_vendor.index.__f__("error", "at utils/http.js:663", "❌ [上传] 文件路径无效，无法找到文件");
           reject(new Error(`未找到上传的文件: ${validFilePath} (原始路径: ${originalFilePath})`));
         } else {
           handleRequestError(error, options).then(resolve).catch(reject);

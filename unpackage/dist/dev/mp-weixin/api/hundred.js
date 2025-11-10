@@ -103,26 +103,64 @@ function completeTask(completeData) {
     throw error;
   });
 }
+function uploadChallengePhoto(filePath) {
+  if (!filePath) {
+    return Promise.reject(new Error("上传照片失败：filePath 不能为空"));
+  }
+  const url = utils_config.config.API.CHALLENGE.UPLOAD;
+  const fullUrl = utils_config.config.baseURL + url;
+  common_vendor.index.__f__("log", "at api/hundred.js:288", "🔗 [一百件事API] 开始上传任务完成照片");
+  common_vendor.index.__f__("log", "at api/hundred.js:289", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/hundred.js:290", "📋 请求方法: POST (multipart/form-data)");
+  common_vendor.index.__f__("log", "at api/hundred.js:291", "📁 文件路径:", filePath);
+  common_vendor.index.__f__("log", "at api/hundred.js:292", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  return utils_http.http.upload({
+    url,
+    filePath,
+    name: "file"
+  }).then((response) => {
+    var _a, _b, _c, _d;
+    common_vendor.index.__f__("log", "at api/hundred.js:299", "✅ [一百件事API] 上传任务完成照片成功");
+    common_vendor.index.__f__("log", "at api/hundred.js:300", "📦 响应数据:", response);
+    const photoUrl = (response == null ? void 0 : response.photoUrl) || (response == null ? void 0 : response.url) || ((_a = response == null ? void 0 : response.data) == null ? void 0 : _a.photoUrl) || ((_b = response == null ? void 0 : response.data) == null ? void 0 : _b.url) || ((_d = (_c = response == null ? void 0 : response.data) == null ? void 0 : _c.photo) == null ? void 0 : _d.url) || (typeof response === "string" ? response : null);
+    if (!photoUrl) {
+      common_vendor.index.__f__("error", "at api/hundred.js:311", "❌ [一百件事API] 上传成功但未返回 photoUrl，响应：", response);
+      const error = new Error("上传成功但未返回照片地址");
+      error.response = response;
+      throw error;
+    }
+    return {
+      success: true,
+      photoUrl,
+      message: (response == null ? void 0 : response.message) || "照片上传成功",
+      raw: response
+    };
+  }).catch((error) => {
+    common_vendor.index.__f__("error", "at api/hundred.js:324", "❌ [一百件事API] 上传任务完成照片失败");
+    common_vendor.index.__f__("error", "at api/hundred.js:325", "🔴 错误信息:", error);
+    throw error;
+  });
+}
 function favoriteTask(favoriteData) {
   const url = utils_config.config.API.CHALLENGE.FAVORITE;
   const fullUrl = utils_config.config.baseURL + url;
   const action = favoriteData.favorited ? "收藏" : "取消收藏";
-  common_vendor.index.__f__("log", "at api/hundred.js:285", `🔗 [一百件事API] 开始${action}任务`);
-  common_vendor.index.__f__("log", "at api/hundred.js:286", "📍 请求地址:", fullUrl);
-  common_vendor.index.__f__("log", "at api/hundred.js:287", "📋 请求方法: POST");
-  common_vendor.index.__f__("log", "at api/hundred.js:288", "📤 请求参数:", favoriteData);
-  common_vendor.index.__f__("log", "at api/hundred.js:289", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  common_vendor.index.__f__("log", "at api/hundred.js:352", `🔗 [一百件事API] 开始${action}任务`);
+  common_vendor.index.__f__("log", "at api/hundred.js:353", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/hundred.js:354", "📋 请求方法: POST");
+  common_vendor.index.__f__("log", "at api/hundred.js:355", "📤 请求参数:", favoriteData);
+  common_vendor.index.__f__("log", "at api/hundred.js:356", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
   return utils_http.http.post(url, {
     taskId: favoriteData.taskId,
     favorited: favoriteData.favorited
   }).then((response) => {
-    common_vendor.index.__f__("log", "at api/hundred.js:295", `✅ [一百件事API] ${action}任务成功`);
-    common_vendor.index.__f__("log", "at api/hundred.js:296", "📦 响应数据:", response);
-    common_vendor.index.__f__("log", "at api/hundred.js:297", `⭐ 任务ID: ${favoriteData.taskId}, 收藏状态: ${favoriteData.favorited ? "已收藏" : "未收藏"}`);
+    common_vendor.index.__f__("log", "at api/hundred.js:362", `✅ [一百件事API] ${action}任务成功`);
+    common_vendor.index.__f__("log", "at api/hundred.js:363", "📦 响应数据:", response);
+    common_vendor.index.__f__("log", "at api/hundred.js:364", `⭐ 任务ID: ${favoriteData.taskId}, 收藏状态: ${favoriteData.favorited ? "已收藏" : "未收藏"}`);
     return response;
   }).catch((error) => {
-    common_vendor.index.__f__("error", "at api/hundred.js:301", `❌ [一百件事API] ${action}任务失败`);
-    common_vendor.index.__f__("error", "at api/hundred.js:302", "🔴 错误信息:", error);
+    common_vendor.index.__f__("error", "at api/hundred.js:368", `❌ [一百件事API] ${action}任务失败`);
+    common_vendor.index.__f__("error", "at api/hundred.js:369", "🔴 错误信息:", error);
     throw error;
   });
 }
@@ -131,4 +169,5 @@ exports.completeTask = completeTask;
 exports.deleteTask = deleteTask;
 exports.favoriteTask = favoriteTask;
 exports.getTasks = getTasks;
+exports.uploadChallengePhoto = uploadChallengePhoto;
 //# sourceMappingURL=../../.sourcemap/mp-weixin/api/hundred.js.map

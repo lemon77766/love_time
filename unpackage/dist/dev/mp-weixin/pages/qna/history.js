@@ -4,12 +4,26 @@ const api_qna = require("../../api/qna.js");
 const _sfc_main = {
   data() {
     return {
+      statusBarHeight: 0,
+      navBarHeight: 54,
+      screenWidth: 375,
       history: [],
       defaultQuestions: [],
       customQuestions: []
     };
   },
-  async onLoad() {
+  computed: {
+    containerPaddingTop() {
+      const totalHeightPx = this.statusBarHeight + this.navBarHeight;
+      const pxToRpx = 750 / this.screenWidth;
+      const totalHeightRpx = totalHeightPx * pxToRpx;
+      return totalHeightRpx + 20 + "rpx";
+    }
+  },
+  onLoad() {
+    const systemInfo = common_vendor.index.getSystemInfoSync();
+    this.statusBarHeight = systemInfo.statusBarHeight || 0;
+    this.screenWidth = systemInfo.screenWidth || 375;
     const loginInfo = common_vendor.index.getStorageSync("login_info");
     if (!loginInfo || !loginInfo.token) {
       common_vendor.index.showModal({
@@ -22,10 +36,13 @@ const _sfc_main = {
       });
       return;
     }
-    await this.loadQuestions();
-    await this.loadHistory();
+    this.loadQuestions();
+    this.loadHistory();
   },
   methods: {
+    goBack() {
+      common_vendor.index.navigateBack();
+    },
     // 从后端加载问题列表
     async loadQuestions() {
       try {
@@ -52,7 +69,7 @@ const _sfc_main = {
           this.customQuestions = customQuestions;
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/qna/history.vue:93", "加载问题列表失败", e);
+        common_vendor.index.__f__("error", "at pages/qna/history.vue:128", "加载问题列表失败", e);
       }
     },
     // 从后端加载历史记录
@@ -60,7 +77,7 @@ const _sfc_main = {
       try {
         common_vendor.index.showLoading({ title: "加载中..." });
         const res = await api_qna.getHistory({ page: 1, pageSize: 100 });
-        common_vendor.index.__f__("log", "at pages/qna/history.vue:101", "📥 历史记录响应:", res);
+        common_vendor.index.__f__("log", "at pages/qna/history.vue:136", "📥 历史记录响应:", res);
         let historyList = [];
         if (res && res.success && Array.isArray(res.history)) {
           historyList = res.history;
@@ -75,7 +92,7 @@ const _sfc_main = {
         } else if (Array.isArray(res)) {
           historyList = res;
         } else {
-          common_vendor.index.__f__("warn", "at pages/qna/history.vue:119", "⚠️ 历史记录响应格式不符合预期:", res);
+          common_vendor.index.__f__("warn", "at pages/qna/history.vue:154", "⚠️ 历史记录响应格式不符合预期:", res);
           historyList = [];
         }
         this.history = historyList.map((item) => {
@@ -109,12 +126,12 @@ const _sfc_main = {
           const timeB = b.answeredAt || b.createdAt || b.time || "";
           return new Date(timeB) - new Date(timeA);
         });
-        common_vendor.index.__f__("log", "at pages/qna/history.vue:162", "✅ 历史记录加载成功:", {
+        common_vendor.index.__f__("log", "at pages/qna/history.vue:197", "✅ 历史记录加载成功:", {
           count: this.history.length,
           totalCount: res == null ? void 0 : res.totalCount
         });
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/qna/history.vue:167", "加载历史记录失败", e);
+        common_vendor.index.__f__("error", "at pages/qna/history.vue:202", "加载历史记录失败", e);
         if (e.statusCode === 401) {
           common_vendor.index.showModal({
             title: "需要登录",
@@ -148,7 +165,10 @@ const _sfc_main = {
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: common_vendor.f($data.history, (item, i, i0) => {
+    a: $data.statusBarHeight + "px",
+    b: common_vendor.o((...args) => $options.goBack && $options.goBack(...args)),
+    c: $data.navBarHeight + "px",
+    d: common_vendor.f($data.history, (item, i, i0) => {
       return {
         a: common_vendor.t($options.pad2(i + 1)),
         b: common_vendor.t(item.question),
@@ -157,8 +177,10 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         e: common_vendor.o(($event) => $options.openItem(item), i)
       };
     }),
-    b: $data.history.length === 0
-  }, $data.history.length === 0 ? {} : {});
+    e: $data.history.length === 0
+  }, $data.history.length === 0 ? {} : {}, {
+    f: $options.containerPaddingTop
+  });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);
 wx.createPage(MiniProgramPage);

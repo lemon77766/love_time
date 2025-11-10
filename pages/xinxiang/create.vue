@@ -434,7 +434,7 @@ export default {
                 console.warn('保存本地预览数据失败', e);
               }
 
-              uni.showToast({ title: '发送成功', icon: 'success' });
+              uni.showToast({ title: '提交成功', icon: 'success' });
               
               // 显示预览弹窗
               this.showPreviewModal = true;
@@ -519,7 +519,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: #F8F0FC;
+  background-color: #FFFAF4;
   overflow: hidden;
 }
 
@@ -529,8 +529,9 @@ export default {
   left: 0;
   right: 0;
   height: 200%;
-  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
-  background: -webkit-linear-gradient(top, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 
 .status-bar {
@@ -559,9 +560,9 @@ export default {
 }
 
 .title-text {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -575,7 +576,7 @@ export default {
 .back-icon {
   font-size: 50rpx;
   font-weight: 600;
-  color: #6B5B95;
+  color: #4A4A4A;
   line-height: 1;
   cursor: pointer;
   transition: opacity 0.3s;
@@ -594,7 +595,7 @@ export default {
 
 .create-page {
   min-height: 100vh;
-  background: #F8F0FC;
+  background: #FFFAF4;
   padding: 24rpx;
   padding-bottom: 120rpx;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -620,8 +621,8 @@ export default {
   width: 60rpx;
   height: 60rpx;
   border-radius: 50%;
-  background: #F3E8FF;
-  color: #9B8FB8;
+  background: #FFE6D0;
+  color: #888888;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -631,41 +632,46 @@ export default {
 }
 
 .step.active .step-number {
-  background: #DCC7E1;
-  color: #ffffff;
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%);
+  color: #3d2a00;
 }
 
 .step-text {
   font-size: 24rpx;
-  color: #9B8FB8;
+  color: #888888;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .step.active .step-text {
-  color: #DCC7E1;
+  color: #3d2a00;
   font-weight: 600;
 }
 
 .step-line {
   width: 120rpx;
   height: 2rpx;
-  background: #F3E8FF;
+  background: #FFE6D0;
   margin: 0 20rpx;
   margin-bottom: 28rpx;
 }
 
 /* 内容区域 */
 .step-content {
-  background: #ffffff;
-  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx;
   padding: 32rpx;
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .section-title {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #4A4A4A;
   display: block;
   margin-bottom: 24rpx;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -689,8 +695,8 @@ export default {
 }
 
 .style-item.selected {
-  border-color: #DCC7E1;
-  box-shadow: 0 4rpx 12rpx rgba(220, 199, 225, 0.3);
+  border-color: #FFB5C2;
+  box-shadow: 0 4rpx 12rpx rgba(255, 181, 194, 0.3);
 }
 
 .style-image {
@@ -705,7 +711,7 @@ export default {
   width: 40rpx;
   height: 40rpx;
   border-radius: 50%;
-  background: #DCC7E1;
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -721,15 +727,17 @@ export default {
 .custom-btn {
   width: 100%;
   padding: 24rpx;
-  background: linear-gradient(135deg, #F8F0FC 0%, #F3E8FF 100%);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   border-radius: 16rpx;
-  border: 2rpx dashed #D8B4FE;
+  border: 2rpx dashed #FFB5C2;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12rpx;
   font-size: 28rpx;
-  color: #6B5B95;
+  color: #4A4A4A;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -1007,8 +1015,8 @@ export default {
 
 .form-label {
   font-size: 28rpx;
-  color: #6B5B95;
-  font-weight: 600;
+  color: #4A4A4A;
+  font-weight: 500;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -1040,7 +1048,7 @@ export default {
 
 .char-count {
   font-size: 22rpx;
-  color: #9B8FB8;
+  color: #666;
   text-align: right;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -1050,11 +1058,11 @@ export default {
 .next-btn {
   width: 100%;
   padding: 24rpx;
-  background: #DCC7E1;
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%);
   color: #ffffff;
   border-radius: 16rpx;
   font-size: 28rpx;
-  font-weight: 600;
+  font-weight: 500;
   margin-top: 40rpx;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -1072,23 +1080,23 @@ export default {
   padding: 24rpx;
   border-radius: 16rpx;
   font-size: 28rpx;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .back-btn {
-  background: #F3E8FF;
-  color: #6B5B95;
+  background: #F5F5F5;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .preview-btn {
-  background: #DCC7E1;
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%);
   color: #ffffff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .submit-btn {
-  background: #DCC7E1;
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%);
   color: #ffffff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -1100,8 +1108,8 @@ export default {
 }
 
 .preview-modal-btn.close {
-  background: #DCC7E1;
-  color: #ffffff;
+  background: linear-gradient(90deg, #FFB5C2 0%, #FFD4A3 100%);
+  color: #3d2a00;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
@@ -1132,9 +1140,9 @@ export default {
 }
 
 .preview-modal-title {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #4A4A4A;
   display: block;
   text-align: center;
   margin-bottom: 24rpx;
@@ -1201,13 +1209,13 @@ export default {
 .letter-title {
   font-size: 36rpx;
   font-weight: 600;
-  color: #6B5B95;
+  color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-date {
   font-size: 24rpx;
-  color: #9B8FB8;
+  color: #666;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -1221,7 +1229,7 @@ export default {
 .letter-text {
   font-size: 28rpx;
   line-height: 2;
-  color: #6B5B95;
+  color: #4A4A4A;
   white-space: pre-wrap;
   word-break: break-all;
   font-weight: 400;
@@ -1237,7 +1245,7 @@ export default {
 
 .letter-sign {
   font-size: 26rpx;
-  color: #9B8FB8;
+  color: #666;
   font-style: italic;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -1257,8 +1265,8 @@ export default {
 }
 
 .preview-modal-btn.confirm {
-  background: #DCC7E1;
-  color: #ffffff;
+  background: linear-gradient(90deg, #FFD666 0%, #FFC53D 100%);
+  color: #3d2a00;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 </style>

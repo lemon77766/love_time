@@ -41,7 +41,8 @@ const devConfig = {
       ADD: '/api/challenge/task/add',        // 添加自定义任务
       DELETE: '/api/challenge/task/delete',  // 删除自定义任务
       COMPLETE: '/api/challenge/complete',   // 标记完成/取消完成
-      FAVORITE: '/api/challenge/favorite'    // 收藏/取消收藏
+      FAVORITE: '/api/challenge/favorite',   // 收藏/取消收藏
+      UPLOAD: '/api/challenge/upload'        // 上传任务完成照片
     },
     COUPLE: {
       INVITE_CREATE: '/api/couple/invite/create',      // 生成邀请码

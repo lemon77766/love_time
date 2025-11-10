@@ -193,7 +193,7 @@ const _sfc_main = {
               } catch (e) {
                 common_vendor.index.__f__("warn", "at pages/xinxiang/create.vue:434", "保存本地预览数据失败", e);
               }
-              common_vendor.index.showToast({ title: "发送成功", icon: "success" });
+              common_vendor.index.showToast({ title: "提交成功", icon: "success" });
               this.showPreviewModal = true;
             } else {
               common_vendor.index.showToast({

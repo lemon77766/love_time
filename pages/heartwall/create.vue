@@ -1,5 +1,19 @@
 <template>
-  <view class="create-page">
+  <view class="create-page" :style="{ paddingTop: containerPaddingTop }">
+    <!-- 自定义导航栏（与首页一致） -->
+    <view class="custom-navbar">
+      <view class="navbar-gradient-bg"></view>
+      <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
+      <view class="navbar-content" :style="{ height: navBarHeight + 'px' }">
+        <view class="navbar-left" @click="goBack">
+          <text class="back-icon">←</text>
+        </view>
+        <view class="navbar-title">
+          <text class="title-text">爱心照片墙</text>
+        </view>
+        <view class="navbar-right"></view>
+      </view>
+    </view>
     <view class="center">
       <view id="heartArea" class="heart-grid">
         <view v-for="(cell, idx) in heartMask" :key="idx" class="cell" :class="{ hole: !cell, filled: cell && images[idx] }" @tap="onPickSingle(idx)">
@@ -19,7 +33,7 @@
         批量上传照片 ({{ remainingSlots > 0 ? `还可添加${Math.min(9, remainingSlots)}张` : '已满' }})
       </button>
       <button class="btn green" @click="onSaveProject">保存项目</button>
-      <button class="btn pink" @click="onSaveImage">保存为图片</button>
+      
     </view>
   </view>
 </template>
@@ -42,6 +56,16 @@ function processImageUrl(url) {
   
   // 如果是相对路径（以 / 开头），拼接baseURL
   if (url.startsWith('/')) {
+    // 兼容错误返回的前端路径，如 /pages/heartwall/uploads/... -> 归一化为 /uploads/... 或去掉 /pages 前缀
+    if (url.startsWith('/pages/')) {
+      const stripped = url.replace(/^\/pages/, '');
+      const uploadsIndex = stripped.indexOf('/uploads/');
+      if (uploadsIndex !== -1) {
+        url = stripped.slice(uploadsIndex);
+      } else {
+        url = stripped.startsWith('/') ? stripped : '/' + stripped;
+      }
+    }
     // 移除baseURL末尾可能存在的斜杠，避免双斜杠
     const baseUrl = config.baseURL.endsWith('/') ? config.baseURL.slice(0, -1) : config.baseURL;
     return baseUrl + url;
@@ -55,6 +79,9 @@ function processImageUrl(url) {
 export default {
   data() {
     return {
+      statusBarHeight: 0,
+      navBarHeight: 44,
+      screenWidth: 375,
       // 9x9 心形掩码（1 表示可填充，0 表示空位）；可按需调整
       heartMask: [
         0,1,1,0,0,1,1,0,0,
@@ -74,6 +101,11 @@ export default {
     };
   },
   computed: {
+    containerPaddingTop() {
+      const totalHeightPx = this.statusBarHeight + this.navBarHeight;
+      const pxToRpx = 750 / this.screenWidth;
+      return totalHeightPx * pxToRpx + 'rpx';
+    },
     // 总共可填充的位置数
     totalSlots() {
       return this.heartMask.filter(cell => cell === 1).length;
@@ -94,6 +126,7 @@ export default {
     }
   },
   async mounted() {
+    this.getSystemInfo();
     // 检查是否在编辑现有项目
     try {
       const editingProjectId = uni.getStorageSync('heartwall_editing_projectId');
@@ -115,6 +148,38 @@ export default {
   methods: {
     goBack() {
       uni.navigateBack();
+    },
+    getSystemInfo() {
+      // #ifdef MP-WEIXIN
+      try {
+        const windowInfo = wx.getWindowInfo && wx.getWindowInfo();
+        if (windowInfo) {
+          this.statusBarHeight = windowInfo.statusBarHeight || 0;
+          this.screenWidth = windowInfo.windowWidth || 375;
+        } else {
+          const sys = uni.getSystemInfoSync();
+          this.statusBarHeight = sys.statusBarHeight || 0;
+          this.screenWidth = sys.windowWidth || 375;
+        }
+      } catch (e) {
+        const sys = uni.getSystemInfoSync();
+        this.statusBarHeight = sys.statusBarHeight || 0;
+        this.screenWidth = sys.windowWidth || 375;
+      }
+      this.navBarHeight = 44;
+      // #endif
+      // #ifdef H5
+      const sysH5 = uni.getSystemInfoSync();
+      this.statusBarHeight = sysH5.statusBarHeight || 0;
+      this.screenWidth = sysH5.windowWidth || 375;
+      this.navBarHeight = 44;
+      // #endif
+      // #ifndef MP-WEIXIN || H5
+      const sysOther = uni.getSystemInfoSync();
+      this.statusBarHeight = sysOther.statusBarHeight || 0;
+      this.screenWidth = sysOther.windowWidth || 375;
+      this.navBarHeight = 44;
+      // #endif
     },
     async onBatchUpload() {
       // 计算空位数量
@@ -531,7 +596,7 @@ export default {
         // 方式2：使用JSON格式（先上传文件获取URL，再发送JSON数据）
         // 这里使用方式1（直接上传），如果需要使用方式2，可以取消注释下面的代码
         
-        const USE_DIRECT_UPLOAD = true; // 设置为true使用直接上传，false使用JSON格式
+        const USE_DIRECT_UPLOAD = false; // 设置为true使用直接上传，false使用JSON格式
         
         let savePromises;
         let validPhotos;
@@ -768,26 +833,6 @@ export default {
         this.saving = false;
       }
     },
-    async onSaveImage() {
-      // H5 环境下使用 html2canvas
-      // #ifdef H5
-      try {
-        const mod = await import('html2canvas');
-        const html2canvas = mod.default || mod;
-        const el = document.getElementById('heartArea');
-        const canvas = await html2canvas(el, { backgroundColor: null, scale: 2 });
-        const dataUrl = canvas.toDataURL('image/png');
-        const a = document.createElement('a');
-        a.href = dataUrl; a.download = 'heartwall.png'; a.click();
-        uni.showToast({ title: '已保存为图片', icon: 'none' });
-      } catch (e) {
-        uni.showToast({ title: '保存失败', icon: 'none' });
-      }
-      // #endif
-      // #ifndef H5
-      uni.showToast({ title: '请在 H5 端使用保存图片功能', icon: 'none' });
-      // #endif
-    },
     persist() {
       try { uni.setStorageSync('heartwall_grid_images', this.images); } catch (e) {}
     }
@@ -796,7 +841,17 @@ export default {
 </script>
 
 <style>
-.create-page { min-height: 100vh; background: #ffe4eb; display: flex; flex-direction: column; overflow: hidden; }
+.create-page { min-height: 100vh; background: #FFFAF4; display: flex; flex-direction: column; overflow: hidden; }
+
+/* 自定义导航栏（与首页一致） */
+.custom-navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background-color: #FFFAF4; overflow: hidden; }
+.navbar-gradient-bg { position: absolute; top: 0; left: 0; right: 0; height: 200%; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
+.status-bar { width: 100%; background: transparent; position: relative; z-index: 1; }
+.navbar-content { display: flex; align-items: center; justify-content: space-between; padding: 0 30rpx; box-sizing: border-box; position: relative; z-index: 1; }
+.navbar-left, .navbar-right { width: 80rpx; display: flex; align-items: center; justify-content: center; }
+.navbar-title { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; }
+.title-text { font-size: 36rpx; font-weight: 500; color: #4A4A4A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; }
+.back-icon { font-size: 50rpx; font-weight: 600; color: #4A4A4A; line-height: 1; }
 
 .center { display: flex; align-items: flex-start; justify-content: center; padding: 80rpx 0 0 60rpx; }
 .heart-grid { width: 640rpx; margin: 0 auto; display: grid; grid-template-columns: repeat(9, 1fr); grid-gap: 10rpx; }
@@ -819,15 +874,15 @@ export default {
 }
 .clear-btn { 
   font-size: 24rpx; 
-  color: #ff507f; 
+  color: #D48806; 
   padding: 8rpx 20rpx; 
-  background: rgba(255, 80, 127, 0.1); 
+  background: rgba(255, 201, 77, 0.15); 
   border-radius: 20rpx; 
 }
 
 .actions { margin-top: 24rpx; padding-bottom: 24rpx; display: flex; flex-direction: column; align-items: center; gap: 16rpx; }
 .btn { width: 70%; border-radius: 999rpx; padding: 18rpx 0; font-size: 26rpx; box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.12); }
-.btn.yellow { background: linear-gradient(90deg, #ffc1d1 0%, #ffaac0 100%); color: #ffffff; }
-.btn.green { background: linear-gradient(90deg, #ff8fb3 0%, #ff7aa0 100%); color: #ffffff; }
-.btn.pink { background: linear-gradient(90deg, #ffb3c6 0%, #ff9eb8 100%); color: #ffffff; }
+.btn.yellow { background: linear-gradient(90deg, #FFB5C2 0%, #FFD4A3 100%); color: #3d2a00; }
+.btn.green { background: linear-gradient(90deg, #FFB5C2 0%, #FFD4A3 100%); color: #3d2a00; }
+.btn.pink { background: linear-gradient(90deg, #FFB5C2 0%, #FFD4A3 100%); color: #3d2a00; }
 </style>

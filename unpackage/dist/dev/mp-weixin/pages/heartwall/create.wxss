@@ -1,5 +1,23 @@
 
-.create-page { min-height: 100vh; background: #ffe4eb; display: flex; flex-direction: column; overflow: hidden;
+.create-page { min-height: 100vh; background: #FFFAF4; display: flex; flex-direction: column; overflow: hidden;
+}
+
+/* 自定义导航栏（与首页一致） */
+.custom-navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background-color: #FFFAF4; overflow: hidden;
+}
+.navbar-gradient-bg { position: absolute; top: 0; left: 0; right: 0; height: 200%; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+}
+.status-bar { width: 100%; background: transparent; position: relative; z-index: 1;
+}
+.navbar-content { display: flex; align-items: center; justify-content: space-between; padding: 0 30rpx; box-sizing: border-box; position: relative; z-index: 1;
+}
+.navbar-left, .navbar-right { width: 80rpx; display: flex; align-items: center; justify-content: center;
+}
+.navbar-title { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;
+}
+.title-text { font-size: 36rpx; font-weight: 500; color: #4A4A4A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.back-icon { font-size: 50rpx; font-weight: 600; color: #4A4A4A; line-height: 1;
 }
 .center { display: flex; align-items: flex-start; justify-content: center; padding: 80rpx 0 0 60rpx;
 }
@@ -27,18 +45,18 @@
 }
 .clear-btn { 
   font-size: 24rpx; 
-  color: #ff507f; 
+  color: #D48806; 
   padding: 8rpx 20rpx; 
-  background: rgba(255, 80, 127, 0.1); 
+  background: rgba(255, 201, 77, 0.15); 
   border-radius: 20rpx;
 }
 .actions { margin-top: 24rpx; padding-bottom: 24rpx; display: flex; flex-direction: column; align-items: center; gap: 16rpx;
 }
 .btn { width: 70%; border-radius: 999rpx; padding: 18rpx 0; font-size: 26rpx; box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.12);
 }
-.btn.yellow { background: linear-gradient(90deg, #ffc1d1 0%, #ffaac0 100%); color: #ffffff;
+.btn.yellow { background: linear-gradient(90deg, #FFB5C2 0%, #FFD4A3 100%); color: #3d2a00;
 }
-.btn.green { background: linear-gradient(90deg, #ff8fb3 0%, #ff7aa0 100%); color: #ffffff;
+.btn.green { background: linear-gradient(90deg, #FFB5C2 0%, #FFD4A3 100%); color: #3d2a00;
 }
-.btn.pink { background: linear-gradient(90deg, #ffb3c6 0%, #ff9eb8 100%); color: #ffffff;
+.btn.pink { background: linear-gradient(90deg, #FFB5C2 0%, #FFD4A3 100%); color: #3d2a00;
 }

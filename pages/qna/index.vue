@@ -885,7 +885,7 @@ export default {
 }
 
 .title-text {
-  font-size: 32rpx;
+  font-size: 36rpx;
   font-weight: 500;
   color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;

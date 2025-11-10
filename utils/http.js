@@ -445,9 +445,10 @@ function request(options) {
           
           // 如果是 404 错误且错误消息是"用户不存在"，也按未授权处理
           // 这通常表示token中的用户信息已失效或后端数据库中用户不存在
-          // 但是对于位置相关的API，不自动跳转登录，让调用者自己处理
+          // 但是对于位置相关的API和一百件事API，不自动跳转登录，让调用者自己处理
           if (res.statusCode === 404 && errorMessage && errorMessage.includes('用户不存在')) {
             const isLocationApi = options.url.includes('/api/trajectory/location/');
+            const isChallengeApi = options.url.includes('/api/challenge/');
             
             if (isLocationApi) {
               // 位置相关API：只记录日志，不自动跳转登录
@@ -455,6 +456,16 @@ function request(options) {
               console.warn('⚠️ [HTTP响应] 检测到"用户不存在"错误（位置API）');
               console.warn('⚠️ 这通常表示用户信息已失效或token中的用户在后端不存在');
               console.warn('⚠️ 位置功能将无法使用，但不会影响页面其他功能');
+              console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            } else if (isChallengeApi) {
+              // 一百件事API：可能是接口不存在，也可能是用户不存在
+              // 不自动跳转登录，让调用者自己处理（可以显示友好提示或使用本地数据）
+              console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+              console.warn('⚠️ [HTTP响应] 检测到"用户不存在"错误（一百件事API）');
+              console.warn('⚠️ 可能原因：');
+              console.warn('   1. 接口不存在（后端未实现此接口）');
+              console.warn('   2. 用户信息已失效或token中的用户在后端不存在');
+              console.warn('⚠️ 不会自动跳转登录，请检查接口是否已实现');
               console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             } else {
               // 其他API：清除登录信息并跳转到登录页
@@ -623,7 +634,10 @@ function upload(options) {
           const result = JSON.parse(uploadRes.data)
           if (result.success) {
             console.log('✅ [上传] 文件上传成功')
-            resolve(result.data)
+            const normalizedData = result.data !== undefined && result.data !== null
+              ? result.data
+              : result
+            resolve(normalizedData)
           } else {
             const errorMsg = result.message || '上传失败'
             console.error('❌ [上传] 服务器返回失败:', errorMsg)
