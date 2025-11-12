@@ -39,9 +39,10 @@
     </view>
 
     <!-- 对方答案显示（提交后出现） -->
-    <view v-if="partnerAnswer" class="partner-card">
+    <view v-if="hasSubmitted" class="partner-card">
       <text class="p-label">TA 的答案</text>
-      <text class="p-text">{{ partnerAnswer }}</text>
+      <text v-if="partnerAnswer" class="p-text">{{ partnerAnswer }}</text>
+      <text v-else class="p-text empty-hint-text">对方暂未作答</text>
     </view>
 
     <!-- 悬浮自定义问题按钮 -->
@@ -80,17 +81,6 @@
       <view class="modal custom-modal" @click.stop>
         <text class="modal-title">管理问题库</text>
         
-        <!-- 添加新问题 -->
-        <view class="add-question">
-          <textarea 
-            class="q-input" 
-            v-model="newQuestion" 
-            placeholder="输入你想问的问题..."
-            maxlength="100"
-          />
-          <button class="btn primary small" @click="addCustomQuestion">添加问题</button>
-        </view>
-
         <!-- 问题列表 -->
         <scroll-view class="question-list" scroll-y="true">
           <view class="section-title">预设问题 ({{ defaultQuestions.length }})</view>
@@ -110,7 +100,18 @@
           </view>
         </scroll-view>
 
+        <!-- 添加新问题 -->
+        <view class="add-question">
+          <textarea 
+            class="q-input" 
+            v-model="newQuestion" 
+            placeholder="输入你想问的问题..."
+            maxlength="100"
+          />
+        </view>
+
         <view class="modal-actions">
+          <button class="btn primary small" @click="addCustomQuestion">添加问题</button>
           <button class="btn secondary" @click="closeCustomModal">关闭</button>
         </view>
       </view>
@@ -123,6 +124,7 @@ import {
   getQuestions, 
   submitAnswer, 
   getHistory, 
+  getPartnerAnswer,
   addCustomQuestion, 
   deleteCustomQuestion 
 } from '@/api/qna.js';
@@ -150,21 +152,120 @@ export default {
     await this.loadQuestionsFromServer();
     await this.loadHistoryFromServer();
     
-    // 加载完历史后，找到第一个未回答的问题
-    const qid = Number(options && options.qid);
+    // 处理从历史记录跳转过来的问题ID
+    const qid = options && options.qid ? Number(options.qid) : null;
     if (qid) {
+      console.log('📌 从历史记录跳转，目标问题ID:', qid);
+      // 保存目标问题ID，用于 currentQuestion 计算属性
+      this.targetQuestionId = qid;
+      
+      // 尝试在未回答问题中找到（如果问题还未回答）
       const idx = this.unansweredQuestions.findIndex(q => q.id === qid);
-      if (idx >= 0) this.qIndex = idx;
+      if (idx >= 0) {
+        this.qIndex = idx;
+        console.log('✅ 问题未回答，设置 qIndex:', idx);
+      } else {
+        // 问题已回答，不在 unansweredQuestions 中
+        // 检查问题是否存在于所有问题列表中
+        const allQuestions = this.questions;
+        const questionExists = allQuestions.some(q => q.id === qid);
+        if (questionExists) {
+          console.log('✅ 问题已回答，但存在于问题列表中，将显示该问题');
+        } else {
+          console.warn('⚠️ 问题ID不存在于问题列表中:', qid);
+          // 如果问题不存在，重置为默认显示
+          this.targetQuestionId = null;
+          this.qIndex = 0;
+        }
+      }
     } else {
       // 默认显示第一个未回答的问题
       this.qIndex = 0;
+      this.targetQuestionId = null;
     }
+    
     // 如果携带 time，回显当天答案
     const time = options && options.time ? decodeURIComponent(options.time) : '';
-    const rec = this.history.find(r => r.questionId === (qid || this.currentQuestion.id) && (!time || r.time === time));
-    if (rec) {
-      this.myAnswer = rec.myAnswer || '';
-      this.partnerAnswer = rec.partnerAnswer || '';
+    const targetQuestionId = qid || (this.currentQuestion && this.currentQuestion.id);
+    
+    console.log('📋 初始化答案加载:', {
+      targetQuestionId,
+      time,
+      currentQuestionId: this.currentQuestion?.id,
+      historyCount: this.history.length
+    });
+    
+    if (targetQuestionId) {
+      const rec = this.history.find(r => {
+        const rQuestionId = r.questionId || r.question_id;
+        return rQuestionId != null && Number(rQuestionId) === Number(targetQuestionId) && (!time || r.time === time);
+      });
+      if (rec) {
+        console.log('✅ 从历史记录加载答案:', {
+          questionId: targetQuestionId,
+          hasMyAnswer: !!rec.myAnswer,
+          hasPartnerAnswer: !!rec.partnerAnswer,
+          partnerAnswer: rec.partnerAnswer ? rec.partnerAnswer.substring(0, 30) + '...' : '空',
+          recData: rec
+        });
+        this.myAnswer = rec.myAnswer || '';
+        this.partnerAnswer = rec.partnerAnswer || '';
+        this.hasSubmitted = true; // 如果是从历史记录回显，标记为已提交状态
+        
+        // 无论历史记录中是否有对方答案，都从后端获取最新的对方答案
+        console.log('📥 从后端获取最新的对方答案，问题ID:', targetQuestionId);
+        try {
+          const partnerRes = await getPartnerAnswer(targetQuestionId);
+          console.log('📥 后端返回的对方答案响应:', {
+            success: partnerRes?.success,
+            data: partnerRes?.data,
+            fullResponse: partnerRes
+          });
+          
+          if (partnerRes && partnerRes.success) {
+            // 处理不同的响应格式
+            const partnerData = partnerRes.data || partnerRes;
+            const hasAnswered = partnerData.hasAnswered !== false; // 默认为 true，除非明确为 false
+            const answer = partnerData.answer || partnerData.partnerAnswer || partnerData.partner_answer || '';
+            
+            console.log('📥 解析后的对方答案数据:', {
+              hasAnswered,
+              answer: answer ? answer.substring(0, 30) + '...' : '空',
+              partnerData
+            });
+            
+            if (hasAnswered && answer) {
+              console.log('✅ 更新对方答案:', answer.substring(0, 30) + '...');
+              this.partnerAnswer = answer;
+              // 同时更新历史记录中的对方答案
+              if (rec) {
+                rec.partnerAnswer = answer;
+              }
+            } else {
+              console.log('⚠️ 对方暂未作答或答案为空');
+              // 如果后端返回对方未作答，但历史记录中有，保留历史记录中的答案
+              // 如果历史记录中也没有，则显示"对方暂未作答"
+            }
+          } else {
+            console.warn('⚠️ 后端返回失败，使用历史记录中的答案');
+          }
+        } catch (e) {
+          console.error('❌ 获取对方答案失败:', e);
+          console.error('错误详情:', {
+            message: e.message,
+            statusCode: e.statusCode,
+            data: e.data
+          });
+          // 获取失败不影响显示，使用历史记录中的答案
+        }
+      } else {
+        // 即使历史记录中没有，也尝试加载当前问题的答案
+        console.log('📋 历史记录中未找到，调用 loadAnswerForCurrentQuestion');
+        this.loadAnswerForCurrentQuestion();
+      }
+    } else {
+      // 如果没有指定问题ID，加载当前问题的答案
+      this.loadAnswerForCurrentQuestion();
     }
   },
   data() {
@@ -183,11 +284,26 @@ export default {
       qIndex: 0,
       myAnswer: '',
       partnerAnswer: '',
+      hasSubmitted: false, // 标记当前问题是否已提交
       showHistory: false,
       showCustomModal: false,
       newQuestion: '',
-      history: []
+      history: [],
+      targetQuestionId: null // 从历史记录跳转过来的目标问题ID
     };
+  },
+  watch: {
+    // 监听当前问题变化，自动加载对应的答案
+    'currentQuestion.id': {
+      handler(newId, oldId) {
+        // 如果问题ID发生变化，且不是初始化时（oldId 存在），重新加载答案
+        if (newId && oldId && newId !== oldId) {
+          console.log('🔄 问题切换:', { from: oldId, to: newId });
+          this.loadAnswerForCurrentQuestion();
+        }
+      },
+      immediate: false
+    }
   },
   computed: {
     containerPaddingTop() {
@@ -250,6 +366,24 @@ export default {
       return unanswered;
     },
     currentQuestion() {
+      // 如果指定了目标问题ID（从历史记录跳转），优先显示该问题
+      if (this.targetQuestionId != null) {
+        const targetId = Number(this.targetQuestionId);
+        // 从所有问题中查找目标问题
+        const targetQuestion = this.questions.find(q => q && q.id != null && Number(q.id) === targetId);
+        if (targetQuestion) {
+          console.log('🎯 显示目标问题:', {
+            id: targetQuestion.id,
+            text: targetQuestion.text.substring(0, 20) + '...'
+          });
+          return targetQuestion;
+        } else {
+          console.warn('⚠️ 目标问题不存在，回退到默认逻辑');
+          // 如果目标问题不存在，清除 targetQuestionId 并回退到默认逻辑
+          this.targetQuestionId = null;
+        }
+      }
+      
       // 从未回答的问题中获取当前问题
       if (this.unansweredQuestions.length === 0) {
         return { id: 0, text: '所有问题已回答完毕！🎉' };
@@ -312,33 +446,73 @@ export default {
         console.log('📥 提交答案响应:', res);
         
         if (res && res.success) {
+          // 保存当前问题的ID，确保后续操作使用正确的ID
+          const submittedQuestionId = Number(this.currentQuestion.id);
+          console.log('✅ 提交答案成功，问题ID:', submittedQuestionId);
+          
+          // 标记已提交，显示对方答案区域
+          this.hasSubmitted = true;
+          
           // 兼容不同的响应格式
           const responseData = res.data || res;
           
-          // 如果对方已回答，显示对方答案（兼容 hasPartnerAnswer 和 hasPartnerAnswered 两种字段名）
+          // 先尝试从提交接口返回的数据中获取对方答案
+          let partnerAnswerFromSubmit = '';
           if (responseData && (responseData.hasPartnerAnswered || responseData.hasPartnerAnswer)) {
-            this.partnerAnswer = responseData.partnerAnswer || '';
+            partnerAnswerFromSubmit = responseData.partnerAnswer || '';
+            this.partnerAnswer = partnerAnswerFromSubmit;
+            console.log('📥 从提交接口获取到对方答案:', partnerAnswerFromSubmit ? partnerAnswerFromSubmit.substring(0, 20) + '...' : '空');
+          }
+          
+          // 无论提交接口是否返回对方答案，都主动调用接口获取对方答案（确保获取最新数据）
+          try {
+            const partnerRes = await getPartnerAnswer(submittedQuestionId);
+            console.log('📥 获取对方答案响应:', {
+              questionId: submittedQuestionId,
+              response: partnerRes
+            });
+            
+            if (partnerRes && partnerRes.success && partnerRes.data) {
+              const partnerData = partnerRes.data;
+              // 如果对方已回答，更新对方答案
+              if (partnerData.hasAnswered && partnerData.answer) {
+                this.partnerAnswer = partnerData.answer;
+                partnerAnswerFromSubmit = partnerData.answer; // 更新用于保存历史记录的答案
+              } else {
+                // 如果对方还没回答，清空显示（会显示"对方暂未作答"提示）
+                this.partnerAnswer = '';
+              }
+            }
+          } catch (partnerError) {
+            // 获取对方答案失败不影响主流程，只记录日志
+            console.warn('⚠️ 获取对方答案失败（不影响提交）:', partnerError);
+            // 如果提交接口返回了对方答案，继续使用它；否则清空（会显示"对方暂未作答"提示）
+            if (!partnerAnswerFromSubmit) {
+              this.partnerAnswer = '';
+            }
           }
           
           // 添加到本地历史记录
           const record = {
             id: responseData?.answerId || res?.answerId || responseData?.id || Date.now(),
-            questionId: this.currentQuestion.id,
+            questionId: submittedQuestionId, // 使用保存的ID，确保一致性
             question: this.currentQuestion.text,
             myAnswer: this.myAnswer,
-            partnerAnswer: responseData?.partnerAnswer || '',
+            partnerAnswer: partnerAnswerFromSubmit || this.partnerAnswer || '',
             time: new Date().toLocaleString(),
             createdAt: new Date().toISOString()
           };
+          console.log('💾 保存历史记录:', {
+            questionId: record.questionId,
+            questionText: record.question.substring(0, 20) + '...',
+            hasPartnerAnswer: !!record.partnerAnswer
+          });
           this.history.unshift(record);
           this.saveHistory();
           
           uni.showToast({ title: '提交成功', icon: 'success' });
           
-          // 提交后自动跳到下一题
-          setTimeout(() => {
-            this.nextQuestion();
-          }, 1500);
+          // 保留在当前题目，用户手动点击“下一题”
         } else {
           // 即使响应格式不符合预期，也保存到本地
           console.warn('⚠️ 响应格式不符合预期:', res);
@@ -355,9 +529,7 @@ export default {
           this.saveHistory();
           uni.showToast({ title: '提交成功（已保存到本地）', icon: 'success' });
           
-          setTimeout(() => {
-            this.nextQuestion();
-          }, 1500);
+          // 保留在当前题目，用户手动点击“下一题”
         }
       } catch (e) {
         console.error('提交答案失败', e);
@@ -412,10 +584,7 @@ export default {
               this.saveHistory();
               uni.showToast({ title: '已保存到本地', icon: 'none' });
               
-              // 提交后自动跳到下一题
-              setTimeout(() => {
-                this.nextQuestion();
-              }, 1500);
+              // 保留在当前题目，用户手动点击“下一题”
             }
           });
           return;
@@ -437,16 +606,149 @@ export default {
       }
     },
     nextQuestion() {
-      this.partnerAnswer = '';
-      this.myAnswer = '';
+      // 清除目标问题ID，恢复正常的问题切换逻辑
+      if (this.targetQuestionId != null) {
+        console.log('🔄 清除目标问题ID，恢复正常切换逻辑');
+        this.targetQuestionId = null;
+      }
+      
+      // 保存当前问题ID，用于调试
+      const currentId = this.currentQuestion && this.currentQuestion.id;
+      console.log('➡️ 切换到下一题，当前问题ID:', currentId);
+      
       // 重新计算未回答问题列表，显示下一个
-      if (this.qIndex < this.unansweredQuestions.length - 1) {
+      // 注意：由于历史记录可能已更新，unansweredQuestions 会重新计算
+      const unansweredCount = this.unansweredQuestions.length;
+      
+      if (unansweredCount === 0) {
+        uni.showToast({ title: '所有问题已回答完毕！', icon: 'success' });
+        return;
+      }
+      
+      // 计算下一个问题的索引
+      if (this.qIndex < unansweredCount - 1) {
         this.qIndex += 1;
       } else {
         this.qIndex = 0; // 回到第一个未回答的
       }
-      if (this.unansweredQuestions.length === 0) {
-        uni.showToast({ title: '所有问题已回答完毕！', icon: 'success' });
+      
+      // 注意：清空答案和重置状态会在 loadAnswerForCurrentQuestion 中处理
+      // watch 会监听到 currentQuestion.id 的变化，自动调用 loadAnswerForCurrentQuestion
+      // 但为了确保立即执行，我们也可以手动调用
+      const nextId = this.currentQuestion && this.currentQuestion.id;
+      console.log('➡️ 下一题ID:', nextId);
+    },
+    // 加载当前问题的答案（从历史记录或后端）
+    async loadAnswerForCurrentQuestion() {
+      if (!this.currentQuestion || !this.currentQuestion.id) {
+        console.warn('⚠️ loadAnswerForCurrentQuestion: 当前问题无效', this.currentQuestion);
+        return;
+      }
+      
+      const questionId = Number(this.currentQuestion.id);
+      console.log('📋 加载问题答案:', {
+        questionId,
+        questionText: this.currentQuestion.text,
+        historyCount: this.history.length
+      });
+      
+      // 先清空当前答案
+      this.myAnswer = '';
+      this.partnerAnswer = '';
+      this.hasSubmitted = false;
+      
+      // 检查历史记录中是否有这个问题的答案
+      const historyRecord = this.history.find(h => {
+        const hQuestionId = h.questionId || h.question_id;
+        const hIdNum = hQuestionId != null ? Number(hQuestionId) : null;
+        const match = hIdNum !== null && hIdNum === questionId;
+        if (match) {
+          console.log('✅ 找到历史记录:', {
+            questionId: hIdNum,
+            myAnswer: h.myAnswer ? h.myAnswer.substring(0, 20) + '...' : '',
+            partnerAnswer: h.partnerAnswer ? h.partnerAnswer.substring(0, 20) + '...' : ''
+          });
+        }
+        return match;
+      });
+      
+      if (historyRecord) {
+        // 如果历史记录中有，从历史记录加载
+        this.myAnswer = historyRecord.myAnswer || '';
+        this.partnerAnswer = historyRecord.partnerAnswer || '';
+        this.hasSubmitted = true; // 标记为已提交状态
+        
+        console.log('📋 从历史记录加载答案:', {
+          questionId,
+          hasMyAnswer: !!this.myAnswer,
+          hasPartnerAnswer: !!this.partnerAnswer,
+          partnerAnswer: this.partnerAnswer ? this.partnerAnswer.substring(0, 30) + '...' : '空'
+        });
+        
+        // 无论历史记录中是否有对方答案，都从后端获取最新的对方答案
+        console.log('📥 从后端获取最新的对方答案，问题ID:', questionId);
+        try {
+          const partnerRes = await getPartnerAnswer(questionId);
+          console.log('📥 后端返回的对方答案响应:', {
+            success: partnerRes?.success,
+            data: partnerRes?.data,
+            fullResponse: partnerRes
+          });
+          
+          if (partnerRes && partnerRes.success) {
+            // 处理不同的响应格式
+            const partnerData = partnerRes.data || partnerRes;
+            const hasAnswered = partnerData.hasAnswered !== false; // 默认为 true，除非明确为 false
+            const answer = partnerData.answer || partnerData.partnerAnswer || partnerData.partner_answer || '';
+            
+            console.log('📥 解析后的对方答案数据:', {
+              hasAnswered,
+              answer: answer ? answer.substring(0, 30) + '...' : '空',
+              partnerData
+            });
+            
+            if (hasAnswered && answer) {
+              console.log('✅ 更新对方答案:', answer.substring(0, 30) + '...');
+              this.partnerAnswer = answer;
+              // 同时更新历史记录中的对方答案
+              if (historyRecord) {
+                historyRecord.partnerAnswer = answer;
+              }
+            } else {
+              console.log('⚠️ 对方暂未作答或答案为空');
+              // 如果后端返回对方未作答，但历史记录中有，保留历史记录中的答案
+              // 如果历史记录中也没有，则显示"对方暂未作答"
+            }
+          } else {
+            console.warn('⚠️ 后端返回失败，使用历史记录中的答案');
+          }
+        } catch (e) {
+          console.error('❌ 获取对方答案失败:', e);
+          console.error('错误详情:', {
+            message: e.message,
+            statusCode: e.statusCode,
+            data: e.data
+          });
+          // 获取失败不影响显示，使用历史记录中的答案
+        }
+      } else {
+        // 如果历史记录中没有，检查后端是否有对方答案（可能对方回答了但自己还没回答）
+        try {
+          const partnerRes = await getPartnerAnswer(questionId);
+          console.log('📥 检查对方是否已回答:', partnerRes);
+          
+          if (partnerRes && partnerRes.success && partnerRes.data) {
+            const partnerData = partnerRes.data;
+            // 如果对方已回答，显示对方答案（但标记为未提交状态，因为自己还没回答）
+            if (partnerData.hasAnswered && partnerData.answer) {
+              // 注意：这种情况下不显示对方答案，因为自己还没回答
+              // 只有在提交后或从历史记录回显时才显示
+            }
+          }
+        } catch (e) {
+          // 忽略错误
+          console.warn('⚠️ 检查对方答案失败:', e);
+        }
       }
     },
     openHistory() {
@@ -731,9 +1033,8 @@ export default {
             if (newQuestionIndex >= 0) {
               // 找到新问题在未回答列表中的位置，切换过去
               this.qIndex = newQuestionIndex;
-              // 清空当前的答案输入，准备回答新问题
-              this.myAnswer = '';
-              this.partnerAnswer = '';
+              // 加载新问题的答案（会自动清空或从历史记录加载）
+              this.loadAnswerForCurrentQuestion();
               
               console.log('✅ 已切换到新添加的问题:', formattedQuestion);
             }
@@ -1026,6 +1327,10 @@ export default {
   line-height: 1.8;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
+.empty-hint-text {
+  color: #C8C8C8;
+  font-style: italic;
+}
 
 .floating { 
   position: fixed; 
@@ -1093,23 +1398,26 @@ export default {
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
-.modal-actions { margin-top: 14rpx; display: flex; justify-content: flex-end; gap: 12rpx; }
+.modal-actions { margin-top: 14rpx; display: flex; justify-content: flex-end; gap: 12rpx; align-items: center; }
 
 /* 自定义问题弹窗样式 */
-.add-question { display: flex; gap: 12rpx; align-items: flex-start; margin-bottom: 16rpx; }
+.add-question { display: flex; gap: 12rpx; align-items: flex-start; margin-top: 16rpx; margin-bottom: 12rpx; }
 .q-input { 
   flex: 1; 
-  min-height: 80rpx; 
+  height: 60rpx; 
+  line-height: 60rpx;
   border: 1rpx solid #F3E8FF; 
-  border-radius: 12rpx; 
-  padding: 12rpx; 
-  font-size: 26rpx; 
+  border-radius: 8rpx; 
+  padding: 0 12rpx; 
+  font-size: 24rpx; 
   color: #333;
+  resize: none;
+  overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .btn.small { padding: 12rpx 20rpx; font-size: 24rpx; white-space: nowrap; }
 
-.question-list { flex: 1; overflow-y: auto; }
+.question-list { flex: 1; overflow-y: auto; margin-top: 8rpx; }
 .section-title { 
   font-size: 26rpx; 
   color: #4A4A4A; 

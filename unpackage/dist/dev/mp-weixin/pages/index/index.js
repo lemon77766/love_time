@@ -49,22 +49,7 @@ const _sfc_main = {
     },
     // 计算下一个周年纪念日
     nextAnniversaryDays() {
-      if (!this.bindTime)
-        return 0;
-      try {
-        const bindDate = new Date(this.bindTime);
-        const now = /* @__PURE__ */ new Date();
-        const currentYear = now.getFullYear();
-        const nextAnniversary = new Date(currentYear, bindDate.getMonth(), bindDate.getDate());
-        if (nextAnniversary < now) {
-          nextAnniversary.setFullYear(currentYear + 1);
-        }
-        const diffTime = nextAnniversary - now;
-        const diffDays = Math.ceil(diffTime / (1e3 * 60 * 60 * 24));
-        return diffDays > 0 ? diffDays : 0;
-      } catch (e) {
-        return 0;
-      }
+      return 93;
     },
     containerPaddingTop() {
       const totalHeightPx = this.statusBarHeight + this.navBarHeight;
@@ -136,7 +121,7 @@ const _sfc_main = {
             this.userInfo.displayName = this.userInfo.nickName || "用户";
           }
           if (!this.userInfo.displayAvatar) {
-            this.userInfo.displayAvatar = this.userInfo.avatarUrl || "/static/zhuye/lanmei_boy.png";
+            this.userInfo.displayAvatar = this.userInfo.avatarUrl || "/static/login/love.jpg";
           }
         } else {
           const loginInfo = common_vendor.index.getStorageSync("login_info");
@@ -145,7 +130,7 @@ const _sfc_main = {
           }
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:328", "加载用户信息失败", error);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:311", "加载用户信息失败", error);
       }
     },
     // 加载情侣信息
@@ -172,7 +157,7 @@ const _sfc_main = {
                 this.partnerInfo = response.data.partnerInfo || {};
                 this.bindTime = response.data.bindTime || "";
               } else {
-                common_vendor.index.__f__("log", "at pages/index/index.vue:359", "⚠️ 服务器返回未绑定，清除本地状态");
+                common_vendor.index.__f__("log", "at pages/index/index.vue:342", "⚠️ 服务器返回未绑定，清除本地状态");
                 utils_couple.clearCoupleInfo();
                 this.isBound = false;
                 this.partnerInfo = null;
@@ -180,7 +165,7 @@ const _sfc_main = {
               }
             }
           } catch (e) {
-            common_vendor.index.__f__("error", "at pages/index/index.vue:367", "同步绑定状态失败", e);
+            common_vendor.index.__f__("error", "at pages/index/index.vue:350", "同步绑定状态失败", e);
           }
           return;
         }
@@ -209,7 +194,7 @@ const _sfc_main = {
             }
           }
         } catch (e) {
-          common_vendor.index.__f__("error", "at pages/index/index.vue:402", "查询绑定状态失败", e);
+          common_vendor.index.__f__("error", "at pages/index/index.vue:385", "查询绑定状态失败", e);
           this.isBound = utils_couple.isBound();
           if (this.isBound) {
             this.partnerInfo = utils_couple.getPartnerInfo();
@@ -218,7 +203,7 @@ const _sfc_main = {
           }
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:412", "加载情侣信息失败", e);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:395", "加载情侣信息失败", e);
         this.isBound = utils_couple.isBound();
         if (this.isBound) {
           this.partnerInfo = utils_couple.getPartnerInfo();
@@ -239,16 +224,16 @@ const _sfc_main = {
           this.loveDays = response.data.loveDays || 0;
           this.anniversaryDate = response.data.anniversaryDate || "";
           this.relationshipName = response.data.relationshipName || "";
-          common_vendor.index.__f__("log", "at pages/index/index.vue:436", "✅ 成功加载相爱天数:", {
+          common_vendor.index.__f__("log", "at pages/index/index.vue:419", "✅ 成功加载相爱天数:", {
             loveDays: this.loveDays,
             anniversaryDate: this.anniversaryDate,
             relationshipName: this.relationshipName
           });
         } else {
-          common_vendor.index.__f__("warn", "at pages/index/index.vue:442", "⚠️ 获取相爱天数失败，响应格式异常:", response);
+          common_vendor.index.__f__("warn", "at pages/index/index.vue:425", "⚠️ 获取相爱天数失败，响应格式异常:", response);
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:445", "❌ 获取相爱天数失败:", error);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:428", "❌ 获取相爱天数失败:", error);
       }
     },
     // 加载近期动态
@@ -310,13 +295,13 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     e: $data.navBarHeight + "px",
     f: $data.isBound && $data.partnerInfo
   }, $data.isBound && $data.partnerInfo ? {
-    g: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/zhuye/lanmei_boy.png",
+    g: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/login/love.jpg",
     h: common_vendor.p({
       icon: "mdi:heart",
       size: 48,
       color: "#ff6b6b"
     }),
-    i: $data.partnerInfo.displayAvatar || $data.partnerInfo.avatarUrl || "/static/zhuye/lanmei_boy.png",
+    i: $data.partnerInfo.displayAvatar || $data.partnerInfo.avatarUrl || "/static/login/love.jpg",
     j: common_vendor.t($options.daysTogether),
     k: common_vendor.p({
       icon: "mdi:message",
@@ -335,7 +320,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     }),
     n: common_vendor.t($options.nextAnniversaryDays)
   } : {
-    o: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/zhuye/lanmei_boy.png",
+    o: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/login/love.jpg",
     p: common_vendor.p({
       icon: "mdi:heart",
       size: 48,

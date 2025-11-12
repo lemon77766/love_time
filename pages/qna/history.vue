@@ -227,8 +227,23 @@ export default {
     },
     pad2(n) { return String(n).padStart(2, '0'); },
     openItem(item) {
-      const qid = encodeURIComponent(item.questionId);
+      // 确保获取正确的 questionId（兼容不同的字段名）
+      const questionId = item.questionId || item.question_id;
+      if (!questionId) {
+        console.error('❌ 历史记录项缺少 questionId:', item);
+        uni.showToast({ title: '问题ID缺失，无法跳转', icon: 'none' });
+        return;
+      }
+      
+      const qid = encodeURIComponent(questionId);
       const time = encodeURIComponent(item.time || '');
+      
+      console.log('🔗 跳转到问题页面:', {
+        questionId: questionId,
+        question: item.question ? item.question.substring(0, 20) + '...' : '',
+        time: time
+      });
+      
       uni.navigateTo({ url: `/pages/qna/index?qid=${qid}&time=${time}` });
     }
   }

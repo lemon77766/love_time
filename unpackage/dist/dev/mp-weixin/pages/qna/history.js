@@ -157,8 +157,19 @@ const _sfc_main = {
       return String(n).padStart(2, "0");
     },
     openItem(item) {
-      const qid = encodeURIComponent(item.questionId);
+      const questionId = item.questionId || item.question_id;
+      if (!questionId) {
+        common_vendor.index.__f__("error", "at pages/qna/history.vue:233", "❌ 历史记录项缺少 questionId:", item);
+        common_vendor.index.showToast({ title: "问题ID缺失，无法跳转", icon: "none" });
+        return;
+      }
+      const qid = encodeURIComponent(questionId);
       const time = encodeURIComponent(item.time || "");
+      common_vendor.index.__f__("log", "at pages/qna/history.vue:241", "🔗 跳转到问题页面:", {
+        questionId,
+        question: item.question ? item.question.substring(0, 20) + "..." : "",
+        time
+      });
       common_vendor.index.navigateTo({ url: `/pages/qna/index?qid=${qid}&time=${time}` });
     }
   }

@@ -7,7 +7,7 @@
         <text class="section-title">头像设置</text>
         <view class="avatar-section">
           <view class="current-avatar">
-            <image class="avatar" :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/zhuye/lanmei_boy.png'" mode="aspectFill" />
+            <image class="avatar" :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/login/love.jpg'" mode="aspectFill" />
             <text class="avatar-label">当前头像</text>
           </view>
           

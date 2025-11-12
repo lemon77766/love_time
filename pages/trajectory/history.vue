@@ -21,8 +21,8 @@
     <!-- 内容区域 -->
     <view class="content-area">
       <!-- 时间选择卡片 -->
-      <view class="date-card">
-        <view class="date-card-header">
+      <view class="card date-card">
+        <view class="card-header">
           <text class="card-title">选择时间区间</text>
         </view>
         <view class="date-range-selector">
@@ -76,7 +76,7 @@
       </view>
 
       <!-- 统计信息卡片 -->
-      <view class="stats-card" v-if="historyPoints.length > 0">
+      <view class="card stats-card" v-if="historyPoints.length > 0">
         <view class="stats-item">
           <text class="stats-icon">📍</text>
           <view class="stats-content">
@@ -95,7 +95,7 @@
       </view>
 
       <!-- 地图容器 -->
-      <view class="map-container">
+      <view class="card map-container">
         <map
           class="map"
           :latitude="mapCenter.latitude"
@@ -181,10 +181,12 @@ export default {
   },
   computed: {
     containerPaddingTop() {
+      // 将px转换为rpx: rpx = px * 750 / screenWidth
+      // 添加20rpx额外间距
       const totalHeightPx = this.statusBarHeight + this.navBarHeight;
       const pxToRpx = 750 / this.screenWidth;
       const totalHeightRpx = totalHeightPx * pxToRpx;
-      return totalHeightRpx + 40 + 'rpx';
+      return totalHeightRpx + 20 + 'rpx';
     },
     // 开始日期选择器的最小日期
     startDateMin() {
@@ -219,10 +221,42 @@ export default {
   },
   methods: {
     getSystemInfo() {
-      const systemInfo = uni.getSystemInfoSync();
-      this.statusBarHeight = systemInfo.statusBarHeight || 0;
-      this.screenWidth = systemInfo.windowWidth || 375;
+      // 使用新的 API 替代已弃用的 getSystemInfoSync
+      // #ifdef MP-WEIXIN
+      try {
+        // 尝试使用新 API
+        const windowInfo = wx.getWindowInfo && wx.getWindowInfo();
+        const deviceInfo = wx.getDeviceInfo && wx.getDeviceInfo();
+        
+        if (windowInfo && deviceInfo) {
+          this.statusBarHeight = windowInfo.statusBarHeight || 0;
+          this.screenWidth = windowInfo.windowWidth || 375;
+        } else {
+          // 降级到旧 API
+          const sysInfo = uni.getSystemInfoSync();
+          this.statusBarHeight = sysInfo.statusBarHeight || 0;
+          this.screenWidth = sysInfo.windowWidth || 375;
+        }
+      } catch (e) {
+        // 如果新 API 不支持，降级到旧 API
+        const sysInfo = uni.getSystemInfoSync();
+        this.statusBarHeight = sysInfo.statusBarHeight || 0;
+        this.screenWidth = sysInfo.windowWidth || 375;
+      }
       this.navBarHeight = 54;
+      // #endif
+      // #ifdef H5
+      const sysInfoH5 = uni.getSystemInfoSync();
+      this.statusBarHeight = sysInfoH5.statusBarHeight || 0;
+      this.screenWidth = sysInfoH5.windowWidth || 375;
+      this.navBarHeight = 54;
+      // #endif
+      // #ifndef MP-WEIXIN || H5
+      const sysInfoOther = uni.getSystemInfoSync();
+      this.statusBarHeight = sysInfoOther.statusBarHeight || 0;
+      this.screenWidth = sysInfoOther.windowWidth || 375;
+      this.navBarHeight = 54;
+      // #endif
     },
     
     goBack() {
@@ -695,7 +729,7 @@ export default {
 <style scoped>
 .history-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 50%, #F8F0FC 100%);
+  background-color: #FFFAF4;
   padding-bottom: 40rpx;
 }
 
@@ -706,7 +740,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: #F8F0FC;
+  background-color: #FFFAF4;
   overflow: hidden;
 }
 .navbar-gradient-bg {
@@ -715,7 +749,9 @@ export default {
   left: 0;
   right: 0;
   height: 200%;
-  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 .status-bar {
   width: 100%;
@@ -739,11 +775,17 @@ export default {
   align-items: center;
   justify-content: center;
   border-radius: 30rpx;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  cursor: pointer;
+}
+.navbar-back:active {
+  opacity: 0.6;
 }
 .back-icon {
   font-size: 36rpx;
-  color: #6B5B95;
+  color: #4A4A4A;
   font-weight: 600;
 }
 .navbar-title {
@@ -754,9 +796,10 @@ export default {
   text-align: center;
 }
 .title-text {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #6B5B95;
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #4A4A4A;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .navbar-placeholder {
   width: 60rpx;
@@ -767,60 +810,90 @@ export default {
   padding: 30rpx 24rpx;
 }
 
-/* 时间选择卡片 */
-.date-card {
-  background: #ffffff;
-  border-radius: 32rpx;
-  padding: 40rpx 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 8rpx 32rpx rgba(107, 91, 149, 0.12);
+/* 卡片通用样式 - glass-card风格 */
+.card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.date-card-header {
-  margin-bottom: 30rpx;
+
+.card-header {
+  padding: 32rpx 30rpx 24rpx;
 }
+
 .card-title {
   font-size: 32rpx;
-  font-weight: 600;
-  color: #2b2b2b;
+  font-weight: 500;
+  color: #4A4A4A;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.card-body {
+  padding: 0 30rpx 32rpx;
+}
+
+/* 时间选择卡片 */
+.date-card {
+  padding: 0;
 }
 .date-range-selector {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
   gap: 20rpx;
-  margin-bottom: 30rpx;
+  margin-bottom: 24rpx;
+  padding: 0 30rpx;
 }
 .date-item-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 12rpx;
+  align-items: center;
 }
 .date-label-text {
   font-size: 24rpx;
-  color: #999;
-  padding-left: 4rpx;
+  color: #666;
+  padding-left: 0;
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .date-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 16rpx;
   padding: 24rpx 20rpx;
-  background: linear-gradient(135deg, #F8F0FC 0%, #F3E8FF 100%);
-  border-radius: 20rpx;
-  border: 2rpx solid rgba(107, 91, 149, 0.1);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.04), inset 0 0 0 1rpx rgba(255,255,255,0.5);
+  cursor: pointer;
+}
+.date-item:active {
+  transform: scale(0.98);
 }
 .date-value {
   font-size: 28rpx;
-  color: #333;
+  color: #4A4A4A;
   font-weight: 500;
-  flex: 1;
+  flex: none;
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .date-value.placeholder {
   color: #999;
 }
 .date-icon {
   font-size: 28rpx;
-  margin-left: 12rpx;
+  margin-left: 0;
 }
 .date-arrow {
   padding-bottom: 48rpx;
@@ -830,24 +903,34 @@ export default {
 }
 .arrow-icon {
   font-size: 32rpx;
-  color: #9B8FB8;
+  color: #666;
   font-weight: 600;
 }
 .date-actions {
   display: flex;
   gap: 20rpx;
+  padding: 0 30rpx;
+  padding-bottom: 32rpx;
+  align-items: center;
+  justify-content: center;
 }
 .btn-query {
   flex: 1;
-  padding: 24rpx;
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF8EAB 100%);
+  max-width: 240rpx;
+  padding: 12rpx 20rpx;
+  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
   color: #ffffff;
-  border-radius: 20rpx;
-  font-size: 30rpx;
-  font-weight: 600;
+  border-radius: 40rpx;
+  font-size: 22rpx;
+  font-weight: 500;
   border: none;
-  box-shadow: 0 6rpx 20rpx rgba(255, 107, 157, 0.3);
-  transition: all 0.3s;
+  box-shadow: 0 6rpx 18rpx rgba(255, 158, 188, 0.3);
+  transition: all 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.btn-query:active {
+  transform: scale(0.95);
+  box-shadow: 0 4rpx 12rpx rgba(255, 158, 188, 0.2);
 }
 .btn-query:disabled {
   background: #e0e0e0;
@@ -858,33 +941,40 @@ export default {
   opacity: 0.7;
 }
 .btn-clear {
-  padding: 24rpx 40rpx;
-  background: #f5f5f5;
-  color: #666;
-  border-radius: 20rpx;
-  font-size: 30rpx;
+  padding: 18rpx 32rpx;
+  background: linear-gradient(135deg, #FF9EBC 0%, #D9ACFF 100%);
+  color: #ffffff;
+  border-radius: 14rpx;
+  font-size: 26rpx;
   font-weight: 500;
   border: none;
+  box-shadow: 0 6rpx 18rpx rgba(255, 158, 188, 0.3);
+  transition: all 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+.btn-clear:active {
+  transform: scale(0.98);
 }
 .btn-text {
-  font-size: 30rpx;
+  font-size: 22rpx;
+  font-weight: 500;
+  line-height: 1;
+  text-align: center;
 }
 
 /* 统计信息卡片 */
 .stats-card {
-  background: #ffffff;
-  border-radius: 32rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 8rpx 32rpx rgba(107, 91, 149, 0.12);
+  padding: 32rpx 30rpx;
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: center;
+  gap: 30rpx;
 }
 .stats-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 16rpx;
+  gap: 12rpx;
   flex: 1;
 }
 .stats-icon {
@@ -894,35 +984,38 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 6rpx;
+  align-items: center;
+  text-align: center;
 }
 .stats-label {
   font-size: 24rpx;
-  color: #999;
+  color: #666;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .stats-value {
   font-size: 32rpx;
   font-weight: 700;
-  color: #FF6B9D;
+  color: #FF6B6B;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .stats-value-small {
   font-size: 26rpx;
-  font-weight: 600;
-  color: #333;
+  font-weight: 500;
+  color: #4A4A4A;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .stats-divider {
   width: 1rpx;
   height: 60rpx;
-  background: #f0f0f0;
+  background: #F0F0F0;
 }
 
 /* 地图容器 */
 .map-container {
   position: relative;
   height: 700rpx;
-  border-radius: 32rpx;
+  padding: 0;
   overflow: hidden;
-  box-shadow: 0 12rpx 40rpx rgba(107, 91, 149, 0.15);
-  background: #fff;
 }
 .map {
   width: 100%;
@@ -940,7 +1033,9 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 250, 244, 0.95);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   z-index: 10;
 }
 .empty-icon {
@@ -950,13 +1045,15 @@ export default {
 }
 .empty-text {
   font-size: 30rpx;
-  color: #666;
+  color: #4A4A4A;
   margin-bottom: 12rpx;
   font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .empty-hint {
   font-size: 26rpx;
-  color: #999;
+  color: #666;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 /* 加载状态 */
@@ -970,14 +1067,16 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 250, 244, 0.95);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   z-index: 10;
 }
 .loading-spinner {
   width: 60rpx;
   height: 60rpx;
   border: 4rpx solid #f0f0f0;
-  border-top-color: #FF6B9D;
+  border-top-color: #FF6B6B;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 20rpx;
@@ -987,46 +1086,52 @@ export default {
 }
 .loading-text {
   font-size: 26rpx;
-  color: #666;
+  color: #4A4A4A;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 /* 弹窗样式 */
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 999;
-  backdrop-filter: blur(4rpx);
+  backdrop-filter: blur(8rpx);
+  -webkit-backdrop-filter: blur(8rpx);
 }
 .modal {
   width: 86%;
   max-width: 600rpx;
-  background: #ffffff;
-  border-radius: 32rpx;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16rpx;
   padding: 40rpx 32rpx;
-  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20rpx 60rpx rgba(0, 0, 0, 0.15), inset 0 0 0 2rpx rgba(255,255,255,0.5);
   max-height: 80vh;
   overflow-y: auto;
 }
 .modal-header {
   margin-bottom: 24rpx;
   padding-bottom: 20rpx;
-  border-bottom: 1rpx solid #f0f0f0;
+  border-bottom: 1rpx solid #F0F0F0;
 }
 .modal-title {
   font-size: 36rpx;
-  font-weight: 700;
-  color: #2b2b2b;
+  font-weight: 500;
+  color: #4A4A4A;
   display: block;
   margin-bottom: 12rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .modal-date {
   font-size: 26rpx;
-  color: #999;
+  color: #666;
   display: block;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .modal-content {
   margin-bottom: 24rpx;
@@ -1037,17 +1142,21 @@ export default {
   gap: 12rpx;
   margin-bottom: 20rpx;
   padding: 16rpx;
-  background: #f8f8f8;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   border-radius: 12rpx;
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.04), inset 0 0 0 1rpx rgba(255,255,255,0.5);
 }
 .address-label {
   font-size: 28rpx;
 }
 .address-text {
   font-size: 28rpx;
-  color: #666;
+  color: #4A4A4A;
   flex: 1;
   line-height: 1.5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .point-image {
   width: 100%;
@@ -1058,39 +1167,47 @@ export default {
 }
 .point-description {
   font-size: 28rpx;
-  color: #555;
+  color: #666;
   line-height: 1.8;
   margin-top: 16rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .point-meta {
   margin-top: 20rpx;
   padding-top: 20rpx;
-  border-top: 1rpx solid #f0f0f0;
+  border-top: 1rpx solid #F0F0F0;
   display: flex;
   flex-direction: column;
   gap: 12rpx;
 }
 .meta-text {
   font-size: 26rpx;
-  color: #999;
+  color: #666;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 16rpx;
   padding-top: 20rpx;
-  border-top: 1rpx solid #f0f0f0;
+  border-top: 1rpx solid #F0F0F0;
 }
 .btn {
   padding: 18rpx 36rpx;
   border-radius: 16rpx;
   font-size: 28rpx;
   border: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .btn.secondary {
-  background: #f0f0f0;
-  color: #333;
+  background: linear-gradient(135deg, #FFB6C1 0%, #FFD700 100%);
+  color: #ffffff;
   font-weight: 500;
+  box-shadow: 0 4rpx 12rpx rgba(255, 182, 193, 0.4);
+  transition: all 0.2s ease;
+}
+.btn.secondary:active {
+  transform: scale(0.98);
 }
 </style>
 

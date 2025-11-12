@@ -21,12 +21,13 @@
       <view class="user-info-card">
         <image 
           class="user-avatar-large" 
-          :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/zhuye/lanmei_boy.png'" 
+          :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/login/love.jpg'" 
           mode="aspectFill"
         />
         <view class="user-info-text">
           <text class="user-name">{{ userInfo.displayName || userInfo.nickName || '用户' }}</text>
           <text class="user-days" v-if="isBound && bindTime">在恋爱中 {{ daysTogether }} 天</text>
+          <text class="user-days" v-else-if="isBound">已有爱人</text>
           <text class="user-days" v-else>等待另一半</text>
         </view>
         <view class="edit-icon" @click="goToEdit">
@@ -41,7 +42,7 @@
           <view class="couple-avatar-item">
             <image 
               class="couple-avatar" 
-              :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/zhuye/lanmei_boy.png'" 
+              :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/login/love.jpg'" 
               mode="aspectFill"
             />
             <text class="couple-name">{{ userInfo.displayName || userInfo.nickName || '我' }}</text>
@@ -52,7 +53,7 @@
           <view class="couple-avatar-item">
             <image 
               class="couple-avatar" 
-              :src="partnerInfo.displayAvatar || partnerInfo.avatarUrl || '/static/zhuye/lanmei_boy.png'" 
+              :src="partnerInfo.displayAvatar || partnerInfo.avatarUrl || '/static/login/love.jpg'" 
               mode="aspectFill"
             />
             <text class="couple-name">{{ partnerInfo.displayName || partnerInfo.nickName || '另一半' }}</text>
@@ -126,7 +127,7 @@
             <text class="profile-setting-title">头像设置</text>
             <view class="avatar-section">
               <view class="current-avatar">
-                <image class="avatar" :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/zhuye/lanmei_boy.png'" mode="aspectFill" />
+                <image class="avatar" :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/login/love.jpg'" mode="aspectFill" />
                 <text class="avatar-label">当前头像</text>
               </view>
               

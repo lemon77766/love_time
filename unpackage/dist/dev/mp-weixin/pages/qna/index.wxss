@@ -186,6 +186,10 @@
   line-height: 1.8;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
+.empty-hint-text {
+  color: #C8C8C8;
+  font-style: italic;
+}
 .floating { 
   position: fixed; 
   right: 24rpx; 
@@ -257,25 +261,28 @@
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
-.modal-actions { margin-top: 14rpx; display: flex; justify-content: flex-end; gap: 12rpx;
+.modal-actions { margin-top: 14rpx; display: flex; justify-content: flex-end; gap: 12rpx; align-items: center;
 }
 
 /* 自定义问题弹窗样式 */
-.add-question { display: flex; gap: 12rpx; align-items: flex-start; margin-bottom: 16rpx;
+.add-question { display: flex; gap: 12rpx; align-items: flex-start; margin-top: 16rpx; margin-bottom: 12rpx;
 }
 .q-input { 
   flex: 1; 
-  min-height: 80rpx; 
+  height: 60rpx; 
+  line-height: 60rpx;
   border: 1rpx solid #F3E8FF; 
-  border-radius: 12rpx; 
-  padding: 12rpx; 
-  font-size: 26rpx; 
+  border-radius: 8rpx; 
+  padding: 0 12rpx; 
+  font-size: 24rpx; 
   color: #333;
+  resize: none;
+  overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .btn.small { padding: 12rpx 20rpx; font-size: 24rpx; white-space: nowrap;
 }
-.question-list { flex: 1; overflow-y: auto;
+.question-list { flex: 1; overflow-y: auto; margin-top: 8rpx;
 }
 .section-title { 
   font-size: 26rpx; 

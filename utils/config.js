@@ -86,7 +86,7 @@ const devConfig = {
 
 // 生产环境配置
 const prodConfig = {
-  baseURL: 'https://api.lovetime.com',
+  baseURL: 'https://api.love_time.com',
   timeout: 10000,  // 普通请求超时时间
   uploadTimeout: 30000,  // 上传请求超时时间
   API: devConfig.API  // 使用相同的API路径配置

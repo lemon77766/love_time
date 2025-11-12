@@ -576,7 +576,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     e: $data.isInviteMode
   }, $data.isInviteMode ? common_vendor.e({
     f: common_vendor.t($data.creatorInfo.nickName || "好友"),
-    g: $data.creatorInfo.avatarUrl || "/static/zhuye/lanmei_boy.png",
+    g: $data.creatorInfo.avatarUrl || "/static/login/love.jpg",
     h: common_vendor.t($data.creatorInfo.nickName || "好友"),
     i: common_vendor.t($data.isAccepting ? "接受中..." : "接受邀请"),
     j: common_vendor.o((...args) => $options.handleAccept && $options.handleAccept(...args)),
@@ -586,7 +586,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   }, $data.isAccepting ? {} : {}) : common_vendor.e({
     n: $data.isBound
   }, $data.isBound ? {
-    o: $data.partnerInfo.displayAvatar || $data.partnerInfo.avatarUrl || "/static/zhuye/lanmei_boy.png",
+    o: $data.partnerInfo.displayAvatar || $data.partnerInfo.avatarUrl || "/static/login/love.jpg",
     p: common_vendor.t($data.partnerInfo.displayName || $data.partnerInfo.nickName || "对方"),
     q: common_vendor.t($options.bindTimeText),
     r: common_vendor.o((...args) => $options.handleUnbind && $options.handleUnbind(...args))

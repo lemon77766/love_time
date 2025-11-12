@@ -25,7 +25,7 @@
         <view class="couple-avatars-section">
           <image 
             class="couple-avatar" 
-            :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/zhuye/lanmei_boy.png'" 
+            :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/login/love.jpg'" 
             mode="aspectFill"
           />
           <view class="heart-connector">
@@ -33,7 +33,7 @@
           </view>
           <image 
             class="couple-avatar" 
-            :src="partnerInfo.displayAvatar || partnerInfo.avatarUrl || '/static/zhuye/lanmei_boy.png'" 
+            :src="partnerInfo.displayAvatar || partnerInfo.avatarUrl || '/static/login/love.jpg'" 
             mode="aspectFill"
           />
         </view>
@@ -61,7 +61,7 @@
         <view class="couple-avatars-section">
           <image 
             class="couple-avatar" 
-            :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/zhuye/lanmei_boy.png'" 
+            :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/login/love.jpg'" 
             mode="aspectFill"
           />
           <view class="heart-connector">
@@ -195,24 +195,7 @@ export default {
     },
     // 计算下一个周年纪念日
     nextAnniversaryDays() {
-      if (!this.bindTime) return 0;
-      try {
-        const bindDate = new Date(this.bindTime);
-        const now = new Date();
-        const currentYear = now.getFullYear();
-        const nextAnniversary = new Date(currentYear, bindDate.getMonth(), bindDate.getDate());
-        
-        // 如果今年的纪念日已过，计算明年的
-        if (nextAnniversary < now) {
-          nextAnniversary.setFullYear(currentYear + 1);
-        }
-        
-        const diffTime = nextAnniversary - now;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays > 0 ? diffDays : 0;
-      } catch (e) {
-        return 0;
-      }
+      return 93;
     },
     containerPaddingTop() {
       // 将px转换为rpx: rpx = px * 750 / screenWidth
@@ -315,7 +298,7 @@ export default {
           
           // 如果没有设置显示头像，使用微信头像
           if (!this.userInfo.displayAvatar) {
-            this.userInfo.displayAvatar = this.userInfo.avatarUrl || '/static/zhuye/lanmei_boy.png';
+            this.userInfo.displayAvatar = this.userInfo.avatarUrl || '/static/login/love.jpg';
           }
       } else {
           // 从登录信息中获取

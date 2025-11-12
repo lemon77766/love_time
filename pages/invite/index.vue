@@ -28,8 +28,8 @@
         </view>
 
         <!-- 邀请方信息卡片 -->
-        <view class="creator-card">
-          <image class="creator-avatar" :src="creatorInfo.avatarUrl || '/static/zhuye/lanmei_boy.png'" mode="aspectFill" />
+        <view class="creator-card glass-card">
+          <image class="creator-avatar" :src="creatorInfo.avatarUrl || '/static/login/love.jpg'" mode="aspectFill" />
           <text class="creator-name">{{ creatorInfo.nickName || '好友' }}</text>
           <text class="creator-tip">想要和你建立情侣关系</text>
         </view>
@@ -56,8 +56,8 @@
             <text class="bound-icon">💑</text>
             <text class="bound-title">已绑定</text>
           </view>
-          <view class="partner-card">
-            <image class="partner-avatar" :src="partnerInfo.displayAvatar || partnerInfo.avatarUrl || '/static/zhuye/lanmei_boy.png'" mode="aspectFill" />
+          <view class="partner-card glass-card">
+            <image class="partner-avatar" :src="partnerInfo.displayAvatar || partnerInfo.avatarUrl || '/static/login/love.jpg'" mode="aspectFill" />
             <text class="partner-name">{{ partnerInfo.displayName || partnerInfo.nickName || '对方' }}</text>
             <text class="bound-time">绑定于 {{ bindTimeText }}</text>
           </view>
@@ -73,7 +73,7 @@
               <text class="invite-subtitle">请输入对方分享的邀请码</text>
             </view>
 
-            <view class="input-code-card">
+            <view class="input-code-card glass-card">
               <input 
                 class="code-input" 
                 type="text" 
@@ -100,7 +100,7 @@
             </view>
 
             <!-- 邀请码显示 -->
-            <view v-if="inviteCode" class="invite-code-card">
+            <view v-if="inviteCode" class="invite-code-card glass-card">
               <text class="code-label">邀请码</text>
               <view class="code-display">
                 <text class="code-text">{{ inviteCode }}</text>
@@ -802,7 +802,7 @@ export default {
 <style>
 .invite-page {
   min-height: 100vh;
-  background: #F8F0FC;
+  background-color: #FFFAF4;
   padding-bottom: 40rpx;
 }
 
@@ -813,7 +813,7 @@ export default {
   left: 0;
   right: 0;
   z-index: 9999;
-  background-color: #F8F0FC;
+  background-color: #FFFAF4;
   overflow: hidden;
 }
 
@@ -823,7 +823,9 @@ export default {
   left: 0;
   right: 0;
   height: 200%;
-  background: linear-gradient(180deg, #F8F0FC 0%, #F3E8FF 30%, #F0E0FF 60%, #F8F0FC 100%);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
 }
 
 .status-bar {
@@ -877,6 +879,24 @@ export default {
   padding: 30rpx 24rpx;
 }
 
+/* 卡片通用样式 - glass-card风格 */
+.glass-card {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 24rpx;
+  box-shadow: 0 12rpx 32rpx rgba(106, 76, 147, 0.08), inset 0 0 0 1rpx rgba(255, 255, 255, 0.5);
+  border: 1rpx solid rgba(255, 255, 255, 0.42);
+  box-sizing: border-box;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 6rpx 18rpx rgba(106, 76, 147, 0.18);
+}
+
 /* 接受邀请容器 */
 .invite-container {
   display: flex;
@@ -906,15 +926,11 @@ export default {
 
 /* 邀请方信息卡片 */
 .creator-card {
-  background: #ffffff;
-  border-radius: 24rpx;
   padding: 40rpx;
-  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-bottom: 60rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.06);
 }
 
 .creator-avatar {
@@ -958,7 +974,7 @@ export default {
 }
 
 .accept-btn {
-  background: linear-gradient(135deg, #FF8FB3 0%, #FF6B9D 100%);
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%);
   color: #ffffff;
 }
 
@@ -973,7 +989,7 @@ export default {
 }
 
 .primary-btn {
-  background: linear-gradient(135deg, #FF8FB3 0%, #FF6B9D 100%);
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%);
   color: #ffffff;
 }
 
@@ -983,9 +999,9 @@ export default {
 }
 
 .secondary-btn {
-  background: #ffffff;
-  color: #FF8FB3;
-  border: 2rpx solid #FF8FB3;
+  background: rgba(255, 255, 255, 0.65);
+  color: #FF9A9E;
+  border: 2rpx solid rgba(255, 154, 158, 0.5);
 }
 
 .input-code-btn {
@@ -1012,12 +1028,8 @@ export default {
 }
 
 .input-code-card {
-  background: #ffffff;
-  border-radius: 24rpx;
   padding: 40rpx;
-  width: 100%;
   margin-top: 40rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.06);
 }
 
 .code-input {
@@ -1047,7 +1059,7 @@ export default {
 }
 
 .verify-btn {
-  background: linear-gradient(135deg, #FF8FB3 0%, #FF6B9D 100%);
+  background: linear-gradient(135deg, #FFB5C2 0%, #FFD4A3 100%);
   color: #ffffff;
 }
 
@@ -1104,15 +1116,11 @@ export default {
 }
 
 .partner-card {
-  background: #ffffff;
-  border-radius: 24rpx;
   padding: 40rpx;
-  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-bottom: 40rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.06);
 }
 
 .partner-avatar {
@@ -1143,12 +1151,8 @@ export default {
 
 /* 邀请码卡片 */
 .invite-code-card {
-  background: #ffffff;
-  border-radius: 24rpx;
   padding: 40rpx;
-  width: 100%;
   margin-bottom: 40rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0,0,0,0.06);
 }
 
 .code-label {
@@ -1177,11 +1181,11 @@ export default {
 
 .copy-btn {
   padding: 12rpx 32rpx;
-  background: #fdf2f8;
-  color: #FF8FB3;
+  background: rgba(255, 181, 194, 0.12);
+  color: #FF9A9E;
   border-radius: 20rpx;
   font-size: 24rpx;
-  border: none;
+  border: 1rpx solid rgba(255, 154, 158, 0.2);
 }
 
 .code-tip {
@@ -1194,14 +1198,15 @@ export default {
 .share-tip {
   margin-top: 40rpx;
   padding: 24rpx;
-  background: #fff9e6;
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 16rpx;
   width: 100%;
+  border: 1rpx solid rgba(255, 255, 255, 0.4);
 }
 
 .tip-text {
   font-size: 24rpx;
-  color: #ff9500;
+  color: #8561C5;
   line-height: 1.6;
 }
 </style>

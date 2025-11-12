@@ -155,7 +155,7 @@ const _sfc_main = {
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
-    a: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/zhuye/lanmei_boy.png",
+    a: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/login/love.jpg",
     b: common_vendor.o((...args) => $options.selectWechatAvatar && $options.selectWechatAvatar(...args)),
     c: common_vendor.o((...args) => $options.uploadCustomAvatar && $options.uploadCustomAvatar(...args)),
     d: $data.useWechatNickname ? 1 : "",
