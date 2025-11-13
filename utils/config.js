@@ -1,6 +1,6 @@
 // 开发环境配置
 const devConfig = {
-  baseURL: 'http://192.168.54.229:8080/lovetime',
+  baseURL: 'http://192.168.224.229:8080',
   timeout: 10000,  // 普通请求超时时间
   uploadTimeout: 30000,  // 上传请求超时时间
   API: {

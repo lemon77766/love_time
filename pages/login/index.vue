@@ -216,11 +216,11 @@ export default {
         }
 
         // 4. 保存登录信息到本地
-        // 处理后端响应格式：支持多种格式
-        // 格式1: {success: true, data: {token: ...}}
-        // 格式2: {token: ...}
-        // 格式3: {success: true, token: ...}
-        // 格式4: {data: {success: true, data: {token: ...}}}
+        // 处理后端响应格式：支持多种格式以兼容不同情况
+        // 标准格式: {success: true, message: "登录成功", data: {token: ..., openid: ..., session_key: ...}}
+        // 兼容格式1: {token: ..., openid: ..., session_key: ...}
+        // 兼容格式2: {success: true, token: ..., openid: ..., session_key: ...}
+        // 兼容格式3: {data: {success: true, data: {token: ...}}}
         let responseData = loginResult;
         
         // 如果存在data字段，优先使用data字段

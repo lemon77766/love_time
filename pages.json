@@ -137,9 +137,9 @@
     "iconWidth": "48rpx",
     "spacing": "4rpx",
     "list": [
-      { "pagePath": "pages/index/index", "text": "Home", "iconPath": "static/love.png", "selectedIconPath": "static/love.png" },
-      { "pagePath": "pages/trajectory/index", "text": "Trajectory", "iconPath": "static/trajectory.png", "selectedIconPath": "static/trajectory.png" },
-      { "pagePath": "pages/we/index", "text": "We", "iconPath": "static/we.png", "selectedIconPath": "static/we.png" }
+      { "pagePath": "pages/index/index", "text": "首页", "iconPath": "static/love.png", "selectedIconPath": "static/love.png" },
+      { "pagePath": "pages/trajectory/index", "text": "轨迹", "iconPath": "static/trajectory.png", "selectedIconPath": "static/trajectory.png" },
+      { "pagePath": "pages/we/index", "text": "我们", "iconPath": "static/we.png", "selectedIconPath": "static/we.png" }
     ]
   },
   "globalStyle": {

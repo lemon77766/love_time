@@ -11,21 +11,21 @@ import config from '../utils/config.js';
  * @param {Object} userInfo - 用户信息
  * @returns {Promise<Object>} 返回登录结果
  * 
- * 后端接口要求：
- * - 请求方法：POST
- * - 请求地址：/api/login/wechat
+ * 后端接口规范：
+ * - URL: POST /api/login/wechat
+ * - 功能: 处理微信登录请求，创建或更新用户信息，返回JWT token
  * - 请求参数：
  *   {
  *     code: string,        // 微信登录凭证（必填）
  *     nickName: string,    // 用户昵称（必填）
  *     avatarUrl: string    // 用户头像（必填）
  *   }
- * - 返回数据：
+ * - 返回数据格式：
  *   {
  *     success: true,
  *     message: "登录成功",
  *     data: {
- *       token: string,         // 登录凭证，后续请求需携带
+ *       token: string,         // JWT token，后续请求需在Header中携带 Authorization: Bearer {token}
  *       openid: string,        // 微信用户唯一标识
  *       session_key: string,   // 会话密钥
  *       userId: string,        // 用户ID（可选）

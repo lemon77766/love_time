@@ -304,19 +304,19 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     i: $data.partnerInfo.displayAvatar || $data.partnerInfo.avatarUrl || "/static/login/love.jpg",
     j: common_vendor.t($options.daysTogether),
     k: common_vendor.p({
-      icon: "mdi:message",
+      icon: "mdi:robot",
       size: 32,
-      color: "#666"
+      color: "#4A90E2"
     }),
     l: common_vendor.p({
-      icon: "mdi:gift",
+      icon: "mdi:emoticon-angry",
       size: 32,
-      color: "#666"
+      color: "#FF6B6B"
     }),
     m: common_vendor.p({
       icon: "mdi:calendar-heart",
       size: 32,
-      color: "#666"
+      color: "#FF91A4"
     }),
     n: common_vendor.t($options.nextAnniversaryDays)
   } : {

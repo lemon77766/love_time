@@ -50,7 +50,7 @@
     "quickapp" : {},
     /* 小程序特有相关 */
     "mp-weixin" : {
-        "appid" : "wx236b5c878c81d830",
+        "appid" : "wx99ff5431b615a046",
         "setting" : {
             "urlCheck" : false
         },
@@ -60,9 +60,7 @@
                 "desc" : "你的位置信息将用于显示双方实时位置"
             }
         },
-        "requiredPrivateInfos" : [
-            "getLocation"
-        ]
+        "requiredPrivateInfos" : [ "getLocation" ]
     },
     "mp-alipay" : {
         "usingComponents" : true

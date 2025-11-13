@@ -42,15 +42,15 @@
         </view>
         <view class="couple-stats">
           <view class="stat-item">
-            <iconify-icon icon="mdi:message" :size="32" color="#666" />
-            <text class="stat-text">昨日聊天</text>
+            <iconify-icon icon="mdi:robot" :size="32" color="#4A90E2" />
+            <text class="stat-text">虚拟人</text>
           </view>
           <view class="stat-item">
-            <iconify-icon icon="mdi:gift" :size="32" color="#666" />
-            <text class="stat-text">纪念礼物</text>
+            <iconify-icon icon="mdi:emoticon-angry" :size="32" color="#FF6B6B" />
+            <text class="stat-text">吵架</text>
         </view>
           <view class="stat-item">
-            <iconify-icon icon="mdi:calendar-heart" :size="32" color="#666" />
+            <iconify-icon icon="mdi:calendar-heart" :size="32" color="#FF91A4" />
             <text class="stat-text">{{ nextAnniversaryDays }}天后周年</text>
         </view>
       </view>

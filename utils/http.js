@@ -25,9 +25,20 @@ function handleRequestError(error, options = {}) {
   }
   
   // 401错误处理
+  // 但是登录接口返回401时不应该调用handleUnauthorized
   if (error.statusCode === 401) {
-    handleUnauthorized()
-    return
+    const urlForCheck = (options.url || '').toString();
+    const isLoginApi = urlForCheck.includes('/api/login/') && 
+                       !urlForCheck.includes('/api/login/logout');
+    
+    if (!isLoginApi) {
+      // 非登录接口的401错误，正常处理
+      handleUnauthorized()
+      return
+    } else {
+      // 登录接口返回401，记录错误但不跳转
+      console.error('❌ [登录接口] 返回401错误，可能是后端配置问题');
+    }
   }
   
   // 超时错误特殊处理
@@ -439,8 +450,50 @@ function request(options) {
           }
           
           // 如果是 401 错误，立即处理未授权情况
+          // 但是登录接口返回401时不应该调用handleUnauthorized，因为：
+          // 1. 登录接口本身不需要认证
+          // 2. 如果登录接口返回401，说明后端配置有问题或请求参数有问题
+          // 3. 不应该因为登录接口返回401就跳转到登录页（会导致死循环）
           if (res.statusCode === 401) {
-            handleUnauthorized();
+            const urlForCheck = options.url || '';
+            const isLoginApi = urlForCheck.includes('/api/login/') && 
+                             !urlForCheck.includes('/api/login/logout');
+            
+            if (isLoginApi) {
+              // 登录接口返回401，说明后端配置有问题
+              console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+              console.error('❌ [严重错误] 登录接口返回401错误！');
+              console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+              console.error('⚠️ 可能原因：');
+              console.error('   1. 后端配置错误：登录接口被错误地配置为需要认证');
+              console.error('   2. 后端Spring Security配置问题：/api/login/** 路径未正确放行');
+              console.error('   3. 请求参数错误：code、nickName或avatarUrl缺失或格式错误');
+              console.error('   4. 后端服务异常：认证拦截器误拦截了登录接口');
+              console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+              console.error('📍 [请求URL]', options.url);
+              console.error('📋 [请求方法]', options.method || 'POST');
+              if (options.data) {
+                console.error('📤 [请求参数]', JSON.stringify(options.data, null, 2));
+              }
+              console.error('📦 [响应数据]', JSON.stringify(responseData, null, 2));
+              console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+              console.error('💡 解决方案：');
+              console.error('   1. 检查后端Spring Security配置，确保 /api/login/** 路径已放行');
+              console.error('   2. 检查后端认证拦截器，确保登录接口不在拦截范围内');
+              console.error('   3. 检查请求参数是否完整且格式正确');
+              console.error('   4. 联系后端开发人员检查后端日志');
+              console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+              
+              // 显示用户友好的错误提示
+              uni.showToast({
+                title: '登录失败：后端配置错误',
+                icon: 'none',
+                duration: 3000
+              });
+            } else {
+              // 非登录接口的401错误，正常处理
+              handleUnauthorized();
+            }
           }
           
           // 如果是 404 错误且错误消息是"用户不存在"，也按未授权处理

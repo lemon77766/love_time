@@ -1,6 +1,6 @@
 "use strict";
 const devConfig = {
-  baseURL: "http://192.168.54.229:8080/lovetime",
+  baseURL: "http://192.168.224.229:8080",
   timeout: 1e4,
   // 普通请求超时时间
   uploadTimeout: 3e4,

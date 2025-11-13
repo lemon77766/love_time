@@ -31,19 +31,19 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "Home",
+        "text": "首页",
         "iconPath": "static/love.png",
         "selectedIconPath": "static/love.png"
       },
       {
         "pagePath": "pages/trajectory/index",
-        "text": "Trajectory",
+        "text": "轨迹",
         "iconPath": "static/trajectory.png",
         "selectedIconPath": "static/trajectory.png"
       },
       {
         "pagePath": "pages/we/index",
-        "text": "We",
+        "text": "我们",
         "iconPath": "static/we.png",
         "selectedIconPath": "static/we.png"
       }
