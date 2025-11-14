@@ -234,7 +234,7 @@ export default {
      */
     goToHistoryPage() {
       uni.navigateTo({
-        url: '/pages/trajectory/history'
+        url: '/subPackages/record/pages/trajectory/history'
       });
     },
     
@@ -378,7 +378,7 @@ export default {
         }
         
       } catch (error) {
-        console.error('获取位置失败:', error);
+        console.error('获取位置失败:', error); 
         this.locationError = error.errMsg || '获取位置失败';
         
         if (error.errMsg && error.errMsg.includes('auth deny')) {

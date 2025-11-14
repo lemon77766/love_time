@@ -4,21 +4,21 @@ const common_vendor = require("./common/vendor.js");
 if (!Math) {
   "./pages/login/index.js";
   "./pages/index/index.js";
-  "./pages/jiyi/index.js";
-  "./pages/qna/index.js";
-  "./pages/qna/history.js";
-  "./pages/hundred/index.js";
-  "./pages/heartwall/index.js";
-  "./pages/heartwall/create.js";
-  "./pages/xinxiang/index.js";
-  "./pages/xinxiang/create.js";
-  "./pages/xinxiang/history.js";
-  "./pages/xinxiang/received.js";
   "./pages/we/index.js";
   "./pages/we/profile.js";
   "./pages/trajectory/index.js";
-  "./pages/trajectory/history.js";
   "./pages/invite/index.js";
+  "./subPackages/record/pages/jiyi/index.js";
+  "./subPackages/record/pages/heartwall/index.js";
+  "./subPackages/record/pages/heartwall/create.js";
+  "./subPackages/record/pages/xinxiang/index.js";
+  "./subPackages/record/pages/xinxiang/create.js";
+  "./subPackages/record/pages/xinxiang/history.js";
+  "./subPackages/record/pages/xinxiang/received.js";
+  "./subPackages/record/pages/trajectory/history.js";
+  "./subPackages/interaction/pages/qna/index.js";
+  "./subPackages/interaction/pages/qna/history.js";
+  "./subPackages/interaction/pages/hundred/index.js";
 }
 (function() {
   const originalError = console.error;

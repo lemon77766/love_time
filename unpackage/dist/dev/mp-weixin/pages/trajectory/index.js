@@ -91,7 +91,7 @@ const _sfc_main = {
      */
     goToHistoryPage() {
       common_vendor.index.navigateTo({
-        url: "/pages/trajectory/history"
+        url: "/subPackages/record/pages/trajectory/history"
       });
     },
     // ========== 定位相关方法 ==========
@@ -620,7 +620,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     A: common_vendor.o((...args) => $options.onMarkerTap && $options.onMarkerTap(...args)),
     B: !$data.myLocation && !$data.partnerLocation
   }, !$data.myLocation && !$data.partnerLocation ? common_vendor.e({
-    C: common_assets._imports_0$4,
+    C: common_assets._imports_0$1,
     D: common_vendor.f($data.trajectoryPoints, (point, index, i0) => {
       return {
         a: common_vendor.t(point.title),

@@ -2,21 +2,35 @@
   "pages": [
     "pages/login/index",
     "pages/index/index",
-    "pages/jiyi/index",
-    "pages/qna/index",
-    "pages/qna/history",
-    "pages/hundred/index",
-    "pages/heartwall/index",
-    "pages/heartwall/create",
-    "pages/xinxiang/index",
-    "pages/xinxiang/create",
-    "pages/xinxiang/history",
-    "pages/xinxiang/received",
     "pages/we/index",
     "pages/we/profile",
     "pages/trajectory/index",
-    "pages/trajectory/history",
     "pages/invite/index"
+  ],
+  "subPackages": [
+    {
+      "root": "subPackages/record",
+      "pages": [
+        "pages/jiyi/index",
+        "pages/heartwall/index",
+        "pages/heartwall/create",
+        "pages/xinxiang/index",
+        "pages/xinxiang/create",
+        "pages/xinxiang/history",
+        "pages/xinxiang/received",
+        "pages/trajectory/history"
+      ],
+      "name": "record"
+    },
+    {
+      "root": "subPackages/interaction",
+      "pages": [
+        "pages/qna/index",
+        "pages/qna/history",
+        "pages/hundred/index"
+      ],
+      "name": "interaction"
+    }
   ],
   "window": {
     "navigationBarTextStyle": "black",
@@ -48,6 +62,15 @@
         "selectedIconPath": "static/we.png"
       }
     ]
+  },
+  "preloadRule": {
+    "pages/index/index": {
+      "network": "all",
+      "packages": [
+        "record",
+        "interaction"
+      ]
+    }
   },
   "permission": {
     "scope.userLocation": {

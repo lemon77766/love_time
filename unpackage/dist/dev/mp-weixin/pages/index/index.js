@@ -93,22 +93,22 @@ const _sfc_main = {
     },
     goToSweetQA() {
       common_vendor.index.navigateTo({
-        url: "/pages/qna/index"
+        url: "/subPackages/interaction/pages/qna/index"
       });
     },
     goToHundredThings() {
       common_vendor.index.navigateTo({
-        url: "/pages/hundred/index"
+        url: "/subPackages/interaction/pages/hundred/index"
       });
     },
     goToHeartWall() {
       common_vendor.index.navigateTo({
-        url: "/pages/heartwall/index"
+        url: "/subPackages/record/pages/heartwall/index"
       });
     },
     goToFutureLetter() {
       common_vendor.index.navigateTo({
-        url: "/pages/xinxiang/index"
+        url: "/subPackages/record/pages/xinxiang/index"
       });
     },
     // 加载用户信息

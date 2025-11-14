@@ -124,14 +124,26 @@ function createInviteCode() {
     return utils_http.http.post(url, { userId }).then((response) => {
       common_vendor.index.__f__("log", "at api/couple.js:183", "✅ [情侣关系API] 生成邀请码成功");
       common_vendor.index.__f__("log", "at api/couple.js:184", "📦 响应数据:", response);
-      if (response && response.data && response.data.inviteCode) {
-        common_vendor.index.__f__("log", "at api/couple.js:188", `📝 邀请码: ${response.data.inviteCode}`);
-        common_vendor.index.__f__("log", "at api/couple.js:189", `⏰ 过期时间: ${response.data.expireAt}`);
+      if (response && response.data && typeof response.data === "string") {
+        const inviteCode = response.data;
+        common_vendor.index.__f__("log", "at api/couple.js:190", `📝 邀请码: ${inviteCode}`);
+        return {
+          success: response.code === 200 || response.success !== false,
+          message: response.msg || response.message || "邀请码生成成功",
+          data: {
+            inviteCode,
+            expireAt: response.expireAt || ""
+            // 如果后端返回过期时间
+          }
+        };
+      } else if (response && response.data && response.data.inviteCode) {
+        common_vendor.index.__f__("log", "at api/couple.js:203", `📝 邀请码: ${response.data.inviteCode}`);
+        common_vendor.index.__f__("log", "at api/couple.js:204", `⏰ 过期时间: ${response.data.expireAt}`);
         return response;
       } else if (response && response.invitation) {
         const invitation = response.invitation;
-        common_vendor.index.__f__("log", "at api/couple.js:195", `📝 邀请码: ${invitation.inviteCode || invitation.code || ""}`);
-        common_vendor.index.__f__("log", "at api/couple.js:196", `⏰ 过期时间: ${invitation.expireAt || invitation.expireTime || ""}`);
+        common_vendor.index.__f__("log", "at api/couple.js:210", `📝 邀请码: ${invitation.inviteCode || invitation.code || ""}`);
+        common_vendor.index.__f__("log", "at api/couple.js:211", `⏰ 过期时间: ${invitation.expireAt || invitation.expireTime || ""}`);
         return {
           success: response.success !== false,
           message: response.message || "邀请码生成成功",
@@ -142,7 +154,7 @@ function createInviteCode() {
           isBound: response.isBound || false
         };
       } else if (response && (response.inviteCode || response.code)) {
-        common_vendor.index.__f__("log", "at api/couple.js:210", `📝 邀请码: ${response.inviteCode || response.code}`);
+        common_vendor.index.__f__("log", "at api/couple.js:225", `📝 邀请码: ${response.inviteCode || response.code}`);
         return {
           success: response.success !== false,
           message: response.message || "邀请码生成成功",
@@ -152,64 +164,64 @@ function createInviteCode() {
           }
         };
       } else {
-        common_vendor.index.__f__("warn", "at api/couple.js:222", "⚠️ 响应数据格式异常:", response);
+        common_vendor.index.__f__("warn", "at api/couple.js:237", "⚠️ 响应数据格式异常:", response);
         return {
-          success: response.success !== false,
-          message: response.message || "生成成功",
+          success: response.code === 200 || response.success !== false,
+          message: response.msg || response.message || "生成成功",
           data: { inviteCode: "", expireAt: "" }
         };
       }
     });
   }).catch((error) => {
-    common_vendor.index.__f__("error", "at api/couple.js:231", "❌ [情侣关系API] 生成邀请码失败");
-    common_vendor.index.__f__("error", "at api/couple.js:232", "🔴 错误信息:", error);
+    common_vendor.index.__f__("error", "at api/couple.js:246", "❌ [情侣关系API] 生成邀请码失败");
+    common_vendor.index.__f__("error", "at api/couple.js:247", "🔴 错误信息:", error);
     throw error;
   });
 }
 function validateInviteCode(inviteCode) {
   const url = utils_config.config.API.COUPLE.INVITE_VALIDATE + "?code=" + encodeURIComponent(inviteCode);
   const fullUrl = utils_config.config.baseURL + url;
-  common_vendor.index.__f__("log", "at api/couple.js:267", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  common_vendor.index.__f__("log", "at api/couple.js:268", "🔗 [情侣关系API] 开始验证邀请码");
-  common_vendor.index.__f__("log", "at api/couple.js:269", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  common_vendor.index.__f__("log", "at api/couple.js:270", "📍 [请求地址]", fullUrl);
-  common_vendor.index.__f__("log", "at api/couple.js:271", "📋 [请求方法] GET");
-  common_vendor.index.__f__("log", "at api/couple.js:272", "📝 [原始邀请码]", inviteCode);
-  common_vendor.index.__f__("log", "at api/couple.js:273", "📝 [邀请码类型]", typeof inviteCode);
-  common_vendor.index.__f__("log", "at api/couple.js:274", "📝 [邀请码长度]", inviteCode ? inviteCode.length : 0);
-  common_vendor.index.__f__("log", "at api/couple.js:275", "📝 [URL编码后邀请码]", encodeURIComponent(inviteCode));
-  common_vendor.index.__f__("log", "at api/couple.js:276", "📝 [完整URL参数]", "code=" + encodeURIComponent(inviteCode));
-  common_vendor.index.__f__("log", "at api/couple.js:277", "⏰ [请求时间]", (/* @__PURE__ */ new Date()).toLocaleString());
-  common_vendor.index.__f__("log", "at api/couple.js:278", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  common_vendor.index.__f__("log", "at api/couple.js:282", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  common_vendor.index.__f__("log", "at api/couple.js:283", "🔗 [情侣关系API] 开始验证邀请码");
+  common_vendor.index.__f__("log", "at api/couple.js:284", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  common_vendor.index.__f__("log", "at api/couple.js:285", "📍 [请求地址]", fullUrl);
+  common_vendor.index.__f__("log", "at api/couple.js:286", "📋 [请求方法] GET");
+  common_vendor.index.__f__("log", "at api/couple.js:287", "📝 [原始邀请码]", inviteCode);
+  common_vendor.index.__f__("log", "at api/couple.js:288", "📝 [邀请码类型]", typeof inviteCode);
+  common_vendor.index.__f__("log", "at api/couple.js:289", "📝 [邀请码长度]", inviteCode ? inviteCode.length : 0);
+  common_vendor.index.__f__("log", "at api/couple.js:290", "📝 [URL编码后邀请码]", encodeURIComponent(inviteCode));
+  common_vendor.index.__f__("log", "at api/couple.js:291", "📝 [完整URL参数]", "code=" + encodeURIComponent(inviteCode));
+  common_vendor.index.__f__("log", "at api/couple.js:292", "⏰ [请求时间]", (/* @__PURE__ */ new Date()).toLocaleString());
+  common_vendor.index.__f__("log", "at api/couple.js:293", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   return utils_http.http.get(url).then((response) => {
     var _a, _b, _c, _d;
-    common_vendor.index.__f__("log", "at api/couple.js:281", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    common_vendor.index.__f__("log", "at api/couple.js:282", "✅ [情侣关系API] 验证邀请码成功");
-    common_vendor.index.__f__("log", "at api/couple.js:283", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    common_vendor.index.__f__("log", "at api/couple.js:284", "📦 [响应数据类型]", typeof response);
-    common_vendor.index.__f__("log", "at api/couple.js:285", "📦 [完整响应数据]", JSON.stringify(response, null, 2));
+    common_vendor.index.__f__("log", "at api/couple.js:296", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    common_vendor.index.__f__("log", "at api/couple.js:297", "✅ [情侣关系API] 验证邀请码成功");
+    common_vendor.index.__f__("log", "at api/couple.js:298", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    common_vendor.index.__f__("log", "at api/couple.js:299", "📦 [响应数据类型]", typeof response);
+    common_vendor.index.__f__("log", "at api/couple.js:300", "📦 [完整响应数据]", JSON.stringify(response, null, 2));
     if (response && typeof response === "object") {
-      common_vendor.index.__f__("log", "at api/couple.js:288", "📦 [响应数据字段列表]", Object.keys(response).join(", "));
+      common_vendor.index.__f__("log", "at api/couple.js:303", "📦 [响应数据字段列表]", Object.keys(response).join(", "));
     }
     if (response && response.data && response.data.creator) {
-      common_vendor.index.__f__("log", "at api/couple.js:293", `📝 [返回的邀请码] ${response.data.code || inviteCode}`);
-      common_vendor.index.__f__("log", "at api/couple.js:294", `👤 [发起方昵称] ${((_a = response.data.creator) == null ? void 0 : _a.nickName) || "未知"}`);
-      common_vendor.index.__f__("log", "at api/couple.js:295", `👤 [发起方ID] ${((_b = response.data.creator) == null ? void 0 : _b.id) || "未知"}`);
-      common_vendor.index.__f__("log", "at api/couple.js:296", `⏰ [过期时间] ${response.data.expireAt || "未知"}`);
+      common_vendor.index.__f__("log", "at api/couple.js:308", `📝 [返回的邀请码] ${response.data.code || inviteCode}`);
+      common_vendor.index.__f__("log", "at api/couple.js:309", `👤 [发起方昵称] ${((_a = response.data.creator) == null ? void 0 : _a.nickName) || "未知"}`);
+      common_vendor.index.__f__("log", "at api/couple.js:310", `👤 [发起方ID] ${((_b = response.data.creator) == null ? void 0 : _b.id) || "未知"}`);
+      common_vendor.index.__f__("log", "at api/couple.js:311", `⏰ [过期时间] ${response.data.expireAt || "未知"}`);
       if (response.data.creator) {
-        common_vendor.index.__f__("log", "at api/couple.js:298", "👤 [发起方完整信息]", JSON.stringify(response.data.creator, null, 2));
+        common_vendor.index.__f__("log", "at api/couple.js:313", "👤 [发起方完整信息]", JSON.stringify(response.data.creator, null, 2));
       }
       return response;
     }
     if (response && response.creator) {
-      common_vendor.index.__f__("log", "at api/couple.js:305", `👤 [发起方昵称] ${((_c = response.creator) == null ? void 0 : _c.nickName) || "未知"}`);
-      common_vendor.index.__f__("log", "at api/couple.js:306", `👤 [发起方ID] ${((_d = response.creator) == null ? void 0 : _d.id) || "未知"}`);
+      common_vendor.index.__f__("log", "at api/couple.js:320", `👤 [发起方昵称] ${((_c = response.creator) == null ? void 0 : _c.nickName) || "未知"}`);
+      common_vendor.index.__f__("log", "at api/couple.js:321", `👤 [发起方ID] ${((_d = response.creator) == null ? void 0 : _d.id) || "未知"}`);
       return { success: true, data: response };
     }
     if (response && (response.inviterNickName || response.inviterId)) {
-      common_vendor.index.__f__("log", "at api/couple.js:312", `👤 [发起方昵称] ${response.inviterNickName || "未知"}`);
-      common_vendor.index.__f__("log", "at api/couple.js:313", `👤 [发起方ID] ${response.inviterId || "未知"}`);
-      common_vendor.index.__f__("log", "at api/couple.js:314", `🖼️ [发起方头像] ${response.inviterAvatarUrl || "未知"}`);
+      common_vendor.index.__f__("log", "at api/couple.js:327", `👤 [发起方昵称] ${response.inviterNickName || "未知"}`);
+      common_vendor.index.__f__("log", "at api/couple.js:328", `👤 [发起方ID] ${response.inviterId || "未知"}`);
+      common_vendor.index.__f__("log", "at api/couple.js:329", `🖼️ [发起方头像] ${response.inviterAvatarUrl || "未知"}`);
       const normalizedResponse = {
         success: response.success !== void 0 ? response.success : true,
         message: response.message || "邀请码有效",
@@ -223,99 +235,119 @@ function validateInviteCode(inviteCode) {
           expireAt: response.expireAt || null
         }
       };
-      common_vendor.index.__f__("log", "at api/couple.js:331", "✅ [数据格式转换] 已将新格式转换为标准格式");
-      common_vendor.index.__f__("log", "at api/couple.js:332", "📦 [转换后的数据]", JSON.stringify(normalizedResponse, null, 2));
+      common_vendor.index.__f__("log", "at api/couple.js:346", "✅ [数据格式转换] 已将新格式转换为标准格式");
+      common_vendor.index.__f__("log", "at api/couple.js:347", "📦 [转换后的数据]", JSON.stringify(normalizedResponse, null, 2));
       return normalizedResponse;
     }
-    common_vendor.index.__f__("warn", "at api/couple.js:337", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    common_vendor.index.__f__("warn", "at api/couple.js:338", "⚠️ [情侣关系API] 响应数据格式异常");
-    common_vendor.index.__f__("warn", "at api/couple.js:339", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    common_vendor.index.__f__("warn", "at api/couple.js:340", "📦 [响应数据]", response);
-    common_vendor.index.__f__("warn", "at api/couple.js:341", "📦 [响应数据类型]", typeof response);
+    common_vendor.index.__f__("warn", "at api/couple.js:352", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    common_vendor.index.__f__("warn", "at api/couple.js:353", "⚠️ [情侣关系API] 响应数据格式异常");
+    common_vendor.index.__f__("warn", "at api/couple.js:354", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    common_vendor.index.__f__("warn", "at api/couple.js:355", "📦 [响应数据]", response);
+    common_vendor.index.__f__("warn", "at api/couple.js:356", "📦 [响应数据类型]", typeof response);
     if (response && typeof response === "object") {
-      common_vendor.index.__f__("warn", "at api/couple.js:343", "📦 [响应数据字段]", Object.keys(response).join(", "));
+      common_vendor.index.__f__("warn", "at api/couple.js:358", "📦 [响应数据字段]", Object.keys(response).join(", "));
     }
-    common_vendor.index.__f__("warn", "at api/couple.js:345", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    common_vendor.index.__f__("warn", "at api/couple.js:360", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     return { success: false, message: (response == null ? void 0 : response.message) || "邀请码验证失败" };
   }).catch((error) => {
-    common_vendor.index.__f__("error", "at api/couple.js:348", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    common_vendor.index.__f__("error", "at api/couple.js:349", "❌ [情侣关系API] 验证邀请码失败");
-    common_vendor.index.__f__("error", "at api/couple.js:350", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    common_vendor.index.__f__("error", "at api/couple.js:351", "📝 [输入的邀请码]", inviteCode);
-    common_vendor.index.__f__("error", "at api/couple.js:352", "📝 [邀请码类型]", typeof inviteCode);
-    common_vendor.index.__f__("error", "at api/couple.js:353", "📝 [邀请码长度]", inviteCode ? inviteCode.length : 0);
-    common_vendor.index.__f__("error", "at api/couple.js:354", "🔴 [错误对象]", error);
-    common_vendor.index.__f__("error", "at api/couple.js:355", "🔴 [错误类型]", typeof error);
-    common_vendor.index.__f__("error", "at api/couple.js:356", "🔴 [错误消息]", error == null ? void 0 : error.message);
-    common_vendor.index.__f__("error", "at api/couple.js:357", "🔴 [错误状态码]", error == null ? void 0 : error.statusCode);
-    common_vendor.index.__f__("error", "at api/couple.js:358", "🔴 [错误数据]", error == null ? void 0 : error.data);
-    common_vendor.index.__f__("error", "at api/couple.js:359", "🔴 [错误响应数据]", error == null ? void 0 : error.responseData);
+    common_vendor.index.__f__("error", "at api/couple.js:363", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    common_vendor.index.__f__("error", "at api/couple.js:364", "❌ [情侣关系API] 验证邀请码失败");
+    common_vendor.index.__f__("error", "at api/couple.js:365", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    common_vendor.index.__f__("error", "at api/couple.js:366", "📝 [输入的邀请码]", inviteCode);
+    common_vendor.index.__f__("error", "at api/couple.js:367", "📝 [邀请码类型]", typeof inviteCode);
+    common_vendor.index.__f__("error", "at api/couple.js:368", "📝 [邀请码长度]", inviteCode ? inviteCode.length : 0);
+    common_vendor.index.__f__("error", "at api/couple.js:369", "🔴 [错误对象]", error);
+    common_vendor.index.__f__("error", "at api/couple.js:370", "🔴 [错误类型]", typeof error);
+    common_vendor.index.__f__("error", "at api/couple.js:371", "🔴 [错误消息]", error == null ? void 0 : error.message);
+    common_vendor.index.__f__("error", "at api/couple.js:372", "🔴 [错误状态码]", error == null ? void 0 : error.statusCode);
+    common_vendor.index.__f__("error", "at api/couple.js:373", "🔴 [错误数据]", error == null ? void 0 : error.data);
+    common_vendor.index.__f__("error", "at api/couple.js:374", "🔴 [错误响应数据]", error == null ? void 0 : error.responseData);
     if (error && typeof error === "object") {
-      common_vendor.index.__f__("error", "at api/couple.js:361", "🔴 [错误对象字段列表]", Object.keys(error).join(", "));
+      common_vendor.index.__f__("error", "at api/couple.js:376", "🔴 [错误对象字段列表]", Object.keys(error).join(", "));
     }
     if (error == null ? void 0 : error.stack) {
-      common_vendor.index.__f__("error", "at api/couple.js:364", "🔴 [错误堆栈]", error.stack);
+      common_vendor.index.__f__("error", "at api/couple.js:379", "🔴 [错误堆栈]", error.stack);
     }
-    common_vendor.index.__f__("error", "at api/couple.js:366", "⏰ [错误时间]", (/* @__PURE__ */ new Date()).toLocaleString());
-    common_vendor.index.__f__("error", "at api/couple.js:367", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    common_vendor.index.__f__("error", "at api/couple.js:381", "⏰ [错误时间]", (/* @__PURE__ */ new Date()).toLocaleString());
+    common_vendor.index.__f__("error", "at api/couple.js:382", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     throw error;
   });
 }
 function acceptInvite(inviteCode) {
-  const url = utils_config.config.API.COUPLE.BIND_ACCEPT;
+  const url = utils_config.config.API.LOGIN.INVITE;
   const fullUrl = utils_config.config.baseURL + url;
-  common_vendor.index.__f__("log", "at api/couple.js:406", "🔗 [情侣关系API] 开始接受邀请");
-  common_vendor.index.__f__("log", "at api/couple.js:407", "📍 请求地址:", fullUrl);
-  common_vendor.index.__f__("log", "at api/couple.js:408", "📋 请求方法: POST");
-  common_vendor.index.__f__("log", "at api/couple.js:409", "📤 请求参数: { inviteCode:", inviteCode, "}");
-  common_vendor.index.__f__("log", "at api/couple.js:410", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
-  return utils_http.http.post(url, { inviteCode }).then((response) => {
-    var _a;
-    common_vendor.index.__f__("log", "at api/couple.js:413", "✅ [情侣关系API] 接受邀请成功");
-    common_vendor.index.__f__("log", "at api/couple.js:414", "📦 响应数据:", response);
-    if (response && response.data) {
-      common_vendor.index.__f__("log", "at api/couple.js:417", `💑 关系ID: ${response.data.coupleId}`);
-      common_vendor.index.__f__("log", "at api/couple.js:418", `👤 对方昵称: ${((_a = response.data.partnerInfo) == null ? void 0 : _a.nickName) || "未知"}`);
-      return response;
-    } else if (response && response.coupleId) {
-      common_vendor.index.__f__("log", "at api/couple.js:422", `💑 关系ID: ${response.coupleId}`);
-      return { success: true, data: response };
-    } else {
-      common_vendor.index.__f__("warn", "at api/couple.js:425", "⚠️ 响应数据格式异常:", response);
-      return response;
-    }
+  common_vendor.index.__f__("log", "at api/couple.js:414", "🔗 [情侣关系API] 开始接受邀请");
+  common_vendor.index.__f__("log", "at api/couple.js:415", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/couple.js:416", "📋 请求方法: POST");
+  common_vendor.index.__f__("log", "at api/couple.js:417", "📝 邀请码:", inviteCode);
+  common_vendor.index.__f__("log", "at api/couple.js:418", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  return getCurrentUserId().then((userId) => {
+    common_vendor.index.__f__("log", "at api/couple.js:422", "👤 被邀请用户ID:", userId);
+    common_vendor.index.__f__("log", "at api/couple.js:423", "📤 请求参数: { inviteCode:", inviteCode, ", userId:", userId, "}");
+    return utils_http.http.post(url, { inviteCode, userId }).then((response) => {
+      var _a;
+      common_vendor.index.__f__("log", "at api/couple.js:426", "✅ [情侣关系API] 接受邀请成功");
+      common_vendor.index.__f__("log", "at api/couple.js:427", "📦 响应数据:", response);
+      if (response && response.code === 200 && response.data) {
+        const inviteData = response.data;
+        common_vendor.index.__f__("log", "at api/couple.js:433", `👤 邀请人信息:`, inviteData);
+        return {
+          success: true,
+          message: response.msg || response.message || "邀请成功",
+          data: {
+            coupleId: inviteData.coupleId || "",
+            partnerInfo: inviteData.partnerInfo || inviteData || {},
+            bindTime: inviteData.bindTime || (/* @__PURE__ */ new Date()).toISOString()
+          }
+        };
+      } else if (response && response.data) {
+        common_vendor.index.__f__("log", "at api/couple.js:448", `💑 关系ID: ${response.data.coupleId || "未知"}`);
+        common_vendor.index.__f__("log", "at api/couple.js:449", `👤 对方昵称: ${((_a = response.data.partnerInfo) == null ? void 0 : _a.nickName) || "未知"}`);
+        return response;
+      } else if (response && response.coupleId) {
+        common_vendor.index.__f__("log", "at api/couple.js:454", `💑 关系ID: ${response.coupleId}`);
+        return { success: true, data: response };
+      } else {
+        common_vendor.index.__f__("warn", "at api/couple.js:459", "⚠️ 响应数据格式异常:", response);
+        return {
+          success: response.code === 200 || response.success !== false,
+          message: response.msg || response.message || "邀请成功",
+          data: response.data || {}
+        };
+      }
+    });
   }).catch((error) => {
-    common_vendor.index.__f__("error", "at api/couple.js:429", "❌ [情侣关系API] 接受邀请失败");
-    common_vendor.index.__f__("error", "at api/couple.js:430", "🔴 错误信息:", error);
+    common_vendor.index.__f__("error", "at api/couple.js:468", "❌ [情侣关系API] 接受邀请失败");
+    common_vendor.index.__f__("error", "at api/couple.js:469", "🔴 错误信息:", error);
     throw error;
   });
 }
 function getCoupleStatus() {
   const url = utils_config.config.API.COUPLE.STATUS;
   const fullUrl = utils_config.config.baseURL + url;
-  common_vendor.index.__f__("log", "at api/couple.js:465", "🔗 [情侣关系API] 开始查询绑定状态");
-  common_vendor.index.__f__("log", "at api/couple.js:466", "📍 请求地址:", fullUrl);
-  common_vendor.index.__f__("log", "at api/couple.js:467", "📋 请求方法: GET");
-  common_vendor.index.__f__("log", "at api/couple.js:468", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  common_vendor.index.__f__("log", "at api/couple.js:504", "🔗 [情侣关系API] 开始查询绑定状态");
+  common_vendor.index.__f__("log", "at api/couple.js:505", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/couple.js:506", "📋 请求方法: GET");
+  common_vendor.index.__f__("log", "at api/couple.js:507", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
   return utils_http.http.get(url).then((response) => {
     var _a;
-    common_vendor.index.__f__("log", "at api/couple.js:471", "✅ [情侣关系API] 查询绑定状态成功");
-    common_vendor.index.__f__("log", "at api/couple.js:472", "📦 响应数据:", response);
+    common_vendor.index.__f__("log", "at api/couple.js:510", "✅ [情侣关系API] 查询绑定状态成功");
+    common_vendor.index.__f__("log", "at api/couple.js:511", "📦 响应数据:", response);
     if (response && response.data) {
       const status = response.data;
-      common_vendor.index.__f__("log", "at api/couple.js:476", "📊 绑定状态:");
-      common_vendor.index.__f__("log", "at api/couple.js:477", `   - 是否已绑定: ${status.isBound ? "是" : "否"}`);
+      common_vendor.index.__f__("log", "at api/couple.js:515", "📊 绑定状态:");
+      common_vendor.index.__f__("log", "at api/couple.js:516", `   - 是否已绑定: ${status.isBound ? "是" : "否"}`);
       if (status.isBound) {
-        common_vendor.index.__f__("log", "at api/couple.js:479", `   - 关系ID: ${status.coupleId}`);
-        common_vendor.index.__f__("log", "at api/couple.js:480", `   - 对方昵称: ${((_a = status.partnerInfo) == null ? void 0 : _a.nickName) || "未知"}`);
-        common_vendor.index.__f__("log", "at api/couple.js:481", `   - 绑定时间: ${status.bindTime || "未知"}`);
+        common_vendor.index.__f__("log", "at api/couple.js:518", `   - 关系ID: ${status.coupleId}`);
+        common_vendor.index.__f__("log", "at api/couple.js:519", `   - 对方昵称: ${((_a = status.partnerInfo) == null ? void 0 : _a.nickName) || "未知"}`);
+        common_vendor.index.__f__("log", "at api/couple.js:520", `   - 绑定时间: ${status.bindTime || "未知"}`);
       }
       return response;
     } else if (response && (response.isBound !== void 0 || response.coupleId)) {
       return { success: true, data: response };
     } else if (response && response.isCouple !== void 0) {
-      common_vendor.index.__f__("log", "at api/couple.js:489", "📊 绑定状态:");
-      common_vendor.index.__f__("log", "at api/couple.js:490", `   - 是否已绑定: ${response.isCouple ? "是" : "否"}`);
+      common_vendor.index.__f__("log", "at api/couple.js:528", "📊 绑定状态:");
+      common_vendor.index.__f__("log", "at api/couple.js:529", `   - 是否已绑定: ${response.isCouple ? "是" : "否"}`);
       return {
         success: response.success !== false,
         message: response.message || "查询成功",
@@ -327,69 +359,82 @@ function getCoupleStatus() {
           role: response.role || null
         }
       };
+    } else if (response && response.msg && (response.msg.includes("未找到情侣关系") || response.msg.includes("没有情侣关系") || response.msg.includes("未绑定"))) {
+      common_vendor.index.__f__("log", "at api/couple.js:544", "📊 绑定状态: 未绑定（后端返回未找到情侣关系）");
+      return {
+        success: true,
+        message: response.msg || "未找到情侣关系",
+        data: {
+          isBound: false,
+          coupleId: null,
+          partnerInfo: null,
+          bindTime: null,
+          role: null
+        }
+      };
     } else {
-      common_vendor.index.__f__("warn", "at api/couple.js:503", "⚠️ 响应数据格式异常:", response);
+      common_vendor.index.__f__("warn", "at api/couple.js:557", "⚠️ 响应数据格式异常:", response);
       return { success: true, data: { isBound: false } };
     }
   }).catch((error) => {
-    common_vendor.index.__f__("error", "at api/couple.js:507", "❌ [情侣关系API] 查询绑定状态失败");
-    common_vendor.index.__f__("error", "at api/couple.js:508", "🔴 错误信息:", error);
+    common_vendor.index.__f__("error", "at api/couple.js:561", "❌ [情侣关系API] 查询绑定状态失败");
+    common_vendor.index.__f__("error", "at api/couple.js:562", "🔴 错误信息:", error);
     throw error;
   });
 }
 function unbindCouple() {
   const url = utils_config.config.API.COUPLE.UNBIND;
   const fullUrl = utils_config.config.baseURL + url;
-  common_vendor.index.__f__("log", "at api/couple.js:531", "🔗 [情侣关系API] 开始解绑关系");
-  common_vendor.index.__f__("log", "at api/couple.js:532", "📍 请求地址:", fullUrl);
-  common_vendor.index.__f__("log", "at api/couple.js:533", "📋 请求方法: POST");
-  common_vendor.index.__f__("log", "at api/couple.js:534", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  common_vendor.index.__f__("log", "at api/couple.js:585", "🔗 [情侣关系API] 开始解绑关系");
+  common_vendor.index.__f__("log", "at api/couple.js:586", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/couple.js:587", "📋 请求方法: POST");
+  common_vendor.index.__f__("log", "at api/couple.js:588", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
   return utils_http.http.post(url).then((response) => {
-    common_vendor.index.__f__("log", "at api/couple.js:537", "✅ [情侣关系API] 解绑关系成功");
-    common_vendor.index.__f__("log", "at api/couple.js:538", "📦 响应数据:", response);
+    common_vendor.index.__f__("log", "at api/couple.js:591", "✅ [情侣关系API] 解绑关系成功");
+    common_vendor.index.__f__("log", "at api/couple.js:592", "📦 响应数据:", response);
     return response;
   }).catch((error) => {
     const errorMessage = error.message || error.data && error.data.message || "";
     if (errorMessage.includes("没有情侣关系") || errorMessage.includes("未绑定") || errorMessage.includes("不存在")) {
-      common_vendor.index.__f__("warn", "at api/couple.js:546", '⚠️ [情侣关系API] 解绑时检测到"没有情侣关系"，视为成功');
-      common_vendor.index.__f__("warn", "at api/couple.js:547", "💡 说明：没有关系可解，目标已达成");
+      common_vendor.index.__f__("warn", "at api/couple.js:600", '⚠️ [情侣关系API] 解绑时检测到"没有情侣关系"，视为成功');
+      common_vendor.index.__f__("warn", "at api/couple.js:601", "💡 说明：没有关系可解，目标已达成");
       return {
         success: true,
         message: "已解除关系（原本没有情侣关系）",
         data: null
       };
     }
-    common_vendor.index.__f__("error", "at api/couple.js:555", "❌ [情侣关系API] 解绑关系失败");
-    common_vendor.index.__f__("error", "at api/couple.js:556", "🔴 错误信息:", error);
+    common_vendor.index.__f__("error", "at api/couple.js:609", "❌ [情侣关系API] 解绑关系失败");
+    common_vendor.index.__f__("error", "at api/couple.js:610", "🔴 错误信息:", error);
     throw error;
   });
 }
 function getLoveDays() {
   const url = utils_config.config.API.COUPLE.LOVE_DAYS;
   const fullUrl = utils_config.config.baseURL + url;
-  common_vendor.index.__f__("log", "at api/couple.js:584", "🔗 [情侣关系API] 开始获取相爱天数");
-  common_vendor.index.__f__("log", "at api/couple.js:585", "📍 请求地址:", fullUrl);
-  common_vendor.index.__f__("log", "at api/couple.js:586", "📋 请求方法: GET");
-  common_vendor.index.__f__("log", "at api/couple.js:587", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  common_vendor.index.__f__("log", "at api/couple.js:638", "🔗 [情侣关系API] 开始获取相爱天数");
+  common_vendor.index.__f__("log", "at api/couple.js:639", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/couple.js:640", "📋 请求方法: GET");
+  common_vendor.index.__f__("log", "at api/couple.js:641", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
   return utils_http.http.get(url).then((response) => {
-    common_vendor.index.__f__("log", "at api/couple.js:590", "✅ [情侣关系API] 获取相爱天数成功");
-    common_vendor.index.__f__("log", "at api/couple.js:591", "📦 响应数据:", response);
+    common_vendor.index.__f__("log", "at api/couple.js:644", "✅ [情侣关系API] 获取相爱天数成功");
+    common_vendor.index.__f__("log", "at api/couple.js:645", "📦 响应数据:", response);
     if (response && response.data) {
       const loveDaysData = response.data;
-      common_vendor.index.__f__("log", "at api/couple.js:595", "📊 相爱天数信息:");
-      common_vendor.index.__f__("log", "at api/couple.js:596", `   - 相爱天数: ${loveDaysData.loveDays || "未知"}`);
-      common_vendor.index.__f__("log", "at api/couple.js:597", `   - 纪念日: ${loveDaysData.anniversaryDate || "未知"}`);
-      common_vendor.index.__f__("log", "at api/couple.js:598", `   - 关系名称: ${loveDaysData.relationshipName || "未知"}`);
+      common_vendor.index.__f__("log", "at api/couple.js:649", "📊 相爱天数信息:");
+      common_vendor.index.__f__("log", "at api/couple.js:650", `   - 相爱天数: ${loveDaysData.loveDays || "未知"}`);
+      common_vendor.index.__f__("log", "at api/couple.js:651", `   - 纪念日: ${loveDaysData.anniversaryDate || "未知"}`);
+      common_vendor.index.__f__("log", "at api/couple.js:652", `   - 关系名称: ${loveDaysData.relationshipName || "未知"}`);
       return response;
     } else if (response && (response.loveDays !== void 0 || response.anniversaryDate)) {
       return { success: true, data: response };
     } else {
-      common_vendor.index.__f__("warn", "at api/couple.js:604", "⚠️ 响应数据格式异常:", response);
+      common_vendor.index.__f__("warn", "at api/couple.js:658", "⚠️ 响应数据格式异常:", response);
       return response;
     }
   }).catch((error) => {
-    common_vendor.index.__f__("error", "at api/couple.js:608", "❌ [情侣关系API] 获取相爱天数失败");
-    common_vendor.index.__f__("error", "at api/couple.js:609", "🔴 错误信息:", error);
+    common_vendor.index.__f__("error", "at api/couple.js:662", "❌ [情侣关系API] 获取相爱天数失败");
+    common_vendor.index.__f__("error", "at api/couple.js:663", "🔴 错误信息:", error);
     throw error;
   });
 }

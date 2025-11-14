@@ -183,8 +183,23 @@ export function createInviteCode() {
       console.log('✅ [情侣关系API] 生成邀请码成功');
       console.log('📦 响应数据:', response);
       
-      // 优先处理标准格式：response.data.inviteCode
-      if (response && response.data && response.data.inviteCode) {
+      // 新格式：{ "msg": "邀请码生成成功", "code": 200, "data": "U9441L" }
+      // data 是字符串，直接是邀请码
+      if (response && response.data && typeof response.data === 'string') {
+        const inviteCode = response.data;
+        console.log(`📝 邀请码: ${inviteCode}`);
+        // 统一转换为标准格式
+        return {
+          success: response.code === 200 || response.success !== false,
+          message: response.msg || response.message || '邀请码生成成功',
+          data: {
+            inviteCode: inviteCode,
+            expireAt: response.expireAt || '' // 如果后端返回过期时间
+          }
+        };
+      }
+      // 兼容旧格式：response.data.inviteCode（对象格式）
+      else if (response && response.data && response.data.inviteCode) {
         console.log(`📝 邀请码: ${response.data.inviteCode}`);
         console.log(`⏰ 过期时间: ${response.data.expireAt}`);
         return response;
@@ -221,8 +236,8 @@ export function createInviteCode() {
       else {
         console.warn('⚠️ 响应数据格式异常:', response);
         return {
-          success: response.success !== false,
-          message: response.message || '生成成功',
+          success: response.code === 200 || response.success !== false,
+          message: response.msg || response.message || '生成成功',
           data: { inviteCode: '', expireAt: '' }
         };
       }
@@ -376,55 +391,79 @@ export function validateInviteCode(inviteCode) {
  * 
  * 后端接口要求：
  * - 请求方法：POST
- * - 请求地址：/api/couple/bind/accept
+ * - 请求地址：/api/login/invite
  * - 请求头：需携带 Authorization token
  * - 请求参数：
  *   {
- *     inviteCode: "ABC123"
+ *     inviteCode: "邀请码",
+ *     userId: "被邀请用户ID"
  *   }
  * - 返回数据格式：
  *   {
- *     success: true,
- *     message: "绑定成功",
- *     data: {
- *       coupleId: "couple_123456",
- *       partnerInfo: {
- *         userId: "user_789",
- *         nickName: "对方昵称",
- *         avatarUrl: "头像URL",
- *         displayName: "显示昵称",
- *         displayAvatar: "显示头像"
- *       },
- *       bindTime: "2024-01-15T10:30:00Z"
+ *     "msg": "邀请成功",
+ *     "code": 200,
+ *     "data": {
+ *       // 邀请人信息
  *     }
  *   }
  */
 export function acceptInvite(inviteCode) {
-  const url = config.API.COUPLE.BIND_ACCEPT;
+  const url = config.API.LOGIN.INVITE;
   const fullUrl = config.baseURL + url;
   
   console.log('🔗 [情侣关系API] 开始接受邀请');
   console.log('📍 请求地址:', fullUrl);
   console.log('📋 请求方法: POST');
-  console.log('📤 请求参数: { inviteCode:', inviteCode, '}');
+  console.log('📝 邀请码:', inviteCode);
   console.log('⏰ 请求时间:', new Date().toLocaleString());
   
-  return http.post(url, { inviteCode }).then(response => {
-    console.log('✅ [情侣关系API] 接受邀请成功');
-    console.log('📦 响应数据:', response);
+  // 先获取userId，然后发送请求
+  return getCurrentUserId().then(userId => {
+    console.log('👤 被邀请用户ID:', userId);
+    console.log('📤 请求参数: { inviteCode:', inviteCode, ', userId:', userId, '}');
     
-    if (response && response.data) {
-      console.log(`💑 关系ID: ${response.data.coupleId}`);
-      console.log(`👤 对方昵称: ${response.data.partnerInfo?.nickName || '未知'}`);
-      return response;
-    } else if (response && response.coupleId) {
+    return http.post(url, { inviteCode, userId }).then(response => {
+      console.log('✅ [情侣关系API] 接受邀请成功');
+      console.log('📦 响应数据:', response);
+      
+      // 新格式：{ "msg": "邀请成功", "code": 200, "data": { // 邀请人信息 } }
+      if (response && response.code === 200 && response.data) {
+        // 如果 data 是邀请人信息对象，转换为标准格式
+        const inviteData = response.data;
+        console.log(`👤 邀请人信息:`, inviteData);
+        
+        // 转换为标准格式，兼容页面期望的数据结构
+        return {
+          success: true,
+          message: response.msg || response.message || '邀请成功',
+          data: {
+            coupleId: inviteData.coupleId || '',
+            partnerInfo: inviteData.partnerInfo || inviteData || {},
+            bindTime: inviteData.bindTime || new Date().toISOString()
+          }
+        };
+      }
+      // 兼容旧格式：response.data 包含 coupleId 和 partnerInfo
+      else if (response && response.data) {
+        console.log(`💑 关系ID: ${response.data.coupleId || '未知'}`);
+        console.log(`👤 对方昵称: ${response.data.partnerInfo?.nickName || '未知'}`);
+        return response;
+      }
       // 兼容直接返回关系信息的情况
-      console.log(`💑 关系ID: ${response.coupleId}`);
-      return { success: true, data: response };
-    } else {
-      console.warn('⚠️ 响应数据格式异常:', response);
-      return response;
-    }
+      else if (response && response.coupleId) {
+        console.log(`💑 关系ID: ${response.coupleId}`);
+        return { success: true, data: response };
+      }
+      // 其他格式
+      else {
+        console.warn('⚠️ 响应数据格式异常:', response);
+        return {
+          success: response.code === 200 || response.success !== false,
+          message: response.msg || response.message || '邀请成功',
+          data: response.data || {}
+        };
+      }
+    });
   }).catch(error => {
     console.error('❌ [情侣关系API] 接受邀请失败');
     console.error('🔴 错误信息:', error);
@@ -497,6 +536,21 @@ export function getCoupleStatus() {
           partnerInfo: response.partnerInfo || null,
           bindTime: response.bindTime || null,
           role: response.role || null
+        }
+      };
+    } else if (response && response.msg && (response.msg.includes('未找到情侣关系') || response.msg.includes('没有情侣关系') || response.msg.includes('未绑定'))) {
+      // 兼容后端返回 {msg: "未找到情侣关系", code: 200} 的格式
+      // 这是正常的业务状态（未绑定），不是错误
+      console.log('📊 绑定状态: 未绑定（后端返回未找到情侣关系）');
+      return {
+        success: true,
+        message: response.msg || '未找到情侣关系',
+        data: {
+          isBound: false,
+          coupleId: null,
+          partnerInfo: null,
+          bindTime: null,
+          role: null
         }
       };
     } else {

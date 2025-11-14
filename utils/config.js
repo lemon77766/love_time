@@ -6,7 +6,8 @@ const devConfig = {
   API: {
     LOGIN: {
       WECHAT: '/api/login/wechat',
-      LOGOUT: '/api/login/logout'
+      LOGOUT: '/api/login/logout',
+      INVITE: '/api/login/invite'  // 使用邀请码邀请用户
     },
     USER: {
       INFO: '/api/user/info',

@@ -263,25 +263,25 @@ export default {
     goToSweetQA() {
       // 跳转到甜蜜问答页面
       uni.navigateTo({
-        url: '/pages/qna/index'
+        url: '/subPackages/interaction/pages/qna/index'
       });
     },
     goToHundredThings() {
       // 跳转到一百件事页面
       uni.navigateTo({
-        url: '/pages/hundred/index'
+        url: '/subPackages/interaction/pages/hundred/index'
       });
     },
     goToHeartWall() {
       // 跳转到心形墙页面
       uni.navigateTo({
-        url: '/pages/heartwall/index'
+        url: '/subPackages/record/pages/heartwall/index'
       });
     },
     goToFutureLetter() {
       // 跳转到未来情书页面
       uni.navigateTo({
-        url: '/pages/xinxiang/index'
+        url: '/subPackages/record/pages/xinxiang/index'
       });
     },
     // 加载用户信息

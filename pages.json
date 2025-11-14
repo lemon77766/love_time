@@ -16,78 +16,6 @@
       }
     },
     {
-      "path": "pages/jiyi/index",
-      "style": {
-        "navigationBarTitleText": "记忆"
-      }
-    },
-    {
-      "path": "pages/qna/index",
-      "style": {
-        "navigationBarTitleText": "甜蜜问答",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/qna/history",
-      "style": {
-        "navigationBarTitleText": "甜蜜小问答",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/hundred/index",
-      "style": {
-        "navigationBarTitleText": "一百件小事",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/heartwall/index",
-      "style": {
-        "navigationBarTitleText": "爱心照片墙",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/heartwall/create",
-      "style": {
-        "navigationBarTitleText": "爱心照片墙",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/xinxiang/index",
-      "style": {
-        "navigationBarTitleText": "未来情书",
-        "navigationStyle": "custom",
-        "navigationBarTextStyle": "black",
-        "navigationBarBackgroundColor": "#ffffff",
-        "disableScroll": true
-      }
-    },
-    {
-      "path": "pages/xinxiang/create",
-      "style": {
-        "navigationBarTitleText": "写信",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/xinxiang/history",
-      "style": {
-        "navigationBarTitleText": "写信记录",
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/xinxiang/received",
-      "style": {
-        "navigationBarTitleText": "收信记录",
-        "navigationStyle": "custom"
-      }
-    },
-    {
       "path": "pages/we/index",
       "style": {
         "navigationBarTitleText": "我们",
@@ -107,14 +35,6 @@
       "path": "pages/trajectory/index",
       "style": {
         "navigationBarTitleText": "恋爱轨迹",
-        "navigationStyle": "custom",
-        "navigationBarTextStyle": "black"
-      }
-    },
-    {
-      "path": "pages/trajectory/history",
-      "style": {
-        "navigationBarTitleText": "历史轨迹",
         "navigationStyle": "custom",
         "navigationBarTextStyle": "black"
       }
@@ -161,6 +81,106 @@
     "autoscan": true,
     "custom": {
       "^iconify-icon$": "@/components/iconify-icon/iconify-icon.vue"
+    }
+  },
+  "subPackages": [
+    {
+      "root": "subPackages/record",
+      "name": "record",
+      "pages": [
+        {
+          "path": "pages/jiyi/index",
+          "style": {
+            "navigationBarTitleText": "记忆"
+          }
+        },
+        {
+          "path": "pages/heartwall/index",
+          "style": {
+            "navigationBarTitleText": "爱心照片墙",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "pages/heartwall/create",
+          "style": {
+            "navigationBarTitleText": "爱心照片墙",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "pages/xinxiang/index",
+          "style": {
+            "navigationBarTitleText": "未来情书",
+            "navigationStyle": "custom",
+            "navigationBarTextStyle": "black",
+            "navigationBarBackgroundColor": "#ffffff",
+            "disableScroll": true
+          }
+        },
+        {
+          "path": "pages/xinxiang/create",
+          "style": {
+            "navigationBarTitleText": "写信",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "pages/xinxiang/history",
+          "style": {
+            "navigationBarTitleText": "写信记录",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "pages/xinxiang/received",
+          "style": {
+            "navigationBarTitleText": "收信记录",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "pages/trajectory/history",
+          "style": {
+            "navigationBarTitleText": "历史轨迹",
+            "navigationStyle": "custom",
+            "navigationBarTextStyle": "black"
+          }
+        }
+      ]
+    },
+    {
+      "root": "subPackages/interaction",
+      "name": "interaction",
+      "pages": [
+        {
+          "path": "pages/qna/index",
+          "style": {
+            "navigationBarTitleText": "甜蜜问答",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "pages/qna/history",
+          "style": {
+            "navigationBarTitleText": "甜蜜小问答",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "pages/hundred/index",
+          "style": {
+            "navigationBarTitleText": "一百件小事",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    }
+  ],
+  "preloadRule": {
+    "pages/index/index": {
+      "network": "all",
+      "packages": ["record", "interaction"]
     }
   }
 }

@@ -8,6 +8,43 @@ const defaultOptions = {
   retryDelay: 1000,  // 重试间隔1秒
 }
 
+// 规范化可能的token（排除纯数字状态码/空值）
+function normalizeTokenCandidate(candidate) {
+  if (typeof candidate !== 'string') {
+    return null;
+  }
+  const trimmed = candidate.trim();
+  if (!trimmed) {
+    return null;
+  }
+  if (/^\d+$/.test(trimmed) && trimmed.length <= 6) {
+    return null;
+  }
+  return trimmed;
+}
+
+function resolveTokenFromLoginInfo(loginInfo) {
+  if (!loginInfo || typeof loginInfo !== 'object') {
+    return null;
+  }
+  const candidates = [
+    loginInfo.token,
+    loginInfo.data?.token,
+    loginInfo.accessToken,
+    loginInfo.authToken,
+    loginInfo.code,
+    loginInfo.data?.code,
+    loginInfo.rawToken
+  ];
+  for (const candidate of candidates) {
+    const normalized = normalizeTokenCandidate(candidate);
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return null;
+}
+
 // 标记是否已经尝试过清除无效登录信息（避免重复清除）
 let hasClearedInvalidLogin = false
 
@@ -98,16 +135,13 @@ function request(options) {
   
   // 添加token（登录接口除外）
   const loginInfo = uni.getStorageSync('login_info')
-  let token = null
-  
-  // 尝试从多个可能的路径获取token
-  if (loginInfo) {
-    token = loginInfo.token || loginInfo.data?.token || loginInfo.accessToken || null
-    // 确保token是字符串且不为空
-    if (token && typeof token === 'string' && token.trim()) {
-      token = token.trim()
-    } else {
-      token = null
+  let token = resolveTokenFromLoginInfo(loginInfo)
+  if (token && loginInfo && !loginInfo.token) {
+    loginInfo.token = token
+    try {
+      uni.setStorageSync('login_info', loginInfo)
+    } catch (storageError) {
+      console.warn('⚠️ 写回标准token字段失败:', storageError)
     }
   }
   
@@ -126,6 +160,15 @@ function request(options) {
         console.warn(`   - token: ${loginInfo.token !== undefined ? (loginInfo.token ? `✅ 存在，长度: ${loginInfo.token.length}` : '❌ 为空') : '❌ 不存在'}`);
         console.warn(`   - data?.token: ${loginInfo.data?.token !== undefined ? (loginInfo.data.token ? `✅ 存在，长度: ${loginInfo.data.token.length}` : '❌ 为空') : '❌ 不存在'}`);
         console.warn(`   - accessToken: ${loginInfo.accessToken !== undefined ? (loginInfo.accessToken ? `✅ 存在，长度: ${loginInfo.accessToken.length}` : '❌ 为空') : '❌ 不存在'}`);
+        if (loginInfo.code !== undefined) {
+          if (typeof loginInfo.code === 'string') {
+            console.warn(`   - code: ${loginInfo.code ? `✅ 字符串，长度: ${loginInfo.code.length}` : '❌ 为空字符串'}`);
+          } else {
+            console.warn(`   - code: ℹ️ 类型: ${typeof loginInfo.code}, 值: ${loginInfo.code}`);
+          }
+        } else {
+          console.warn('   - code: ❌ 不存在');
+        }
         console.warn(`   - userInfo: ${loginInfo.userInfo !== undefined ? '✅ 存在' : '❌ 不存在'}`);
         console.warn(`   - loginTime: ${loginInfo.loginTime !== undefined ? `✅ 存在: ${loginInfo.loginTime}` : '❌ 不存在'}`);
       }
@@ -142,7 +185,7 @@ function request(options) {
         
         // 自动修复：如果登录信息存在但token缺失，清除登录信息（只清除一次）
         // 注意：这里只清除，不自动跳转，让用户手动重新登录
-        if (!hasClearedInvalidLogin && !loginInfo.token && !loginInfo.data?.token && !loginInfo.accessToken) {
+        if (!hasClearedInvalidLogin && !token) {
           console.warn('🔧 [自动修复] 检测到无效的登录信息，正在清除...');
           uni.removeStorageSync('login_info');
           hasClearedInvalidLogin = true; // 标记已清除，避免重复清除

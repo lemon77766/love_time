@@ -221,33 +221,81 @@ export default {
         // 兼容格式1: {token: ..., openid: ..., session_key: ...}
         // 兼容格式2: {success: true, token: ..., openid: ..., session_key: ...}
         // 兼容格式3: {data: {success: true, data: {token: ...}}}
+        // 统一处理响应数据，兼容多种返回结构
         let responseData = loginResult;
-        
-        // 如果存在data字段，优先使用data字段
         if (loginResult.data && typeof loginResult.data === 'object') {
           responseData = loginResult.data;
         }
-        
-        // 尝试从多个可能的路径获取token
-        const token = responseData.token || 
-                     loginResult.token || 
-                     loginResult.data?.token || 
-                     (responseData.data && responseData.data.token) || 
-                     '';
+
+        // 规范化可能的token字段（排除纯数字的状态码）
+        const normalizeTokenCandidate = (candidate) => {
+          if (typeof candidate !== 'string') {
+            return '';
+          }
+          const trimmed = candidate.trim();
+          if (!trimmed) {
+            return '';
+          }
+          if (/^\d+$/.test(trimmed) && trimmed.length <= 6) {
+            // 像 200 / 401 这样的状态码不视为token
+            return '';
+          }
+          return trimmed;
+        };
+
+        const tokenCandidates = [];
+        const pushTokenCandidate = (candidate) => {
+          const normalized = normalizeTokenCandidate(candidate);
+          if (normalized) {
+            tokenCandidates.push(normalized);
+          }
+        };
+
+        if (responseData && typeof responseData === 'object') {
+          pushTokenCandidate(responseData.token);
+          pushTokenCandidate(responseData.data?.token);
+        }
+        pushTokenCandidate(loginResult.token);
+        pushTokenCandidate(loginResult.data?.token);
+
+        // 兼容后端直接把token放在 data 字符串或 code 字段里的情况
+        if (typeof loginResult.data === 'string') {
+          pushTokenCandidate(loginResult.data);
+        }
+        if (responseData && typeof responseData === 'string') {
+          pushTokenCandidate(responseData);
+        }
+        pushTokenCandidate(loginResult.code);
+        if (responseData && typeof responseData === 'object') {
+          pushTokenCandidate(responseData.code);
+        }
+
+        const token = tokenCandidates.length > 0 ? tokenCandidates[0] : '';
         
         // 尝试从多个可能的路径获取openid
         const openid = responseData.openid || 
+                      responseData.user?.openid ||
                       loginResult.openid || 
                       loginResult.data?.openid || 
+                      loginResult.data?.user?.openid ||
                       (responseData.data && responseData.data.openid) || 
                       '';
         
-        // 尝试从多个可能的路径获取session_key
+        // 尝试从多个可能的路径获取session_key（可选字段，后端通常不返回给前端）
+        // 注意：session_key 主要用于后端解密敏感数据，前端通常不需要
         const sessionKey = responseData.session_key || 
+                           responseData.sessionKey ||
+                           responseData.user?.session_key ||
+                           responseData.user?.sessionKey ||
                            loginResult.session_key || 
+                           loginResult.sessionKey ||
                            loginResult.data?.session_key || 
+                           loginResult.data?.sessionKey ||
+                           loginResult.data?.user?.session_key ||
+                           loginResult.data?.user?.sessionKey ||
                            (responseData.data && responseData.data.session_key) || 
-                           '';
+                           (responseData.data && responseData.data.sessionKey) || 
+                           undefined; // 使用 undefined 而不是空字符串，表示未提供
         
         const isSuccess = loginResult.success !== false; // 如果没有success字段，默认为成功
         
@@ -282,12 +330,25 @@ export default {
           console.log('   - 最终提取的Token:', token ? `✅ 已找到，长度: ${token.length}` : '❌ 未找到');
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
           console.log('👤 OpenID提取结果:');
+          console.log('   - responseData.openid:', responseData.openid || '未找到');
+          console.log('   - responseData.user?.openid:', responseData.user?.openid || '未找到');
+          console.log('   - loginResult.openid:', loginResult.openid || '未找到');
+          console.log('   - loginResult.data?.openid:', loginResult.data?.openid || '未找到');
+          console.log('   - loginResult.data?.user?.openid:', loginResult.data?.user?.openid || '未找到');
           console.log('   - 最终提取的OpenID:', openid ? `✅ 已找到: ${openid}` : '❌ 未找到');
+          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          console.log('🔐 SessionKey提取结果:');
+          console.log('   - 最终提取的SessionKey:', sessionKey ? `✅ 已找到，长度: ${sessionKey.length}` : 'ℹ️ 未提供（这是正常的）');
+          console.log('   - 💡 说明: session_key 主要用于后端解密敏感数据，前端通常不需要');
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
           if (!token) {
             console.error('❌ Token提取失败！');
             console.error('📋 完整响应结构:', JSON.stringify(loginResult, null, 2));
             console.error('💡 提示: 请检查后端返回的数据结构是否符合预期');
+          }
+          if (!openid) {
+            console.error('❌ OpenID提取失败！');
+            console.error('💡 提示: OpenID 是必需的，请检查后端是否返回了 openid');
           }
         }
         
@@ -304,7 +365,7 @@ export default {
           console.log('📦 保存后的登录信息:', savedLoginInfo);
           console.log('🔑 保存后的Token:', savedLoginInfo?.token ? `✅ 已保存，长度: ${savedLoginInfo.token.length}` : '❌ 未保存');
           console.log('👤 保存后的OpenID:', savedLoginInfo?.openid ? `✅ 已保存: ${savedLoginInfo.openid}` : '❌ 未保存');
-          console.log('🔐 保存后的SessionKey:', savedLoginInfo?.sessionKey ? `✅ 已保存，长度: ${savedLoginInfo.sessionKey.length}` : '❌ 未保存');
+          console.log('🔐 保存后的SessionKey:', savedLoginInfo?.sessionKey ? `✅ 已保存，长度: ${savedLoginInfo.sessionKey.length}` : 'ℹ️ 未保存（这是正常的，前端通常不需要）');
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         }
         
