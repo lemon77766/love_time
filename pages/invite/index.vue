@@ -237,6 +237,15 @@ export default {
     };
   },
   methods: {
+    isMsgCodeSuccess(response) {
+      return response && typeof response === 'object' && response.code === 200 && (response.msg || response.message);
+    },
+    getResponseMessage(response, fallbackText = '') {
+      if (!response || typeof response !== 'object') {
+        return fallbackText;
+      }
+      return response.msg || response.message || fallbackText;
+    },
     getSystemInfo() {
       const systemInfo = uni.getSystemInfoSync();
       this.statusBarHeight = systemInfo.statusBarHeight || 0;
@@ -360,13 +369,28 @@ export default {
         const response = await validateInviteCode(code);
         uni.hideLoading();
         
-        if (response && response.success && response.data) {
-          this.creatorInfo = response.data.creator || {};
-          this.inviteCode = code;
-          this.expireAt = response.data.expireAt || '';
+        const isLegacySuccess = response && response.success && response.data;
+        const isMsgCodeSuccess = this.isMsgCodeSuccess(response);
+        const successMessage = this.getResponseMessage(response, '邀请码验证成功');
+
+        if (isLegacySuccess || isMsgCodeSuccess) {
+          const normalizedCreator = response?.data?.creator || response?.creator || {};
+          const normalizedExpireAt = response?.data?.expireAt || response?.expireAt || '';
+          const normalizedCode = response?.data?.code || code;
+
+          this.creatorInfo = normalizedCreator;
+          this.inviteCode = normalizedCode;
+          this.expireAt = normalizedExpireAt;
+
+          if (successMessage) {
+            uni.showToast({
+              title: successMessage,
+              icon: 'success'
+            });
+          }
         } else {
           // 提供更详细的错误提示
-          const errorMsg = response.message || '邀请码无效或已过期';
+          const errorMsg = response?.msg || response?.message || '邀请码无效或已过期';
           uni.showModal({
             title: '验证失败',
             content: errorMsg + '\n\n可能原因：\n1. 邀请码不存在\n2. 邀请码已过期\n3. 邀请码已被使用\n\n请确认邀请码是否正确',
@@ -412,8 +436,10 @@ export default {
       this.isGenerating = true;
       try {
         const response = await createInviteCode();
+        const legacySuccess = response && response.success && response.data;
+        const msgCodeSuccess = this.isMsgCodeSuccess(response);
         
-        if (response && response.success && response.data) {
+        if (legacySuccess || msgCodeSuccess) {
           this.inviteCode = response.data.inviteCode || '';
           this.expireAt = response.data.expireAt || '';
           
@@ -429,9 +455,9 @@ export default {
             inviteCodeExpire: this.expireAt
           });
           
-          uni.showToast({ title: '邀请码生成成功', icon: 'success' });
+          uni.showToast({ title: this.getResponseMessage(response, '邀请码生成成功'), icon: 'success' });
         } else {
-          uni.showToast({ title: response.message || '生成失败', icon: 'none' });
+          uni.showToast({ title: this.getResponseMessage(response, '生成失败'), icon: 'none' });
         }
       } catch (error) {
         console.error('生成邀请码失败', error);
@@ -560,7 +586,8 @@ export default {
         
         uni.hideLoading();
         
-        if (response && response.success && response.data) {
+        const msgCodeSuccess = this.isMsgCodeSuccess(response);
+        if ((response && response.success && response.data) || msgCodeSuccess) {
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
           console.log('✅ [页面] 验证成功，处理响应数据');
           console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -594,7 +621,7 @@ export default {
           console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
           
           // 提供更详细的错误提示
-          const errorMsg = response?.message || '邀请码无效或已过期';
+          const errorMsg = this.getResponseMessage(response, '邀请码无效或已过期');
           uni.showModal({
             title: '验证失败',
             content: errorMsg + '\n\n可能原因：\n1. 邀请码不存在\n2. 邀请码已过期\n3. 邀请码已被使用\n\n请确认邀请码是否正确（6位字母数字）',
@@ -707,8 +734,9 @@ export default {
       this.isAccepting = true;
       try {
         const response = await acceptInvite(this.inviteCode);
+        const msgCodeSuccess = this.isMsgCodeSuccess(response);
         
-        if (response && response.success && response.data) {
+        if ((response && response.success && response.data) || msgCodeSuccess) {
           // 保存绑定信息
           const coupleData = {
             isBound: true,
@@ -722,7 +750,7 @@ export default {
           saveCoupleInfo(coupleData);
           
           uni.showToast({ 
-            title: '绑定成功！', 
+            title: this.getResponseMessage(response, '绑定成功！'), 
             icon: 'success',
             duration: 2000
           });
@@ -735,7 +763,7 @@ export default {
           }, 2000);
         } else {
           uni.showToast({ 
-            title: response.message || '接受失败', 
+            title: this.getResponseMessage(response, '接受失败'), 
             icon: 'none' 
           });
           this.isAccepting = false;

@@ -139,6 +139,9 @@
         </view>
       </view>
     </view>
+    
+    <!-- 自定义 TabBar -->
+    <custom-tabbar :current="0"></custom-tabbar>
   </view>
 </template>
 
@@ -147,8 +150,12 @@ import { getCoupleInfo, getPartnerInfo, isBound as checkIsBound, clearCoupleInfo
 import { getCoupleStatus, getLoveDays } from '../../api/couple.js';
 import { saveCoupleInfo } from '../../utils/couple.js';
 import { getUserInfo } from '../../utils/auth.js';
+import CustomTabbar from '@/components/custom-tabbar/index.vue';
 
 export default {
+  components: {
+    CustomTabbar
+  },
   data() {
     return {
       statusBarHeight: 0,

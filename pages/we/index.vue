@@ -177,6 +177,9 @@
         </view>
       </view>
     </view>
+    
+    <!-- 自定义 TabBar -->
+    <custom-tabbar :current="2"></custom-tabbar>
   </view>
 </template>
 
@@ -187,8 +190,12 @@ import { getCoupleInfo, getPartnerInfo, isBound as checkIsBound, clearCoupleInfo
 import { getCoupleStatus, unbindCouple } from '../../api/couple.js';
 import { saveCoupleInfo } from '../../utils/couple.js';
 import { updateUserProfile } from '../../api/user.js';
+import CustomTabbar from '@/components/custom-tabbar/index.vue';
 
 export default {
+  components: {
+    CustomTabbar
+  },
   data() {
     return {
       // 导航栏相关

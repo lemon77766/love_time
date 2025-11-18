@@ -146,13 +146,20 @@
       <text class="history-btn-icon">📜</text>
       <text class="history-btn-text">历史轨迹</text>
     </view>
+    
+    <!-- 自定义 TabBar -->
+    <custom-tabbar :current="1"></custom-tabbar>
   </view>
 </template>
 
 <script>
 import { updateLocation, getCurrentLocations } from '@/api/trajectory.js';
+import CustomTabbar from '@/components/custom-tabbar/index.vue';
 
 export default {
+  components: {
+    CustomTabbar
+  },
   data() {
     return {
       statusBarHeight: 0,
@@ -831,7 +838,7 @@ export default {
 .trajectory-page {
   min-height: 100vh;
   background-color: #FFFAF4;
-  padding-bottom: 40rpx;
+  padding-bottom: 120rpx; /* 为自定义 TabBar 预留空间 */
 }
 
 /* 自定义导航栏样式 */
