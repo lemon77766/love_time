@@ -44,7 +44,7 @@
           :class="{ selected: selectedStyle === i && !isCustomStyle }"
           @click="selectPresetStyle(i)"
         >
-          <image class="style-image" :src="`../../static/xinxiang/xin${i}.jpg`" mode="aspectFill"></image>
+          <image class="style-image" :src="`/static/xinxiang/xin${i}.jpg`" mode="aspectFill"></image>
           <view v-if="selectedStyle === i && !isCustomStyle" class="check-mark">✓</view>
         </view>
       </view>
@@ -98,6 +98,30 @@
           </picker>
         </view>
 
+        <!-- 字体样式 -->
+        <view class="form-item font-style-item">
+          <text class="form-label">字体样式</text>
+          <view v-if="fontLoading" class="font-loading">正在加载字体...</view>
+          <view v-else class="font-options">
+            <view
+              v-for="font in fontOptions"
+              :key="font.value"
+              class="font-option"
+              :class="{ active: selectedFontStyle === font.value }"
+              @click="selectFont(font.value)"
+            >
+              <view class="font-option-header">
+                <text class="font-option-name">{{ font.label }}</text>
+                <text class="font-option-desc">{{ font.description || '点击选择' }}</text>
+              </view>
+              <text class="font-option-sample" :class="`font-style-${font.value}`">
+                {{ font.sample || '未来与你' }}
+              </text>
+            </view>
+          </view>
+          <text v-if="fontRequestError" class="font-error">{{ fontRequestError }}</text>
+        </view>
+
         <!-- 信件内容 -->
         <view class="form-item">
           <text class="form-label">信件内容</text>
@@ -136,16 +160,16 @@
             <!-- 信件内容层 -->
             <view class="letter-content">
               <view class="letter-header">
-                <text class="letter-title">{{ form.title || '信件主题' }}</text>
-                <text class="letter-date">送达时间：{{ form.deliveryDate || '未选择' }}</text>
+                <text class="letter-title" :class="selectedFontClass">{{ form.title || '信件主题' }}</text>
+                <text class="letter-date" :class="selectedFontClass">送达时间：{{ form.deliveryDate || '未选择' }}</text>
               </view>
               
               <view class="letter-body">
-                <text class="letter-text">{{ form.content || '信件内容...' }}</text>
+                <text class="letter-text" :class="selectedFontClass">{{ form.content || '信件内容...' }}</text>
               </view>
               
               <view class="letter-footer">
-                <text class="letter-sign">—— 给未来的你</text>
+                <text class="letter-sign" :class="selectedFontClass">—— 给未来的你</text>
               </view>
             </view>
           </view>
@@ -176,18 +200,18 @@
             <!-- 信件内容层 -->
             <view class="letter-content">
               <view class="letter-header">
-                <text class="letter-title">{{ form.title }}</text>
-                <text class="letter-date">送达时间：{{ form.deliveryDate }}</text>
+                <text class="letter-title" :class="selectedFontClass">{{ form.title }}</text>
+                <text class="letter-date" :class="selectedFontClass">送达时间：{{ form.deliveryDate }}</text>
               </view>
-              
-              <view class="letter-body">
-                <text class="letter-text">{{ form.content }}</text>
+                
+                <view class="letter-body">
+                  <text class="letter-text" :class="selectedFontClass">{{ form.content }}</text>
+                </view>
+                
+                <view class="letter-footer">
+                  <text class="letter-sign" :class="selectedFontClass">—— 给未来的你</text>
+                </view>
               </view>
-              
-              <view class="letter-footer">
-                <text class="letter-sign">—— 给未来的你</text>
-              </view>
-            </view>
           </view>
         </view>
 
@@ -200,8 +224,29 @@
 </template>
 
 <script>
-import { createFutureLetter, sendFutureLetter } from '@/api/futureLetter.js';
+import { createFutureLetter, sendFutureLetter, getFutureLetterFonts } from '@/api/futureLetter.js';
 import { getPartnerInfo, isBound } from '@/utils/couple.js';
+import config from '@/utils/config.js';
+
+const FALLBACK_FONT_OPTIONS = [
+  { label: '默认字体', value: 'default', description: '清晰易读', sample: '未来与你' },
+  { label: '马善政手写', value: 'mashanzheng', description: '温柔手写感', sample: '未来与你' },
+  { label: '站酷快乐体', value: 'zcoolkuaile', description: '活泼可爱', sample: '未来与你' },
+  { label: '清松手写体', value: 'qingsong', description: '自然流畅', sample: '未来与你' },
+  { label: '站酷小薇体', value: 'zcoolxiaowei', description: '清新文艺', sample: '未来与你' },
+  { label: '站酷文艺体', value: 'zcoolwenyi', description: '优雅文艺', sample: '未来与你' }
+];
+
+const FALLBACK_FONT_MAP = FALLBACK_FONT_OPTIONS.reduce((map, option) => {
+  map[option.value] = option;
+  return map;
+}, {});
+
+let maShanZhengFontPromise = null;
+let zcoolKuaiLeFontPromise = null;
+let qingSongFontPromise = null;
+let zcoolXiaoWeiFontPromise = null;
+let zcoolWenYiFontPromise = null;
 
 export default {
   data() {
@@ -218,8 +263,13 @@ export default {
       form: {
         title: '',
         deliveryDate: '',
-        content: ''
-      }
+        content: '',
+        fontStyle: 'default'
+      },
+      fontOptions: [...FALLBACK_FONT_OPTIONS],
+      fontLoading: false,
+      fontRequestError: '',
+      customFontLoaded: false
     };
   },
   computed: {
@@ -241,11 +291,19 @@ export default {
       if (this.isCustomStyle) {
         return this.customImage;
       }
-      return `../../static/xinxiang/xin${this.selectedStyle}.jpg`;
+      return `/static/xinxiang/xin${this.selectedStyle}.jpg`;
+    },
+    selectedFontStyle() {
+      return this.form.fontStyle || 'default';
+    },
+    selectedFontClass() {
+      return `font-style-${this.selectedFontStyle}`;
     }
   },
   onLoad() {
     this.getSystemInfo();
+    this.preloadCustomFont();
+    this.fetchFontOptions();
   },
   methods: {
     goBack() {
@@ -261,6 +319,450 @@ export default {
       // #ifdef H5
       this.navBarHeight = 44;
       // #endif
+    },
+    async fetchFontOptions() {
+      this.fontLoading = true;
+      this.fontRequestError = '';
+      try {
+        const response = await getFutureLetterFonts();
+        const fontList = this.extractFontList(response);
+        const normalized = this.normalizeFontOptions(fontList);
+        if (normalized.length > 0) {
+          this.fontOptions = normalized;
+        } else {
+          console.warn('字体列表为空，使用默认字体配置');
+          this.fontOptions = [...FALLBACK_FONT_OPTIONS];
+        }
+        if (!this.fontOptions.some(font => font.value === this.selectedFontStyle) && this.fontOptions.length > 0) {
+          this.form.fontStyle = this.fontOptions[0].value;
+        }
+      } catch (error) {
+        console.error('获取字体列表失败:', error);
+        this.fontRequestError = '字体加载失败，已使用默认字体';
+        this.fontOptions = [...FALLBACK_FONT_OPTIONS];
+        uni.showToast({ title: '字体加载失败，使用默认字体', icon: 'none' });
+      } finally {
+        this.fontLoading = false;
+      }
+    },
+    async preloadCustomFont() {
+      if (this.customFontLoaded) {
+        return;
+      }
+      if (typeof uni === 'undefined' || typeof uni.loadFontFace !== 'function') {
+        console.warn('当前平台不支持自定义字体加载');
+        return;
+      }
+      try {
+        // 并行加载所有字体
+        await Promise.allSettled([
+          this.ensureMaShanZhengFont(),
+          this.ensureZcoolKuaiLeFont(),
+          this.ensureQingSongFont(),
+          this.ensureZcoolXiaoWeiFont(),
+          this.ensureZcoolWenYiFont()
+        ]);
+        this.customFontLoaded = true;
+        console.log('所有手写字体加载完成');
+      } catch (error) {
+        console.error('加载字体失败:', error);
+        // 不显示错误提示，允许部分字体加载失败
+      }
+    },
+    ensureMaShanZhengFont() {
+      if (maShanZhengFontPromise) {
+        return maShanZhengFontPromise;
+      }
+      // 微信小程序不支持本地字体文件，使用服务器字体文件
+      // 其他平台优先使用本地字体文件
+      let fontSource;
+      // #ifdef MP-WEIXIN
+      // 微信小程序必须使用网络URL，使用服务器字体文件
+      fontSource = `url("${config.baseURL}/fonts/MaShanZheng-Regular.ttf")`;
+      // #endif
+      // #ifndef MP-WEIXIN
+      fontSource = 'url("/static/fonts/MaShanZheng-Regular.ttf")';
+      // #endif
+      maShanZhengFontPromise = new Promise((resolve, reject) => {
+        uni.loadFontFace({
+          global: true,
+          family: 'MaShanZheng',
+          source: fontSource,
+          desc: {
+            style: 'normal',
+            weight: '400'
+          },
+          success: (res) => {
+            console.log('MaShanZheng 字体加载成功', res);
+            resolve(res);
+          },
+          fail: (error) => {
+            console.warn('MaShanZheng 字体加载失败:', error);
+            // 微信小程序环境下，如果网络加载失败，使用默认字体
+            // #ifdef MP-WEIXIN
+            maShanZhengFontPromise = null;
+            resolve(null); // 不阻止其他字体加载
+            // #endif
+            // 非微信小程序，如果本地加载失败，尝试服务器字体
+            // #ifndef MP-WEIXIN
+            if (fontSource.includes('/static/')) {
+              console.log('尝试使用服务器加载 MaShanZheng 字体');
+              fontSource = `url("${config.baseURL}/fonts/MaShanZheng-Regular.ttf")`;
+              uni.loadFontFace({
+                global: true,
+                family: 'MaShanZheng',
+                source: fontSource,
+                desc: {
+                  style: 'normal',
+                  weight: '400'
+                },
+                success: (res) => {
+                  console.log('MaShanZheng 字体从CDN加载成功', res);
+                  resolve(res);
+                },
+                fail: (error2) => {
+                  console.warn('MaShanZheng 字体CDN加载也失败:', error2);
+                  maShanZhengFontPromise = null;
+                  resolve(null);
+                }
+              });
+              return;
+            }
+            // #endif
+            maShanZhengFontPromise = null;
+            resolve(null); // 不阻止其他字体加载
+          }
+        });
+      });
+      return maShanZhengFontPromise;
+    },
+    ensureZcoolKuaiLeFont() {
+      if (zcoolKuaiLeFontPromise) {
+        return zcoolKuaiLeFontPromise;
+      }
+      // 微信小程序不支持本地字体文件，使用服务器字体文件
+      // 其他平台优先使用本地字体文件
+      let fontSource;
+      // #ifdef MP-WEIXIN
+      // 微信小程序必须使用网络URL，使用服务器字体文件
+      fontSource = `url("${config.baseURL}/fonts/ZCOOLKuaiLe-Regular.ttf")`;
+      // #endif
+      // #ifndef MP-WEIXIN
+      fontSource = 'url("/static/fonts/ZCOOLKuaiLe-Regular.ttf")';
+      // #endif
+      zcoolKuaiLeFontPromise = new Promise((resolve, reject) => {
+        uni.loadFontFace({
+          global: true,
+          family: 'ZCOOLKuaiLe',
+          source: fontSource,
+          desc: {
+            style: 'normal',
+            weight: '400'
+          },
+          success: (res) => {
+            console.log('ZCOOLKuaiLe 字体加载成功', res);
+            resolve(res);
+          },
+          fail: (error) => {
+            console.warn('ZCOOLKuaiLe 字体加载失败:', error);
+            // 微信小程序环境下，如果网络加载失败，使用默认字体
+            // #ifdef MP-WEIXIN
+            zcoolKuaiLeFontPromise = null;
+            resolve(null);
+            // #endif
+            // 非微信小程序，如果本地加载失败，尝试服务器字体
+            // #ifndef MP-WEIXIN
+            if (fontSource.includes('/static/')) {
+              console.log('尝试使用服务器加载 ZCOOLKuaiLe 字体');
+              fontSource = `url("${config.baseURL}/fonts/ZCOOLKuaiLe-Regular.ttf")`;
+              uni.loadFontFace({
+                global: true,
+                family: 'ZCOOLKuaiLe',
+                source: fontSource,
+                desc: {
+                  style: 'normal',
+                  weight: '400'
+                },
+                success: (res) => {
+                  console.log('ZCOOLKuaiLe 字体从CDN加载成功', res);
+                  resolve(res);
+                },
+                fail: (error2) => {
+                  console.warn('ZCOOLKuaiLe 字体CDN加载也失败:', error2);
+                  zcoolKuaiLeFontPromise = null;
+                  resolve(null);
+                }
+              });
+              return;
+            }
+            // #endif
+            zcoolKuaiLeFontPromise = null;
+            resolve(null);
+          }
+        });
+      });
+      return zcoolKuaiLeFontPromise;
+    },
+    ensureQingSongFont() {
+      if (qingSongFontPromise) {
+        return qingSongFontPromise;
+      }
+      // 微信小程序不支持本地字体文件，使用服务器字体文件
+      // 其他平台优先使用本地字体文件
+      let fontSource;
+      // #ifdef MP-WEIXIN
+      // 微信小程序必须使用网络URL，使用服务器字体文件
+      fontSource = `url("${config.baseURL}/fonts/QingSong-Regular.ttf")`;
+      // #endif
+      // #ifndef MP-WEIXIN
+      fontSource = 'url("/static/fonts/QingSong-Regular.ttf")';
+      // #endif
+      qingSongFontPromise = new Promise((resolve, reject) => {
+        uni.loadFontFace({
+          global: true,
+          family: 'QingSong',
+          source: fontSource,
+          desc: {
+            style: 'normal',
+            weight: '400'
+          },
+          success: (res) => {
+            console.log('QingSong 字体加载成功', res);
+            resolve(res);
+          },
+          fail: (error) => {
+            console.warn('QingSong 字体加载失败:', error);
+            // 微信小程序环境下，如果网络加载失败，使用默认字体
+            // #ifdef MP-WEIXIN
+            qingSongFontPromise = null;
+            resolve(null);
+            // #endif
+            // 非微信小程序，如果本地加载失败，尝试服务器字体
+            // #ifndef MP-WEIXIN
+            if (fontSource.includes('/static/')) {
+              console.log('尝试使用服务器加载 QingSong 字体');
+              fontSource = `url("${config.baseURL}/fonts/QingSong-Regular.ttf")`;
+              uni.loadFontFace({
+                global: true,
+                family: 'QingSong',
+                source: fontSource,
+                desc: {
+                  style: 'normal',
+                  weight: '400'
+                },
+                success: (res) => {
+                  console.log('QingSong 字体从CDN加载成功', res);
+                  resolve(res);
+                },
+                fail: (error2) => {
+                  console.warn('QingSong 字体CDN加载也失败:', error2);
+                  qingSongFontPromise = null;
+                  resolve(null);
+                }
+              });
+              return;
+            }
+            // #endif
+            qingSongFontPromise = null;
+            resolve(null);
+          }
+        });
+      });
+      return qingSongFontPromise;
+    },
+    ensureZcoolXiaoWeiFont() {
+      if (zcoolXiaoWeiFontPromise) {
+        return zcoolXiaoWeiFontPromise;
+      }
+      // 微信小程序不支持本地字体文件，使用服务器字体文件
+      // 其他平台优先使用本地字体文件
+      let fontSource;
+      // #ifdef MP-WEIXIN
+      // 微信小程序必须使用网络URL，使用服务器字体文件
+      fontSource = `url("${config.baseURL}/fonts/ZCOOLXiaoWei-Regular.ttf")`;
+      // #endif
+      // #ifndef MP-WEIXIN
+      fontSource = 'url("/static/fonts/ZCOOLXiaoWei-Regular.ttf")';
+      // #endif
+      zcoolXiaoWeiFontPromise = new Promise((resolve, reject) => {
+        uni.loadFontFace({
+          global: true,
+          family: 'ZCOOLXiaoWei',
+          source: fontSource,
+          desc: {
+            style: 'normal',
+            weight: '400'
+          },
+          success: (res) => {
+            console.log('ZCOOLXiaoWei 字体加载成功', res);
+            resolve(res);
+          },
+          fail: (error) => {
+            console.warn('ZCOOLXiaoWei 字体加载失败:', error);
+            // 微信小程序环境下，如果网络加载失败，使用默认字体
+            // #ifdef MP-WEIXIN
+            zcoolXiaoWeiFontPromise = null;
+            resolve(null);
+            // #endif
+            // 非微信小程序，如果本地加载失败，尝试服务器字体
+            // #ifndef MP-WEIXIN
+            if (fontSource.includes('/static/')) {
+              console.log('尝试使用服务器加载 ZCOOLXiaoWei 字体');
+              fontSource = `url("${config.baseURL}/fonts/ZCOOLXiaoWei-Regular.ttf")`;
+              uni.loadFontFace({
+                global: true,
+                family: 'ZCOOLXiaoWei',
+                source: fontSource,
+                desc: {
+                  style: 'normal',
+                  weight: '400'
+                },
+                success: (res) => {
+                  console.log('ZCOOLXiaoWei 字体从CDN加载成功', res);
+                  resolve(res);
+                },
+                fail: (error2) => {
+                  console.warn('ZCOOLXiaoWei 字体CDN加载也失败:', error2);
+                  zcoolXiaoWeiFontPromise = null;
+                  resolve(null);
+                }
+              });
+              return;
+            }
+            // #endif
+            zcoolXiaoWeiFontPromise = null;
+            resolve(null);
+          }
+        });
+      });
+      return zcoolXiaoWeiFontPromise;
+    },
+    ensureZcoolWenYiFont() {
+      if (zcoolWenYiFontPromise) {
+        return zcoolWenYiFontPromise;
+      }
+      // 微信小程序不支持本地字体文件，使用服务器字体文件
+      // 其他平台优先使用本地字体文件
+      let fontSource;
+      // #ifdef MP-WEIXIN
+      // 微信小程序必须使用网络URL，使用服务器字体文件
+      fontSource = `url("${config.baseURL}/fonts/ZCOOLWenYi-Regular.ttf")`;
+      // #endif
+      // #ifndef MP-WEIXIN
+      fontSource = 'url("/static/fonts/ZCOOLWenYi-Regular.ttf")';
+      // #endif
+      zcoolWenYiFontPromise = new Promise((resolve, reject) => {
+        uni.loadFontFace({
+          global: true,
+          family: 'ZCOOLWenYi',
+          source: fontSource,
+          desc: {
+            style: 'normal',
+            weight: '400'
+          },
+          success: (res) => {
+            console.log('ZCOOLWenYi 字体加载成功', res);
+            resolve(res);
+          },
+          fail: (error) => {
+            console.warn('ZCOOLWenYi 字体加载失败:', error);
+            // 微信小程序环境下，如果网络加载失败，使用默认字体
+            // #ifdef MP-WEIXIN
+            zcoolWenYiFontPromise = null;
+            resolve(null);
+            // #endif
+            // 非微信小程序，如果本地加载失败，尝试服务器字体
+            // #ifndef MP-WEIXIN
+            if (fontSource.includes('/static/')) {
+              console.log('尝试使用服务器加载 ZCOOLWenYi 字体');
+              fontSource = `url("${config.baseURL}/fonts/ZCOOLWenYi-Regular.ttf")`;
+              uni.loadFontFace({
+                global: true,
+                family: 'ZCOOLWenYi',
+                source: fontSource,
+                desc: {
+                  style: 'normal',
+                  weight: '400'
+                },
+                success: (res) => {
+                  console.log('ZCOOLWenYi 字体从CDN加载成功', res);
+                  resolve(res);
+                },
+                fail: (error2) => {
+                  console.warn('ZCOOLWenYi 字体CDN加载也失败:', error2);
+                  zcoolWenYiFontPromise = null;
+                  resolve(null);
+                }
+              });
+              return;
+            }
+            // #endif
+            zcoolWenYiFontPromise = null;
+            resolve(null);
+          }
+        });
+      });
+      return zcoolWenYiFontPromise;
+    },
+    extractFontList(response) {
+      if (!response) return [];
+      const candidates = [
+        response.data?.fonts,
+        response.data?.items,
+        response.data,
+        response.fonts,
+        response.items,
+        response.list,
+        response
+      ];
+      for (const candidate of candidates) {
+        if (Array.isArray(candidate)) {
+          return candidate;
+        }
+      }
+      return [];
+    },
+    normalizeFontOptions(fonts = []) {
+      if (!Array.isArray(fonts)) return [];
+      return fonts
+        .map(item => {
+          if (typeof item === 'string') {
+            return this.createFontOption(item);
+          }
+          const value = item.value || item.fontStyle || item.font_style || item.code || item.key;
+          if (!value) return null;
+          const base = this.createFontOption(value);
+          return {
+            ...base,
+            ...item,
+            value: base.value,
+            label: item.label || item.name || base.label,
+            description: item.description || base.description,
+            sample: item.sample || base.sample
+          };
+        })
+        .filter(Boolean);
+    },
+    createFontOption(value) {
+      if (!value && value !== 0) {
+        return FALLBACK_FONT_OPTIONS[0];
+      }
+      const normalizedValue = String(value).trim().toLowerCase();
+      const base = FALLBACK_FONT_MAP[normalizedValue] || {
+        label: value,
+        description: '自定义字体',
+        sample: '未来与你'
+      };
+      return {
+        value: normalizedValue,
+        label: base.label,
+        description: base.description,
+        sample: base.sample
+      };
+    },
+    selectFont(value) {
+      if (!value) return;
+      this.form.fontStyle = String(value).trim().toLowerCase();
     },
     // 选择预设样式
     selectPresetStyle(index) {
@@ -361,7 +863,7 @@ export default {
           backgroundImage = this.customImage;
         } else {
           // 预设样式可以转换为完整URL或使用样式ID
-          backgroundImage = `../../static/xinxiang/xin${this.selectedStyle}.jpg`;
+          backgroundImage = `/static/xinxiang/xin${this.selectedStyle}.jpg`;
         }
 
         // 验证日期格式
@@ -377,9 +879,11 @@ export default {
           content: this.form.content.trim(),
           deliveryMethod: 'PARTNER', // 目前只支持PARTNER
           scheduledDate: this.form.deliveryDate, // 格式：YYYY-MM-DD
-          scheduledTime: '00:00:00', // 默认时间
-          status: 'DRAFT' // 草稿状态
+          scheduledTime: `${this.form.deliveryDate}T00:00:00.000`, // 默认时间，确保后端可解析
+          status: 'DRAFT', // 草稿状态
+          fontStyle: this.selectedFontStyle
         };
+        letterData.font_style = this.selectedFontStyle;
 
         // 如果已绑定且获取到对方ID，添加receiverId（确保是数字类型）
         if (receiverId) {
@@ -421,6 +925,7 @@ export default {
                 title: this.form.title,
                 deliveryDate: this.form.deliveryDate,
                 content: this.form.content,
+                fontStyle: this.selectedFontStyle,
                 createTime: new Date().toLocaleString(),
                 status: 'SENT' // 标记为已发送
               };
@@ -461,6 +966,7 @@ export default {
               title: this.form.title,
               deliveryDate: this.form.deliveryDate,
               content: this.form.content,
+              fontStyle: this.selectedFontStyle,
               createTime: new Date().toLocaleString(),
               status: 'DRAFT' // 标记为草稿（发送失败）
             };
@@ -1046,6 +1552,106 @@ export default {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
+.font-style-item {
+  gap: 16rpx;
+}
+
+.font-loading {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.font-error {
+  font-size: 22rpx;
+  color: #ff4d4f;
+}
+
+.font-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.font-option {
+  padding: 20rpx;
+  border-radius: 12rpx;
+  border: 2rpx solid transparent;
+  background: #ffffff;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  transition: all 0.2s ease;
+}
+
+.font-option.active {
+  border-color: #FFB5C2;
+  box-shadow: 0 6rpx 16rpx rgba(255, 181, 194, 0.3);
+}
+
+.font-option-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.font-option-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #4A4A4A;
+}
+
+.font-option-desc {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.font-option-sample {
+  font-size: 30rpx;
+  color: #4A4A4A;
+}
+
+.font-style-default {
+  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  letter-spacing: 0;
+}
+
+.font-style-mashanzheng {
+  font-family: 'MaShanZheng', 'Ma Shan Zheng', 'KaiTi', cursive;
+  letter-spacing: 2rpx;
+}
+
+.font-style-zcoolkuaile {
+  font-family: 'ZCOOLKuaiLe', 'ZCOOL KuaiLe', 'KaiTi', cursive;
+  letter-spacing: 1rpx;
+}
+
+.font-style-qingsong {
+  font-family: 'QingSong', 'KaiTi', 'STKaiti', cursive;
+  letter-spacing: 1.5rpx;
+}
+
+.font-style-zcoolxiaowei {
+  font-family: 'ZCOOLXiaoWei', 'ZCOOL XiaoWei', 'KaiTi', cursive;
+  letter-spacing: 1rpx;
+}
+
+.font-style-zcoolwenyi {
+  font-family: 'ZCOOLWenYi', 'ZCOOL WenYi', 'KaiTi', cursive;
+  letter-spacing: 1.5rpx;
+}
+
+/* 兼容旧的手写体样式 */
+.font-style-handwriting {
+  font-family: 'MaShanZheng', 'Ma Shan Zheng', 'ZCOOL KuaiLe', 'KaiTi', cursive;
+  letter-spacing: 2rpx;
+}
+
+.font-style-typewriter {
+  font-family: 'Courier New', 'Special Elite', 'Source Code Pro', monospace;
+  letter-spacing: 1rpx;
+}
+
 .char-count {
   font-size: 22rpx;
   color: #666;
@@ -1210,14 +1816,12 @@ export default {
   font-size: 36rpx;
   font-weight: 600;
   color: #4A4A4A;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-date {
   font-size: 24rpx;
   color: #666;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-body {
@@ -1233,7 +1837,6 @@ export default {
   white-space: pre-wrap;
   word-break: break-all;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-footer {
@@ -1248,7 +1851,6 @@ export default {
   color: #666;
   font-style: italic;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .preview-modal-actions {

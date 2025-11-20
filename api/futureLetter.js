@@ -235,6 +235,49 @@ export function getFutureLetterStats() {
 }
 
 /**
+ * 获取可用字体列表
+ * @returns {Promise<Object>} 返回字体列表
+ *
+ * 后端接口要求：
+ * - 请求方法：GET
+ * - 请求地址：/api/future-letter/fonts
+ * - 请求头：需携带 Authorization token
+ */
+export function getFutureLetterFonts() {
+  const url = config.API.FUTURE_LETTER.FONTS;
+  const fullUrl = config.baseURL + url;
+
+  console.log('🔗 [未来情书API] 开始获取字体列表');
+  console.log('📍 请求地址:', fullUrl);
+  console.log('📋 请求方法: GET');
+  console.log('⏰ 请求时间:', new Date().toLocaleString());
+
+  return http.get(url).then(response => {
+    console.log('✅ [未来情书API] 获取字体列表成功');
+    console.log('📦 响应数据:', response);
+
+    let fonts = [];
+    if (response && Array.isArray(response.data)) {
+      fonts = response.data;
+    } else if (response && Array.isArray(response.fonts)) {
+      fonts = response.fonts;
+    } else if (response && response.data && Array.isArray(response.data.fonts)) {
+      fonts = response.data.fonts;
+    } else if (Array.isArray(response)) {
+      fonts = response;
+    } else {
+      console.warn('⚠️ 字体列表响应数据格式异常:', response);
+    }
+
+    return { success: true, data: fonts };
+  }).catch(error => {
+    console.error('❌ [未来情书API] 获取字体列表失败');
+    console.error('🔴 错误信息:', error);
+    throw error;
+  });
+}
+
+/**
  * 获取情书详情
  * @param {number|string} letterId - 情书ID
  * @returns {Promise<Object>} 返回情书详情

@@ -419,23 +419,66 @@ export default {
       
       try {
         const response = await getLoveDays();
-        if (response && response.success && response.data) {
-          this.loveDays = response.data.loveDays || 0;
-          this.anniversaryDate = response.data.anniversaryDate || '';
-          this.relationshipName = response.data.relationshipName || '';
+        const loveDaysPayload = this.normalizeLoveDaysResponse(response);
+        if (loveDaysPayload) {
+          this.loveDays = this.toNumberOrZero(loveDaysPayload.loveDays);
+          this.anniversaryDate = loveDaysPayload.anniversaryDate || '';
+          this.relationshipName = loveDaysPayload.relationshipName || '';
           console.log('✅ 成功加载相爱天数:', {
             loveDays: this.loveDays,
             anniversaryDate: this.anniversaryDate,
             relationshipName: this.relationshipName
           });
         } else {
-          console.warn('⚠️ 获取相爱天数失败，响应格式异常:', response);
+          console.warn('⚠️ 获取相爱天数失败，无法识别有效数据结构:', response);
         }
       } catch (error) {
         console.error('❌ 获取相爱天数失败:', error);
         // 接口调用失败时，使用本地计算的绑定天数作为降级方案
         // 不显示错误提示，避免影响用户体验
       }
+    },
+    normalizeLoveDaysResponse(response) {
+      if (!response) return null;
+      
+      const successLike =
+        response.success === true ||
+        response.code === 200 ||
+        response.status === 200;
+      
+      const candidates = [
+        response?.data,
+        response?.result,
+        response?.body,
+        response?.content,
+        response
+      ];
+      
+      for (const candidate of candidates) {
+        if (
+          candidate &&
+          (candidate.loveDays !== undefined ||
+            candidate.anniversaryDate ||
+            candidate.relationshipName)
+        ) {
+          return candidate;
+        }
+      }
+      
+      // 如果响应本身被标记为成功但没有数据字段，返回空对象保持安全
+      if (successLike) {
+        return {
+          loveDays: 0,
+          anniversaryDate: '',
+          relationshipName: ''
+        };
+      }
+      
+      return null;
+    },
+    toNumberOrZero(value) {
+      const num = Number(value);
+      return Number.isFinite(num) && num >= 0 ? num : 0;
     },
     // 加载近期动态
     loadRecentActivities() {

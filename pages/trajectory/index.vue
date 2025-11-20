@@ -406,71 +406,81 @@ export default {
     async loadCurrentLocations() {
       try {
         const res = await getCurrentLocations();
-        
-        if (res.success && res.data) {
-          // 兼容后端返回的两种命名格式：驼峰命名（myLocation）和下划线命名（my_location）
-          const myLocationData = res.data.myLocation || res.data.my_location;
-          const partnerLocationData = res.data.partnerLocation || res.data.partner_location;
-          const distance = res.data.distance;
-          const distanceText = res.data.distance_text || res.data.distanceText;
-          
-          // 更新我的位置
-          if (myLocationData) {
-            this.myLocation = {
-              latitude: myLocationData.latitude,
-              longitude: myLocationData.longitude,
-              address: myLocationData.address || myLocationData.description || null,
-              location_name: myLocationData.location_name || myLocationData.locationName || null,
-              updateTime: myLocationData.update_time || myLocationData.updatedAt || myLocationData.createdAt || new Date()
-            };
-            
-            // 如果没有地址信息，根据经纬度反解析地址
-            if (!this.myLocation.address && !this.myLocation.location_name) {
-              await this.reverseGeocode(this.myLocation.latitude, this.myLocation.longitude, 'my');
-            }
-          }
-          
-          // 更新对方位置
-          if (partnerLocationData) {
-            this.partnerLocation = {
-              latitude: partnerLocationData.latitude,
-              longitude: partnerLocationData.longitude,
-              address: partnerLocationData.address || partnerLocationData.description || null,
-              location_name: partnerLocationData.location_name || partnerLocationData.locationName || null,
-              updateTime: partnerLocationData.update_time || partnerLocationData.updatedAt || partnerLocationData.createdAt || new Date()
-            };
-            
-            // 如果没有地址信息，根据经纬度反解析地址
-            if (!this.partnerLocation.address && !this.partnerLocation.location_name) {
-              await this.reverseGeocode(this.partnerLocation.latitude, this.partnerLocation.longitude, 'partner');
-            }
-          } else {
-            this.partnerLocation = null;
-          }
-          
-          // 更新距离
-          this.distance = distance;
-          
-          // 如果双方都有位置，但后端没有返回距离，前端计算距离
-          if (this.distance === null || this.distance === undefined) {
-            if (this.myLocation && this.partnerLocation) {
-              this.distance = this.calculateDistance(
-                this.myLocation.latitude, this.myLocation.longitude,
-                this.partnerLocation.latitude, this.partnerLocation.longitude
-              );
-            }
-          }
-          
-          console.log('双方位置加载成功', {
-            myLocation: this.myLocation,
-            partnerLocation: this.partnerLocation,
-            distance: distanceText || this.distance,
-            rawData: res.data
-          });
-          
-          // 更新地图显示
-          this.updateMap();
+        const isSuccess = res?.success === true || res?.code === 200 || res?.status === 0;
+        const responseData = res?.data || res?.result || null;
+
+        if (!isSuccess || !responseData) {
+          console.warn('⚠️ 双方位置接口返回数据格式不符合预期', res);
+          return;
         }
+
+        const normalizeLocation = (locationData = {}) => {
+          if (!locationData || (!locationData.latitude && !locationData.longitude)) {
+            return null;
+          }
+          const latitude = Number(locationData.latitude || locationData.lat || locationData.latitudeDecimal);
+          const longitude = Number(locationData.longitude || locationData.lng || locationData.longitudeDecimal);
+          if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+            return null;
+          }
+          return {
+            latitude,
+            longitude,
+            address: locationData.address || locationData.description || locationData.detail || null,
+            location_name: locationData.location_name || locationData.locationName || locationData.name || null,
+            updateTime: locationData.update_time || locationData.updatedAt || locationData.updateTime || locationData.createdAt || locationData.timestamp || new Date()
+          };
+        };
+
+        // 兼容不同字段命名
+        const myLocationData = responseData.myLocation || responseData.my_location || responseData.self || responseData.mine;
+        const partnerLocationData = responseData.partnerLocation || responseData.partner_location || responseData.partner || responseData.lover;
+        const distanceText = responseData.distance_text || responseData.distanceText || responseData.distanceFormatted;
+
+        // 更新我的位置
+        const normalizedMyLocation = normalizeLocation(myLocationData);
+        if (normalizedMyLocation) {
+          this.myLocation = normalizedMyLocation;
+          if (!this.myLocation.address && !this.myLocation.location_name) {
+            await this.reverseGeocode(this.myLocation.latitude, this.myLocation.longitude, 'my');
+          }
+        }
+
+        // 更新对方位置
+        const normalizedPartnerLocation = normalizeLocation(partnerLocationData);
+        if (normalizedPartnerLocation) {
+          this.partnerLocation = normalizedPartnerLocation;
+          if (!this.partnerLocation.address && !this.partnerLocation.location_name) {
+            await this.reverseGeocode(this.partnerLocation.latitude, this.partnerLocation.longitude, 'partner');
+          }
+        } else {
+          this.partnerLocation = null;
+        }
+
+        // 更新距离（默认接口返回公里；如果提供的是米，转换成公里）
+        let distance = responseData.distance;
+        if ((distance === null || distance === undefined) && typeof responseData.distanceMeters === 'number') {
+          distance = responseData.distanceMeters / 1000;
+        }
+        this.distance = distance;
+
+        // 如果双方都有位置，但后端没有返回距离，前端计算距离
+        if ((this.distance === null || this.distance === undefined) && this.myLocation && this.partnerLocation) {
+          this.distance = this.calculateDistance(
+            this.myLocation.latitude, this.myLocation.longitude,
+            this.partnerLocation.latitude, this.partnerLocation.longitude
+          );
+        }
+
+        console.log('双方位置加载成功', {
+          myLocation: this.myLocation,
+          partnerLocation: this.partnerLocation,
+          distance: distanceText || this.formatDistance(this.distance),
+          rawData: responseData
+        });
+
+        // 更新地图显示
+        this.updateMap();
       } catch (error) {
         console.error('加载双方位置失败:', error);
         // 如果是"用户不存在"错误，优雅处理，不触发全局登录跳转
@@ -632,7 +642,7 @@ export default {
         const location = {
           latitude,
           longitude,
-          address: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+          address: '定位中…',
           location_name: '当前位置'
         };
         
@@ -1220,7 +1230,7 @@ export default {
 .history-float-btn {
   position: fixed;
   right: 30rpx;
-  bottom: 40rpx;
+  bottom: 180rpx;
   display: flex;
   align-items: center;
   justify-content: center;

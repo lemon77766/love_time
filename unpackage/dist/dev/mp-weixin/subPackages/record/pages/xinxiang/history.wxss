@@ -359,13 +359,11 @@
   font-size: 36rpx;
   font-weight: 600;
   color: #4A4A4A;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .letter-date {
   font-size: 24rpx;
   color: #888888;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .letter-body {
   flex: 1;
@@ -379,7 +377,6 @@
   white-space: pre-wrap;
   word-break: break-all;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .letter-footer {
   display: flex;
@@ -392,14 +389,38 @@
   font-size: 24rpx;
   color: #888888;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .letter-time {
   font-size: 22rpx;
   color: #888888;
   margin-top: 8rpx;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+/* 字体样式类 */
+.font-style-default {
+  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  letter-spacing: 0;
+}
+.font-style-mashanzheng {
+  font-family: 'MaShanZheng', 'Ma Shan Zheng', 'KaiTi', cursive;
+  letter-spacing: 2rpx;
+}
+.font-style-zcoolkuaile {
+  font-family: 'ZCOOLKuaiLe', 'ZCOOL KuaiLe', 'KaiTi', cursive;
+  letter-spacing: 1rpx;
+}
+.font-style-qingsong {
+  font-family: 'QingSong', 'KaiTi', 'STKaiti', cursive;
+  letter-spacing: 1.5rpx;
+}
+.font-style-zcoolxiaowei {
+  font-family: 'ZCOOLXiaoWei', 'ZCOOL XiaoWei', 'KaiTi', cursive;
+  letter-spacing: 1rpx;
+}
+.font-style-zcoolwenyi {
+  font-family: 'ZCOOLWenYi', 'ZCOOL WenYi', 'KaiTi', cursive;
+  letter-spacing: 1.5rpx;
 }
 .detail-modal-actions {
   display: flex;

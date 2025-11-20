@@ -184,14 +184,18 @@ const _sfc_main = {
         const res = await api_trajectory.getTrajectoryList(params);
         common_vendor.index.__f__("log", "at subPackages/record/pages/trajectory/history.vue:365", "轨迹点查询响应:", res);
         common_vendor.index.__f__("log", "at subPackages/record/pages/trajectory/history.vue:366", "选择的日期范围:", this.startDate, "至", this.endDate);
-        if (res.success && res.data) {
+        const isSuccess = res && (res.success === true || res.code === 200);
+        const responseData = (res == null ? void 0 : res.data) || res;
+        if (isSuccess && responseData) {
           let points = [];
-          if (res.data.partnerTrajectories && Array.isArray(res.data.partnerTrajectories)) {
-            points = res.data.partnerTrajectories;
-          } else if (Array.isArray(res.data)) {
-            points = res.data;
-          } else if (res.data.points && Array.isArray(res.data.points)) {
-            points = res.data.points;
+          if (responseData.partnerTrajectories && Array.isArray(responseData.partnerTrajectories)) {
+            points = responseData.partnerTrajectories;
+          } else if (responseData.records && Array.isArray(responseData.records)) {
+            points = responseData.records;
+          } else if (Array.isArray(responseData)) {
+            points = responseData;
+          } else if (responseData.points && Array.isArray(responseData.points)) {
+            points = responseData.points;
           }
           points = points.map((point) => {
             if (point.visitTime && !point.visit_time) {
@@ -201,17 +205,20 @@ const _sfc_main = {
               point.visitTime = point.visit_time;
             }
             if (!point.location_name && !point.locationName) {
-              point.location_name = point.address || point.description || "未知地点";
+              point.location_name = point.placeName || point.address || point.description || "未知地点";
               point.locationName = point.location_name;
             } else if (point.locationName && !point.location_name) {
               point.location_name = point.locationName;
             } else if (point.location_name && !point.locationName) {
               point.locationName = point.location_name;
             }
+            if (!point.photos && point.photoUrl) {
+              point.photos = [point.photoUrl];
+            }
             return point;
           });
-          common_vendor.index.__f__("log", "at subPackages/record/pages/trajectory/history.vue:408", "解析后的轨迹点数量:", points.length);
-          common_vendor.index.__f__("log", "at subPackages/record/pages/trajectory/history.vue:409", "轨迹点数据示例:", points[0]);
+          common_vendor.index.__f__("log", "at subPackages/record/pages/trajectory/history.vue:418", "解析后的轨迹点数量:", points.length);
+          common_vendor.index.__f__("log", "at subPackages/record/pages/trajectory/history.vue:419", "轨迹点数据示例:", points[0]);
           if (this.startDate && this.endDate) {
             const startDateObj = /* @__PURE__ */ new Date(this.startDate + " 00:00:00");
             const endDateObj = /* @__PURE__ */ new Date(this.endDate + " 23:59:59");
@@ -221,8 +228,8 @@ const _sfc_main = {
                 return false;
               return visitTime >= startDateObj && visitTime <= endDateObj;
             });
-            common_vendor.index.__f__("log", "at subPackages/record/pages/trajectory/history.vue:424", `前端时间过滤: 原始 ${points.length} 个点，过滤后 ${filteredPoints.length} 个点`);
-            common_vendor.index.__f__("log", "at subPackages/record/pages/trajectory/history.vue:425", `时间范围: ${this.startDate} 00:00:00 至 ${this.endDate} 23:59:59`);
+            common_vendor.index.__f__("log", "at subPackages/record/pages/trajectory/history.vue:434", `前端时间过滤: 原始 ${points.length} 个点，过滤后 ${filteredPoints.length} 个点`);
+            common_vendor.index.__f__("log", "at subPackages/record/pages/trajectory/history.vue:435", `时间范围: ${this.startDate} 00:00:00 至 ${this.endDate} 23:59:59`);
             this.historyPoints = filteredPoints;
           } else {
             this.historyPoints = points;
@@ -248,10 +255,11 @@ const _sfc_main = {
             this.mapScale = 13;
           }
         } else {
-          throw new Error(res.message || "加载失败");
+          const backendMsg = (res == null ? void 0 : res.msg) || (res == null ? void 0 : res.message) || (responseData == null ? void 0 : responseData.message);
+          throw new Error(backendMsg || "加载失败");
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/trajectory/history.vue:458", "加载历史轨迹失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/trajectory/history.vue:469", "加载历史轨迹失败:", error);
         common_vendor.index.showToast({
           title: error.message || "加载历史轨迹失败",
           icon: "none",
@@ -370,7 +378,7 @@ ${this.formatVisitTime(visitTime)}`,
      * 地图标记点点击事件
      */
     onMarkerTap(e) {
-      common_vendor.index.__f__("log", "at subPackages/record/pages/trajectory/history.vue:597", "标记点点击:", e);
+      common_vendor.index.__f__("log", "at subPackages/record/pages/trajectory/history.vue:608", "标记点点击:", e);
       if (e.detail) {
         const markerId = e.detail.markerId;
         const marker = this.mapMarkers.find((m) => m.id === markerId);
@@ -436,7 +444,7 @@ ${this.formatVisitTime(visitTime)}`,
       if (!isNaN(date.getTime())) {
         return date;
       }
-      common_vendor.index.__f__("warn", "at subPackages/record/pages/trajectory/history.vue:671", "无法解析时间字符串:", timeStr);
+      common_vendor.index.__f__("warn", "at subPackages/record/pages/trajectory/history.vue:682", "无法解析时间字符串:", timeStr);
       return null;
     },
     /**

@@ -154,6 +154,8 @@ export default {
     
     // 处理从历史记录跳转过来的问题ID
     const qid = options && options.qid ? Number(options.qid) : null;
+    const qTextParam = options && typeof options.qtext === 'string' ? options.qtext : '';
+    this.targetQuestionFallbackText = qTextParam ? decodeURIComponent(qTextParam) : '';
     if (qid) {
       console.log('📌 从历史记录跳转，目标问题ID:', qid);
       // 保存目标问题ID，用于 currentQuestion 计算属性
@@ -216,39 +218,10 @@ export default {
         console.log('📥 从后端获取最新的对方答案，问题ID:', targetQuestionId);
         try {
           const partnerRes = await getPartnerAnswer(targetQuestionId);
-          console.log('📥 后端返回的对方答案响应:', {
-            success: partnerRes?.success,
-            data: partnerRes?.data,
-            fullResponse: partnerRes
+          this.handlePartnerAnswerResponse(partnerRes, {
+            historyRecord: rec,
+            context: `onLoad questionId=${targetQuestionId}`
           });
-          
-          if (partnerRes && partnerRes.success) {
-            // 处理不同的响应格式
-            const partnerData = partnerRes.data || partnerRes;
-            const hasAnswered = partnerData.hasAnswered !== false; // 默认为 true，除非明确为 false
-            const answer = partnerData.answer || partnerData.partnerAnswer || partnerData.partner_answer || '';
-            
-            console.log('📥 解析后的对方答案数据:', {
-              hasAnswered,
-              answer: answer ? answer.substring(0, 30) + '...' : '空',
-              partnerData
-            });
-            
-            if (hasAnswered && answer) {
-              console.log('✅ 更新对方答案:', answer.substring(0, 30) + '...');
-              this.partnerAnswer = answer;
-              // 同时更新历史记录中的对方答案
-              if (rec) {
-                rec.partnerAnswer = answer;
-              }
-            } else {
-              console.log('⚠️ 对方暂未作答或答案为空');
-              // 如果后端返回对方未作答，但历史记录中有，保留历史记录中的答案
-              // 如果历史记录中也没有，则显示"对方暂未作答"
-            }
-          } else {
-            console.warn('⚠️ 后端返回失败，使用历史记录中的答案');
-          }
         } catch (e) {
           console.error('❌ 获取对方答案失败:', e);
           console.error('错误详情:', {
@@ -289,7 +262,8 @@ export default {
       showCustomModal: false,
       newQuestion: '',
       history: [],
-      targetQuestionId: null // 从历史记录跳转过来的目标问题ID
+      targetQuestionId: null, // 从历史记录跳转过来的目标问题ID
+      targetQuestionFallbackText: '' // 历史跳转时携带的题干
     };
   },
   watch: {
@@ -378,9 +352,19 @@ export default {
           });
           return targetQuestion;
         } else {
+          if (this.targetQuestionFallbackText) {
+            console.warn('⚠️ 目标问题不在问题列表，使用历史记录携带的题干');
+            return {
+              id: targetId,
+              text: this.targetQuestionFallbackText,
+              category: 'history',
+              isFallback: true
+            };
+          }
           console.warn('⚠️ 目标问题不存在，回退到默认逻辑');
           // 如果目标问题不存在，清除 targetQuestionId 并回退到默认逻辑
           this.targetQuestionId = null;
+          this.targetQuestionFallbackText = '';
         }
       }
       
@@ -395,6 +379,141 @@ export default {
     // onLoad 中已经加载，无需重复加载
   },
   methods: {
+    normalizeApiResponse(response, defaultMessage = '操作成功') {
+      if (response == null) {
+        return { success: false, message: '响应为空', data: null, raw: response };
+      }
+      if (typeof response === 'string') {
+        return { success: false, message: response, data: null, raw: response };
+      }
+      if (typeof response.success === 'boolean') {
+        return {
+          success: !!response.success,
+          message: response.message || response.msg || defaultMessage,
+          data: response.data !== undefined ? response.data : null,
+          raw: response
+        };
+      }
+      if (response.code !== undefined) {
+        const success = Number(response.code) === 200;
+        return {
+          success,
+          message: response.msg || response.message || defaultMessage,
+          data: response.data !== undefined ? response.data : null,
+          raw: response
+        };
+      }
+      if (Array.isArray(response)) {
+        return { success: true, message: defaultMessage, data: response, raw: response };
+      }
+      return {
+        success: true,
+        message: response.message || response.msg || defaultMessage,
+        data: response.data !== undefined ? response.data : response,
+        raw: response
+      };
+    },
+    handlePartnerAnswerResponse(partnerRes, { historyRecord = null, context = '', updateState = true } = {}) {
+      const normalized = this.normalizeApiResponse(partnerRes, '获取对方答案成功');
+      console.log('📥 对方答案响应（标准化）:', {
+        context,
+        success: normalized.success,
+        message: normalized.message,
+        data: normalized.data
+      });
+      
+      if (!normalized.success) {
+        console.warn('⚠️ 获取对方答案业务失败:', {
+          context,
+          message: normalized.message,
+          raw: normalized.raw
+        });
+        return { updated: false, answer: '', normalized };
+      }
+      
+      const pickPayload = candidate => {
+        if (candidate && typeof candidate === 'object') {
+          if (candidate.data && typeof candidate.data === 'object') {
+            return candidate.data;
+          }
+          return candidate;
+        }
+        return null;
+      };
+      
+      let payload =
+        pickPayload(normalized.data) ||
+        pickPayload(normalized.raw?.data) ||
+        pickPayload(normalized.raw) ||
+        null;
+      
+      if (!payload) {
+        console.warn('⚠️ 对方答案响应缺少有效数据对象:', { context, normalized });
+        return { updated: false, answer: '', normalized };
+      }
+      
+      const answer =
+        payload.answer ??
+        payload.partnerAnswer ??
+        payload.partner_answer ??
+        payload.data?.answer ??
+        payload.data?.partnerAnswer ??
+        payload.data?.partner_answer ??
+        '';
+      
+      const answeredFlag =
+        payload.hasAnswered ??
+        payload.hasPartnerAnswered ??
+        payload.has_partner_answered ??
+        payload.has_answered ??
+        payload.data?.hasAnswered ??
+        payload.data?.hasPartnerAnswered;
+      
+      const hasAnswered = answeredFlag === undefined ? !!answer : answeredFlag !== false;
+      
+      if (hasAnswered && answer) {
+        console.log('✅ 解析到对方答案:', {
+          context,
+          preview: answer.substring(0, 30) + (answer.length > 30 ? '...' : '')
+        });
+        if (updateState) {
+          this.partnerAnswer = answer;
+          if (historyRecord) {
+            historyRecord.partnerAnswer = answer;
+            historyRecord.partnerAnsweredAt =
+              payload.answeredAt ||
+              payload.partnerAnsweredAt ||
+              payload.answered_at ||
+              historyRecord.partnerAnsweredAt;
+          }
+        }
+        return { updated: true, answer, normalized };
+      }
+      
+      console.log('⚠️ 对方暂未作答或答案为空:', { context, payload });
+      return { updated: false, answer: '', normalized };
+    },
+    formatQuestionList(list, categoryFallback = 'preset') {
+      if (!Array.isArray(list)) {
+        return [];
+      }
+      return list
+        .filter(q => q && q.id != null)
+        .map(q => {
+          const formatted = {
+            ...q,
+            id: q.id,
+            text: q.text || q.questionText || '',
+            category: q.category || categoryFallback,
+            isActive: q.isActive !== false,
+            orderIndex: q.orderIndex ?? 999
+          };
+          if (formatted.questionText) {
+            delete formatted.questionText;
+          }
+          return formatted;
+        });
+    },
     goBack() {
       uni.navigateBack();
     },
@@ -467,21 +586,14 @@ export default {
           // 无论提交接口是否返回对方答案，都主动调用接口获取对方答案（确保获取最新数据）
           try {
             const partnerRes = await getPartnerAnswer(submittedQuestionId);
-            console.log('📥 获取对方答案响应:', {
-              questionId: submittedQuestionId,
-              response: partnerRes
+            const partnerResult = this.handlePartnerAnswerResponse(partnerRes, {
+              context: `submit questionId=${submittedQuestionId}`
             });
-            
-            if (partnerRes && partnerRes.success && partnerRes.data) {
-              const partnerData = partnerRes.data;
-              // 如果对方已回答，更新对方答案
-              if (partnerData.hasAnswered && partnerData.answer) {
-                this.partnerAnswer = partnerData.answer;
-                partnerAnswerFromSubmit = partnerData.answer; // 更新用于保存历史记录的答案
-              } else {
-                // 如果对方还没回答，清空显示（会显示"对方暂未作答"提示）
-                this.partnerAnswer = '';
-              }
+            if (partnerResult.updated && partnerResult.answer) {
+              partnerAnswerFromSubmit = partnerResult.answer;
+            } else if (!partnerAnswerFromSubmit) {
+              // 如果接口未返回答案且提交响应中也没有，保持空状态
+              this.partnerAnswer = '';
             }
           } catch (partnerError) {
             // 获取对方答案失败不影响主流程，只记录日志
@@ -610,6 +722,7 @@ export default {
       if (this.targetQuestionId != null) {
         console.log('🔄 清除目标问题ID，恢复正常切换逻辑');
         this.targetQuestionId = null;
+        this.targetQuestionFallbackText = '';
       }
       
       // 保存当前问题ID，用于调试
@@ -640,12 +753,26 @@ export default {
     },
     // 加载当前问题的答案（从历史记录或后端）
     async loadAnswerForCurrentQuestion() {
-      if (!this.currentQuestion || !this.currentQuestion.id) {
-        console.warn('⚠️ loadAnswerForCurrentQuestion: 当前问题无效', this.currentQuestion);
+      if (!this.currentQuestion) {
+        console.warn('⚠️ loadAnswerForCurrentQuestion: 当前问题不存在');
         return;
       }
       
       const questionId = Number(this.currentQuestion.id);
+
+      if (!Number.isFinite(questionId)) {
+        console.warn('⚠️ loadAnswerForCurrentQuestion: 当前问题ID无效', this.currentQuestion);
+        return;
+      }
+
+      if (questionId === 0) {
+        console.log('🎉 所有问题已回答完毕，停止加载答案流程');
+        this.myAnswer = '';
+        this.partnerAnswer = '';
+        this.hasSubmitted = false;
+        return;
+      }
+
       console.log('📋 加载问题答案:', {
         questionId,
         questionText: this.currentQuestion.text,
@@ -689,39 +816,10 @@ export default {
         console.log('📥 从后端获取最新的对方答案，问题ID:', questionId);
         try {
           const partnerRes = await getPartnerAnswer(questionId);
-          console.log('📥 后端返回的对方答案响应:', {
-            success: partnerRes?.success,
-            data: partnerRes?.data,
-            fullResponse: partnerRes
+          this.handlePartnerAnswerResponse(partnerRes, {
+            historyRecord,
+            context: `loadHistory questionId=${questionId}`
           });
-          
-          if (partnerRes && partnerRes.success) {
-            // 处理不同的响应格式
-            const partnerData = partnerRes.data || partnerRes;
-            const hasAnswered = partnerData.hasAnswered !== false; // 默认为 true，除非明确为 false
-            const answer = partnerData.answer || partnerData.partnerAnswer || partnerData.partner_answer || '';
-            
-            console.log('📥 解析后的对方答案数据:', {
-              hasAnswered,
-              answer: answer ? answer.substring(0, 30) + '...' : '空',
-              partnerData
-            });
-            
-            if (hasAnswered && answer) {
-              console.log('✅ 更新对方答案:', answer.substring(0, 30) + '...');
-              this.partnerAnswer = answer;
-              // 同时更新历史记录中的对方答案
-              if (historyRecord) {
-                historyRecord.partnerAnswer = answer;
-              }
-            } else {
-              console.log('⚠️ 对方暂未作答或答案为空');
-              // 如果后端返回对方未作答，但历史记录中有，保留历史记录中的答案
-              // 如果历史记录中也没有，则显示"对方暂未作答"
-            }
-          } else {
-            console.warn('⚠️ 后端返回失败，使用历史记录中的答案');
-          }
         } catch (e) {
           console.error('❌ 获取对方答案失败:', e);
           console.error('错误详情:', {
@@ -735,16 +833,10 @@ export default {
         // 如果历史记录中没有，检查后端是否有对方答案（可能对方回答了但自己还没回答）
         try {
           const partnerRes = await getPartnerAnswer(questionId);
-          console.log('📥 检查对方是否已回答:', partnerRes);
-          
-          if (partnerRes && partnerRes.success && partnerRes.data) {
-            const partnerData = partnerRes.data;
-            // 如果对方已回答，显示对方答案（但标记为未提交状态，因为自己还没回答）
-            if (partnerData.hasAnswered && partnerData.answer) {
-              // 注意：这种情况下不显示对方答案，因为自己还没回答
-              // 只有在提交后或从历史记录回显时才显示
-            }
-          }
+          this.handlePartnerAnswerResponse(partnerRes, {
+            context: `pre-submit check questionId=${questionId}`,
+            updateState: false
+          });
         } catch (e) {
           // 忽略错误
           console.warn('⚠️ 检查对方答案失败:', e);
@@ -768,30 +860,38 @@ export default {
       try {
         const res = await getHistory({ page: 1, pageSize: 100 });
         console.log('📥 历史记录响应:', res);
+        const normalizedRes = this.normalizeApiResponse(res, '获取历史记录成功');
+        if (!normalizedRes.success) {
+          console.warn('⚠️ 历史记录业务状态返回失败:', {
+            message: normalizedRes.message,
+            raw: normalizedRes.raw
+          });
+        }
+
+        const dataSources = [
+          normalizedRes.data?.list,
+          normalizedRes.data?.history,
+          normalizedRes.data?.answers,
+          Array.isArray(normalizedRes.data) ? normalizedRes.data : null,
+          res?.history,
+          res?.answers,
+          res?.data?.list,
+          res?.data?.history,
+          res?.data?.answers,
+          Array.isArray(res?.data) ? res.data : null,
+          res?.list,
+          Array.isArray(res) ? res : null
+        ];
         
         let historyList = [];
-        
-        // 处理不同的响应格式（按优先级顺序）
-        if (res && res.success && Array.isArray(res.history)) {
-          // 格式: { success: true, history: [...], message: "获取成功", totalCount: 5 }
-          historyList = res.history;
-        } else if (res && res.success && Array.isArray(res.answers)) {
-          // 格式: { success: true, answers: [...], message: "获取成功", totalCount: 0 }
-          historyList = res.answers;
-        } else if (res && res.success && res.data && res.data.list) {
-          // 格式: { success: true, data: { list: [...] } }
-          historyList = Array.isArray(res.data.list) ? res.data.list : [];
-        } else if (res && res.success && res.data && Array.isArray(res.data)) {
-          // 格式: { success: true, data: [...] } （直接是数组）
-          historyList = res.data;
-        } else if (res && res.list) {
-          // 格式: { list: [...] } （直接返回数据）
-          historyList = Array.isArray(res.list) ? res.list : [];
-        } else if (Array.isArray(res)) {
-          // 格式: [...] （直接返回数组）
-          historyList = res;
-        } else {
-          console.warn('⚠️ 历史记录响应格式不符合预期:', res);
+        for (const candidate of dataSources) {
+          if (Array.isArray(candidate)) {
+            historyList = candidate;
+            break;
+          }
+        }
+
+        if (!Array.isArray(historyList)) {
           historyList = [];
         }
         
@@ -837,7 +937,7 @@ export default {
         
         console.log('✅ 历史记录加载成功:', {
           count: this.history.length,
-          totalCount: res?.totalCount,
+          totalCount: normalizedRes.raw?.totalCount ?? normalizedRes.data?.totalCount,
           sample: this.history.slice(0, 3)
         });
       } catch (e) {
@@ -868,84 +968,55 @@ export default {
         uni.showLoading({ title: '加载中...' });
         const res = await getQuestions();
         console.log('📥 问题列表响应:', res);
+        const normalizedRes = this.normalizeApiResponse(res, '获取问题成功');
         
-        // 处理后端返回的格式: { success: true, questions: Array, message: "获取成功" }
-        if (res && res.success && Array.isArray(res.questions)) {
-          // 将问题按 category 分类，并转换字段名
-          const presetQuestions = [];
-          const customQuestions = [];
-          
-          res.questions.forEach(q => {
-            // 跳过无效的问题对象
-            if (!q || q.id === undefined || q.id === null) {
-              console.warn('⚠️ 跳过无效的问题对象:', q);
-              return;
-            }
-            
-            // 转换字段：questionText -> text，保留其他字段
-            const question = {
-              id: q.id,
-              text: q.questionText || q.text || '', // 兼容两种字段名，确保有默认值
-              category: q.category || 'preset',
-              isActive: q.isActive !== false, // 默认为 true
-              orderIndex: q.orderIndex ?? 999,
-              createdBy: q.createdBy,
-              // 保留其他可能存在的字段
-              ...q
-            };
-            
-            // 移除原始的 questionText，避免混乱
-            if (question.questionText) {
-              delete question.questionText;
-            }
-            
-            // 按 category 分类
-            if (q.category === 'preset') {
-              presetQuestions.push(question);
-            } else if (q.category === 'custom') {
-              customQuestions.push(question);
-            }
-          });
-          
-          // 预设问题按 orderIndex 排序
+        const rawData = normalizedRes.data ?? res?.data ?? {};
+        let topLevelQuestions = null;
+        if (Array.isArray(res?.questions)) {
+          topLevelQuestions = res.questions;
+        } else if (Array.isArray(rawData?.questions)) {
+          topLevelQuestions = rawData.questions;
+        } else if (Array.isArray(rawData)) {
+          topLevelQuestions = rawData;
+        }
+
+        let presetQuestions = null;
+        let customQuestions = null;
+        
+        if (Array.isArray(topLevelQuestions)) {
+          const formatted = this.formatQuestionList(topLevelQuestions);
+          presetQuestions = formatted.filter(q => (q.category || 'preset') === 'preset');
+          customQuestions = formatted.filter(q => (q.category || 'preset') === 'custom');
+        } else if (rawData && (Array.isArray(rawData.defaultQuestions) || Array.isArray(rawData.customQuestions))) {
+          presetQuestions = this.formatQuestionList(rawData.defaultQuestions, 'preset');
+          customQuestions = this.formatQuestionList(rawData.customQuestions, 'custom');
+        } else if (res && res.code === 200 && res.data && (Array.isArray(res.data.defaultQuestions) || Array.isArray(res.data.customQuestions))) {
+          presetQuestions = this.formatQuestionList(res.data.defaultQuestions, 'preset');
+          customQuestions = this.formatQuestionList(res.data.customQuestions, 'custom');
+        }
+
+        if (presetQuestions !== null) {
           presetQuestions.sort((a, b) => {
             const orderA = a.orderIndex ?? 999;
             const orderB = b.orderIndex ?? 999;
             return orderA - orderB;
           });
-          
           this.defaultQuestions = presetQuestions;
+        }
+
+        if (customQuestions !== null) {
           this.customQuestions = customQuestions;
-          
+        }
+
+        if (presetQuestions !== null || customQuestions !== null) {
           console.log('✅ 问题列表加载成功:', {
-            preset: presetQuestions.length,
-            custom: customQuestions.length,
-            total: presetQuestions.length + customQuestions.length
+            preset: this.defaultQuestions.length,
+            custom: this.customQuestions.length,
+            total: this.defaultQuestions.length + this.customQuestions.length
           });
-        } else if (res && res.success && res.data) {
-          // 兼容旧格式: { success: true, data: { defaultQuestions: [...], customQuestions: [...] } }
-          this.defaultQuestions = Array.isArray(res.data.defaultQuestions) 
-            ? res.data.defaultQuestions
-                .filter(q => q && q.id != null) // 过滤无效数据
-                .map(q => ({
-                  id: q.id,
-                  text: q.questionText || q.text || '',
-                  ...q
-                }))
-            : [];
-          this.customQuestions = Array.isArray(res.data.customQuestions) 
-            ? res.data.customQuestions
-                .filter(q => q && q.id != null) // 过滤无效数据
-                .map(q => ({
-                  id: q.id,
-                  text: q.questionText || q.text || '',
-                  ...q
-                }))
-            : [];
         } else {
           console.warn('⚠️ 问题列表响应格式不符合预期:', res);
-          this.defaultQuestions = [];
-          this.customQuestions = [];
+          console.warn('⚠️ 保留本地预设问题，避免页面空白');
         }
       } catch (e) {
         console.error('加载问题失败', e);
@@ -1001,47 +1072,50 @@ export default {
         
         // 调用后端API添加问题
         const res = await addCustomQuestion(this.newQuestion.trim());
-        
-        if (res.success) {
-          // 格式化新问题，确保包含所有必需字段
-          const newQuestionData = res.data || {};
-          const formattedQuestion = {
-            id: newQuestionData.id,
-            text: newQuestionData.text || newQuestionData.questionText || this.newQuestion.trim(),
-            category: 'custom',
-            isActive: true,
-            orderIndex: 999,
-            createdBy: newQuestionData.userId || newQuestionData.createdBy,
-            createdAt: newQuestionData.createdAt,
-            // 保留其他字段
-            ...newQuestionData
-          };
-          
-          // 将新问题添加到列表
-          this.customQuestions.push(formattedQuestion);
-          this.newQuestion = '';
-          
-          // 关闭弹窗，让用户看到主页面
-          this.showCustomModal = false;
-          
-          // 自动切换到新添加的问题（如果它是未回答的问题）
-          // 使用 setTimeout 确保响应式更新已完成（uni-app 中使用 setTimeout 更可靠）
-          setTimeout(() => {
-            const newQuestionIndex = this.unansweredQuestions.findIndex(
-              q => q.id === formattedQuestion.id
-            );
-            if (newQuestionIndex >= 0) {
-              // 找到新问题在未回答列表中的位置，切换过去
-              this.qIndex = newQuestionIndex;
-              // 加载新问题的答案（会自动清空或从历史记录加载）
-              this.loadAnswerForCurrentQuestion();
-              
-              console.log('✅ 已切换到新添加的问题:', formattedQuestion);
-            }
-          }, 100);
-          
-          uni.showToast({ title: '问题添加成功', icon: 'success' });
+        const normalizedRes = this.normalizeApiResponse(res, '添加问题成功');
+        if (!normalizedRes.success) {
+          uni.showToast({ title: normalizedRes.message || '添加失败，请重试', icon: 'none' });
+          return;
         }
+        
+        // 格式化新问题，确保包含所有必需字段
+        const newQuestionData = normalizedRes.data || {};
+        const formattedQuestion = {
+          id: newQuestionData.id,
+          text: newQuestionData.text || newQuestionData.questionText || this.newQuestion.trim(),
+          category: 'custom',
+          isActive: true,
+          orderIndex: 999,
+          createdBy: newQuestionData.userId || newQuestionData.createdBy,
+          createdAt: newQuestionData.createdAt,
+          // 保留其他字段
+          ...newQuestionData
+        };
+        
+        // 将新问题添加到列表
+        this.customQuestions.push(formattedQuestion);
+        this.newQuestion = '';
+        
+        // 关闭弹窗，让用户看到主页面
+        this.showCustomModal = false;
+        
+        // 自动切换到新添加的问题（如果它是未回答的问题）
+        // 使用 setTimeout 确保响应式更新已完成（uni-app 中使用 setTimeout 更可靠）
+        setTimeout(() => {
+          const newQuestionIndex = this.unansweredQuestions.findIndex(
+            q => q.id === formattedQuestion.id
+          );
+          if (newQuestionIndex >= 0) {
+            // 找到新问题在未回答列表中的位置，切换过去
+            this.qIndex = newQuestionIndex;
+            // 加载新问题的答案（会自动清空或从历史记录加载）
+            this.loadAnswerForCurrentQuestion();
+            
+            console.log('✅ 已切换到新添加的问题:', formattedQuestion);
+          }
+        }, 100);
+        
+        uni.showToast({ title: normalizedRes.message || '问题添加成功', icon: 'success' });
       } catch (e) {
         console.error('添加问题失败', e);
         

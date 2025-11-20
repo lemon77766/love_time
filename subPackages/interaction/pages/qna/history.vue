@@ -68,7 +68,7 @@ export default {
       return totalHeightRpx + 20 + 'rpx';
     }
   },
-  onLoad() {
+  async onLoad() {
     // 获取系统信息
     const systemInfo = uni.getSystemInfoSync();
     this.statusBarHeight = systemInfo.statusBarHeight || 0;
@@ -88,41 +88,127 @@ export default {
       return;
     }
     
-    // 先加载问题列表，再加载历史记录
-    this.loadQuestions();
-    this.loadHistory();
+    // 先加载问题列表，再加载历史记录，确保历史记录可以匹配到问题文本
+    await this.loadQuestions();
+    await this.loadHistory();
   },
   methods: {
     goBack() {
       uni.navigateBack();
     },
+    normalizeApiResponse(response, defaultMessage = '操作成功') {
+      if (response == null) {
+        return { success: false, message: '响应为空', data: null, raw: response };
+      }
+      if (typeof response === 'string') {
+        return { success: false, message: response, data: null, raw: response };
+      }
+      if (typeof response.success === 'boolean') {
+        return {
+          success: !!response.success,
+          message: response.message || response.msg || defaultMessage,
+          data: response.data !== undefined ? response.data : null,
+          raw: response
+        };
+      }
+      if (response.code !== undefined) {
+        const success = Number(response.code) === 200;
+        return {
+          success,
+          message: response.msg || response.message || defaultMessage,
+          data: response.data !== undefined ? response.data : null,
+          raw: response
+        };
+      }
+      if (Array.isArray(response)) {
+        return { success: true, message: defaultMessage, data: response, raw: response };
+      }
+      return {
+        success: true,
+        message: response.message || response.msg || defaultMessage,
+        data: response.data !== undefined ? response.data : response,
+        raw: response
+      };
+    },
+    formatQuestionList(list, categoryFallback = 'preset') {
+      if (!Array.isArray(list)) {
+        return [];
+      }
+      return list
+        .filter(q => q && q.id != null)
+        .map(q => {
+          const formatted = {
+            ...q,
+            id: q.id,
+            text: q.text || q.questionText || '',
+            category: q.category || categoryFallback,
+            isActive: q.isActive !== false,
+            orderIndex: q.orderIndex ?? 999
+          };
+          if (formatted.questionText) {
+            delete formatted.questionText;
+          }
+          return formatted;
+        });
+    },
     // 从后端加载问题列表
     async loadQuestions() {
       try {
         const res = await getQuestions();
-        if (res && res.success && Array.isArray(res.questions)) {
-          const presetQuestions = [];
-          const customQuestions = [];
-          
-          res.questions.forEach(q => {
-            if (!q || q.id === undefined || q.id === null) return;
-            
-            const question = {
-              id: q.id,
-              text: q.questionText || q.text || '',
-              category: q.category || 'preset',
-              ...q
-            };
-            
-            if (q.category === 'preset') {
-              presetQuestions.push(question);
-            } else if (q.category === 'custom') {
-              customQuestions.push(question);
-            }
+        console.log('📥 问题列表响应:', res);
+        const normalizedRes = this.normalizeApiResponse(res, '获取问题成功');
+        
+        const rawData = normalizedRes.data ?? res?.data ?? {};
+        let topLevelQuestions = null;
+        if (Array.isArray(res?.questions)) {
+          topLevelQuestions = res.questions;
+        } else if (Array.isArray(rawData?.questions)) {
+          topLevelQuestions = rawData.questions;
+        } else if (Array.isArray(rawData)) {
+          topLevelQuestions = rawData;
+        }
+
+        let presetQuestions = null;
+        let customQuestions = null;
+        
+        if (Array.isArray(topLevelQuestions)) {
+          const formatted = this.formatQuestionList(topLevelQuestions);
+          presetQuestions = formatted.filter(q => (q.category || 'preset') === 'preset');
+          customQuestions = formatted.filter(q => (q.category || 'preset') === 'custom');
+        } else if (rawData && (Array.isArray(rawData.defaultQuestions) || Array.isArray(rawData.customQuestions))) {
+          presetQuestions = this.formatQuestionList(rawData.defaultQuestions, 'preset');
+          customQuestions = this.formatQuestionList(rawData.customQuestions, 'custom');
+        } else if (res && res.code === 200 && res.data && (Array.isArray(res.data.defaultQuestions) || Array.isArray(res.data.customQuestions))) {
+          presetQuestions = this.formatQuestionList(res.data.defaultQuestions, 'preset');
+          customQuestions = this.formatQuestionList(res.data.customQuestions, 'custom');
+        }
+
+        if (presetQuestions !== null) {
+          presetQuestions.sort((a, b) => {
+            const orderA = a.orderIndex ?? 999;
+            const orderB = b.orderIndex ?? 999;
+            return orderA - orderB;
           });
-          
           this.defaultQuestions = presetQuestions;
+        }
+
+        if (customQuestions !== null) {
           this.customQuestions = customQuestions;
+        }
+
+        if (presetQuestions !== null || customQuestions !== null) {
+          console.log('✅ 问题列表加载成功:', {
+            preset: this.defaultQuestions.length,
+            custom: this.customQuestions.length,
+            total: this.defaultQuestions.length + this.customQuestions.length
+          });
+        } else if (!normalizedRes.success) {
+          console.warn('⚠️ 问题列表业务状态失败:', {
+            message: normalizedRes.message,
+            raw: normalizedRes.raw
+          });
+        } else {
+          console.warn('⚠️ 问题列表响应格式不符合预期:', res);
         }
       } catch (e) {
         console.error('加载问题列表失败', e);
@@ -134,23 +220,44 @@ export default {
         uni.showLoading({ title: '加载中...' });
         const res = await getHistory({ page: 1, pageSize: 100 });
         console.log('📥 历史记录响应:', res);
+        const normalizedRes = this.normalizeApiResponse(res, '获取历史记录成功');
+        if (!normalizedRes.success) {
+          console.warn('⚠️ 历史记录业务状态返回失败:', {
+            message: normalizedRes.message,
+            raw: normalizedRes.raw
+          });
+        }
+        
+        const dataSources = [
+          normalizedRes.data?.list,
+          normalizedRes.data?.history,
+          normalizedRes.data?.answers,
+          Array.isArray(normalizedRes.data) ? normalizedRes.data : null,
+          normalizedRes.raw?.history,
+          normalizedRes.raw?.answers,
+          normalizedRes.raw?.data?.list,
+          normalizedRes.raw?.data?.history,
+          normalizedRes.raw?.data?.answers,
+          Array.isArray(normalizedRes.raw?.data) ? normalizedRes.raw.data : null,
+          res?.history,
+          res?.answers,
+          res?.data?.list,
+          res?.data?.history,
+          res?.data?.answers,
+          Array.isArray(res?.data) ? res.data : null,
+          res?.list,
+          Array.isArray(res) ? res : null
+        ];
         
         let historyList = [];
+        for (const candidate of dataSources) {
+          if (Array.isArray(candidate)) {
+            historyList = candidate;
+            break;
+          }
+        }
         
-        // 处理不同的响应格式
-        if (res && res.success && Array.isArray(res.history)) {
-          historyList = res.history;
-        } else if (res && res.success && Array.isArray(res.answers)) {
-          historyList = res.answers;
-        } else if (res && res.success && res.data && res.data.list) {
-          historyList = Array.isArray(res.data.list) ? res.data.list : [];
-        } else if (res && res.success && res.data && Array.isArray(res.data)) {
-          historyList = res.data;
-        } else if (res && res.list) {
-          historyList = Array.isArray(res.list) ? res.list : [];
-        } else if (Array.isArray(res)) {
-          historyList = res;
-        } else {
+        if (!Array.isArray(historyList)) {
           console.warn('⚠️ 历史记录响应格式不符合预期:', res);
           historyList = [];
         }
@@ -196,7 +303,7 @@ export default {
         
         console.log('✅ 历史记录加载成功:', {
           count: this.history.length,
-          totalCount: res?.totalCount
+          totalCount: normalizedRes.raw?.totalCount ?? normalizedRes.data?.totalCount ?? normalizedRes.data?.total
         });
       } catch (e) {
         console.error('加载历史记录失败', e);
@@ -237,6 +344,7 @@ export default {
       
       const qid = encodeURIComponent(questionId);
       const time = encodeURIComponent(item.time || '');
+      const questionText = encodeURIComponent(item.question || '');
       
       console.log('🔗 跳转到问题页面:', {
         questionId: questionId,
@@ -244,7 +352,11 @@ export default {
         time: time
       });
       
-      uni.navigateTo({ url: `/subPackages/interaction/pages/qna/index?qid=${qid}&time=${time}` });
+      let targetUrl = `/subPackages/interaction/pages/qna/index?qid=${qid}&time=${time}`;
+      if (questionText) {
+        targetUrl += `&qtext=${questionText}`;
+      }
+      uni.navigateTo({ url: targetUrl });
     }
   }
 };

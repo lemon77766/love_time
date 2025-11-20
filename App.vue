@@ -132,6 +132,16 @@
 </script>
 
 <style>
+	/* #ifndef MP-WEIXIN */
+	@font-face {
+		font-family: 'MaShanZheng';
+		src: url('/static/fonts/MaShanZheng-Regular.ttf') format('truetype');
+		font-weight: 400;
+		font-style: normal;
+		font-display: swap;
+	}
+	/* #endif */
+	
 	/*每个页面公共css */
 	
 	/* 底部导航栏字体样式 - 与主页导航栏一致 */
@@ -159,7 +169,42 @@
 	}
 	/* #endif */
 	
-	/* 底部导航栏选中图标颜色 - 尝试通过filter实现粉色效果 */
-	/* 注意：原生tabbar的PNG图标可能无法通过CSS直接改变颜色 */
-	/* 如果此方法无效，需要准备粉色版本的图标文件 */
+	/* 方案1：底部导航栏淡黄色渐变效果 */
+	/* #ifdef MP-WEIXIN */
+	/* 未选中状态：淡黄色图标 */
+	/deep/ .uni-tabbar .uni-tabbar__icon {
+		filter: sepia(20%) saturate(150%) hue-rotate(15deg) brightness(1.1);
+		transition: all 0.3s ease;
+	}
+	
+	/* 选中状态：深黄色图标，带渐变效果 */
+	/deep/ .uni-tabbar .uni-tabbar__icon.uni-tabbar__icon--active {
+		filter: sepia(40%) saturate(200%) hue-rotate(10deg) brightness(0.9);
+		transform: scale(1.05);
+		transition: all 0.3s ease;
+	}
+	
+	/* 文字颜色过渡 */
+	/deep/ .uni-tabbar .uni-tabbar__bd {
+		transition: color 0.3s ease;
+	}
+	/* #endif */
+	
+	/* #ifdef H5 */
+	/* H5 环境下的样式 */
+	.uni-tabbar .uni-tabbar__icon {
+		filter: sepia(20%) saturate(150%) hue-rotate(15deg) brightness(1.1);
+		transition: all 0.3s ease;
+	}
+	
+	.uni-tabbar .uni-tabbar__icon.uni-tabbar__icon--active {
+		filter: sepia(40%) saturate(200%) hue-rotate(10deg) brightness(0.9);
+		transform: scale(1.05);
+		transition: all 0.3s ease;
+	}
+	
+	.uni-tabbar .uni-tabbar__bd {
+		transition: color 0.3s ease;
+	}
+	/* #endif */
 </style>

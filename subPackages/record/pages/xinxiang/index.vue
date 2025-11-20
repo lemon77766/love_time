@@ -19,7 +19,7 @@
     </view>
     
     <!-- 背景图片铺满整个屏幕 -->
-    <image class="background-image" src="../../static/xinxiang/1.jpg" mode="aspectFill"></image>
+    <image class="background-image" src="/static/xinxiang/1.jpg" mode="aspectFill"></image>
     
     <!-- 内容层 -->
     <view class="content-layer">

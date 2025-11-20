@@ -3,7 +3,11 @@ const common_vendor = require("../../common/vendor.js");
 const utils_couple = require("../../utils/couple.js");
 const api_couple = require("../../api/couple.js");
 const utils_auth = require("../../utils/auth.js");
+const CustomTabbar = () => "../../components/custom-tabbar/index.js";
 const _sfc_main = {
+  components: {
+    CustomTabbar
+  },
   data() {
     return {
       statusBarHeight: 0,
@@ -130,7 +134,7 @@ const _sfc_main = {
           }
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:311", "加载用户信息失败", error);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:318", "加载用户信息失败", error);
       }
     },
     // 加载情侣信息
@@ -157,7 +161,7 @@ const _sfc_main = {
                 this.partnerInfo = response.data.partnerInfo || {};
                 this.bindTime = response.data.bindTime || "";
               } else {
-                common_vendor.index.__f__("log", "at pages/index/index.vue:342", "⚠️ 服务器返回未绑定，清除本地状态");
+                common_vendor.index.__f__("log", "at pages/index/index.vue:349", "⚠️ 服务器返回未绑定，清除本地状态");
                 utils_couple.clearCoupleInfo();
                 this.isBound = false;
                 this.partnerInfo = null;
@@ -165,7 +169,7 @@ const _sfc_main = {
               }
             }
           } catch (e) {
-            common_vendor.index.__f__("error", "at pages/index/index.vue:350", "同步绑定状态失败", e);
+            common_vendor.index.__f__("error", "at pages/index/index.vue:357", "同步绑定状态失败", e);
           }
           return;
         }
@@ -194,7 +198,7 @@ const _sfc_main = {
             }
           }
         } catch (e) {
-          common_vendor.index.__f__("error", "at pages/index/index.vue:385", "查询绑定状态失败", e);
+          common_vendor.index.__f__("error", "at pages/index/index.vue:392", "查询绑定状态失败", e);
           this.isBound = utils_couple.isBound();
           if (this.isBound) {
             this.partnerInfo = utils_couple.getPartnerInfo();
@@ -203,7 +207,7 @@ const _sfc_main = {
           }
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:395", "加载情侣信息失败", e);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:402", "加载情侣信息失败", e);
         this.isBound = utils_couple.isBound();
         if (this.isBound) {
           this.partnerInfo = utils_couple.getPartnerInfo();
@@ -220,21 +224,51 @@ const _sfc_main = {
       }
       try {
         const response = await api_couple.getLoveDays();
-        if (response && response.success && response.data) {
-          this.loveDays = response.data.loveDays || 0;
-          this.anniversaryDate = response.data.anniversaryDate || "";
-          this.relationshipName = response.data.relationshipName || "";
-          common_vendor.index.__f__("log", "at pages/index/index.vue:419", "✅ 成功加载相爱天数:", {
+        const loveDaysPayload = this.normalizeLoveDaysResponse(response);
+        if (loveDaysPayload) {
+          this.loveDays = this.toNumberOrZero(loveDaysPayload.loveDays);
+          this.anniversaryDate = loveDaysPayload.anniversaryDate || "";
+          this.relationshipName = loveDaysPayload.relationshipName || "";
+          common_vendor.index.__f__("log", "at pages/index/index.vue:427", "✅ 成功加载相爱天数:", {
             loveDays: this.loveDays,
             anniversaryDate: this.anniversaryDate,
             relationshipName: this.relationshipName
           });
         } else {
-          common_vendor.index.__f__("warn", "at pages/index/index.vue:425", "⚠️ 获取相爱天数失败，响应格式异常:", response);
+          common_vendor.index.__f__("warn", "at pages/index/index.vue:433", "⚠️ 获取相爱天数失败，无法识别有效数据结构:", response);
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:428", "❌ 获取相爱天数失败:", error);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:436", "❌ 获取相爱天数失败:", error);
       }
+    },
+    normalizeLoveDaysResponse(response) {
+      if (!response)
+        return null;
+      const successLike = response.success === true || response.code === 200 || response.status === 200;
+      const candidates = [
+        response == null ? void 0 : response.data,
+        response == null ? void 0 : response.result,
+        response == null ? void 0 : response.body,
+        response == null ? void 0 : response.content,
+        response
+      ];
+      for (const candidate of candidates) {
+        if (candidate && (candidate.loveDays !== void 0 || candidate.anniversaryDate || candidate.relationshipName)) {
+          return candidate;
+        }
+      }
+      if (successLike) {
+        return {
+          loveDays: 0,
+          anniversaryDate: "",
+          relationshipName: ""
+        };
+      }
+      return null;
+    },
+    toNumberOrZero(value) {
+      const num = Number(value);
+      return Number.isFinite(num) && num >= 0 ? num : 0;
     },
     // 加载近期动态
     loadRecentActivities() {
@@ -272,7 +306,8 @@ const _sfc_main = {
 };
 if (!Array) {
   const _easycom_iconify_icon2 = common_vendor.resolveComponent("iconify-icon");
-  _easycom_iconify_icon2();
+  const _component_custom_tabbar = common_vendor.resolveComponent("custom-tabbar");
+  (_easycom_iconify_icon2 + _component_custom_tabbar)();
 }
 const _easycom_iconify_icon = () => "../../components/iconify-icon/iconify-icon.js";
 if (!Math) {
@@ -357,7 +392,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   }, $data.recentActivities.length > 0 ? {
     C: common_vendor.f($data.recentActivities, (activity, index, i0) => {
       return {
-        a: "141f41a3-11-" + i0,
+        a: "c1b7deaa-11-" + i0,
         b: common_vendor.p({
           icon: activity.icon,
           size: 32,
@@ -368,7 +403,10 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       };
     })
   } : {}, {
-    D: $options.containerPaddingTop
+    D: common_vendor.p({
+      current: 0
+    }),
+    E: $options.containerPaddingTop
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

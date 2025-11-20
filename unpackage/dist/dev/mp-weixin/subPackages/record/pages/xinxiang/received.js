@@ -42,29 +42,30 @@ const _sfc_main = {
     async loadLetters() {
       try {
         const response = await api_futureLetter.getReceivedLetters();
-        if (response && response.data) {
-          const backendLetters = Array.isArray(response.data) ? response.data : [];
-          this.letters = backendLetters.map((letter) => ({
+        const backendLetters = this.extractLetterArray(response);
+        this.letters = backendLetters.map((letter) => {
+          const opacityValue = Number(letter.backgroundOpacity);
+          const normalizedOpacity = isNaN(opacityValue) ? 100 : opacityValue <= 1 ? opacityValue * 100 : opacityValue;
+          const deliveryDateRaw = letter.scheduledDate || letter.deliveryDate;
+          const createTimeRaw = letter.createdAt || letter.createTime;
+          const sentAtRaw = letter.sentAt;
+          return {
             id: letter.id,
             title: letter.title,
             content: letter.content,
-            deliveryDate: letter.scheduledDate,
-            // 后端字段名
-            createTime: letter.createdAt || letter.createTime,
-            sentAt: letter.sentAt,
+            deliveryDate: this.formatToMinute(deliveryDateRaw),
+            createTime: this.formatToMinute(createTimeRaw),
+            sentAt: this.formatToMinute(sentAtRaw),
             status: letter.status,
             style: this.getStyleFromBackground(letter.backgroundImage),
             customImage: letter.backgroundImage,
-            opacity: 100,
-            // 默认透明度
-            // 保留后端原始数据
+            opacity: Math.min(100, Math.max(0, normalizedOpacity)),
+            fontStyle: letter.fontStyle || letter.font_style || "default",
             _backendData: letter
-          }));
-        } else {
-          this.letters = [];
-        }
+          };
+        });
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/received.vue:192", "加载收到的信件失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/received.vue:199", "加载收到的信件失败", error);
         this.letters = [];
         if (error.statusCode !== 401) {
           common_vendor.index.showToast({
@@ -73,6 +74,51 @@ const _sfc_main = {
           });
         }
       }
+    },
+    // 兼容多种响应结构
+    extractLetterArray(response) {
+      var _a, _b, _c, _d, _e, _f, _g;
+      if (!response)
+        return [];
+      const candidates = [
+        response,
+        response == null ? void 0 : response.data,
+        response == null ? void 0 : response.letters,
+        response == null ? void 0 : response.records,
+        response == null ? void 0 : response.items,
+        response == null ? void 0 : response.list,
+        response == null ? void 0 : response.result,
+        response == null ? void 0 : response.body,
+        (_a = response == null ? void 0 : response.data) == null ? void 0 : _a.letters,
+        (_b = response == null ? void 0 : response.data) == null ? void 0 : _b.records,
+        (_c = response == null ? void 0 : response.data) == null ? void 0 : _c.items,
+        (_d = response == null ? void 0 : response.data) == null ? void 0 : _d.list,
+        (_e = response == null ? void 0 : response.data) == null ? void 0 : _e.result,
+        (_f = response == null ? void 0 : response.data) == null ? void 0 : _f.content,
+        (_g = response == null ? void 0 : response.data) == null ? void 0 : _g.rows
+      ];
+      for (const candidate of candidates) {
+        if (Array.isArray(candidate)) {
+          return candidate;
+        }
+      }
+      return [];
+    },
+    // 将时间统一格式化到分钟
+    formatToMinute(dateInput) {
+      if (!dateInput)
+        return "--";
+      const dateValue = dateInput instanceof Date ? dateInput : new Date(dateInput);
+      if (Number.isNaN(dateValue.getTime())) {
+        return typeof dateInput === "string" ? dateInput : "--";
+      }
+      const pad = (num) => num < 10 ? `0${num}` : `${num}`;
+      const year = dateValue.getFullYear();
+      const month = pad(dateValue.getMonth() + 1);
+      const day = pad(dateValue.getDate());
+      const hours = pad(dateValue.getHours());
+      const minutes = pad(dateValue.getMinutes());
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
     },
     // 从背景图片URL提取样式ID
     getStyleFromBackground(backgroundImage) {
@@ -89,7 +135,7 @@ const _sfc_main = {
       if (letter.style === "custom") {
         return letter.customImage;
       }
-      return `../../static/xinxiang/xin${letter.style}.jpg`;
+      return `/static/xinxiang/xin${letter.style}.jpg`;
     },
     // 查看信件详情
     async viewLetter(letter, index) {
@@ -99,6 +145,9 @@ const _sfc_main = {
         common_vendor.index.hideLoading();
         if (response && response.data) {
           const detailData = response.data;
+          const detailDeliveryDate = detailData.scheduledDate || detailData.deliveryDate || letter.deliveryDate;
+          const detailCreateTime = detailData.createdAt || detailData.createTime || letter.createTime;
+          const detailSentAt = detailData.sentAt || letter.sentAt;
           this.currentLetter = {
             ...letter,
             ...detailData,
@@ -106,13 +155,14 @@ const _sfc_main = {
             id: detailData.id || letter.id,
             title: detailData.title || letter.title,
             content: detailData.content || letter.content,
-            deliveryDate: detailData.scheduledDate || detailData.deliveryDate || letter.deliveryDate,
-            createTime: detailData.createdAt || detailData.createTime || letter.createTime,
-            sentAt: detailData.sentAt || letter.sentAt,
+            deliveryDate: this.formatToMinute(detailDeliveryDate),
+            createTime: this.formatToMinute(detailCreateTime),
+            sentAt: this.formatToMinute(detailSentAt),
             status: detailData.status || letter.status,
             style: this.getStyleFromBackground(detailData.backgroundImage || letter.backgroundImage),
             customImage: detailData.backgroundImage || letter.customImage,
             opacity: detailData.opacity !== void 0 ? detailData.opacity : letter.opacity || 100,
+            fontStyle: detailData.fontStyle || detailData.font_style || letter.fontStyle || "default",
             _backendData: detailData
           };
         } else {
@@ -122,7 +172,7 @@ const _sfc_main = {
         this.showDetailModal = true;
       } catch (error) {
         common_vendor.index.hideLoading();
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/received.vue:266", "获取信件详情失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/received.vue:327", "获取信件详情失败", error);
         this.currentLetter = letter;
         this.currentIndex = index;
         this.showDetailModal = true;
@@ -132,6 +182,13 @@ const _sfc_main = {
           duration: 2e3
         });
       }
+    },
+    // 获取字体样式类
+    getFontClass(letter) {
+      if (!letter)
+        return "font-style-default";
+      const fontStyle = letter.fontStyle || letter.font_style || "default";
+      return `font-style-${fontStyle}`;
     },
     // 关闭详情弹窗
     closeDetail() {
@@ -169,19 +226,25 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     g: $options.getLetterBackground($data.currentLetter),
     h: 1 - $data.currentLetter.opacity / 100,
     i: common_vendor.t($data.currentLetter.title),
-    j: common_vendor.t($data.currentLetter.deliveryDate),
-    k: $data.currentLetter.sentAt
+    j: common_vendor.n($options.getFontClass($data.currentLetter)),
+    k: common_vendor.t($data.currentLetter.deliveryDate),
+    l: common_vendor.n($options.getFontClass($data.currentLetter)),
+    m: $data.currentLetter.sentAt
   }, $data.currentLetter.sentAt ? {
-    l: common_vendor.t($data.currentLetter.sentAt)
+    n: common_vendor.t($data.currentLetter.sentAt),
+    o: common_vendor.n($options.getFontClass($data.currentLetter))
   } : {}, {
-    m: common_vendor.t($data.currentLetter.content),
-    n: common_vendor.t($data.currentLetter.createTime),
-    o: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args)),
-    p: common_vendor.o(() => {
+    p: common_vendor.t($data.currentLetter.content),
+    q: common_vendor.n($options.getFontClass($data.currentLetter)),
+    r: common_vendor.n($options.getFontClass($data.currentLetter)),
+    s: common_vendor.t($data.currentLetter.createTime),
+    t: common_vendor.n($options.getFontClass($data.currentLetter)),
+    v: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args)),
+    w: common_vendor.o(() => {
     }),
-    q: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args))
+    x: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args))
   }) : {}, {
-    r: $options.containerPaddingTop
+    y: $options.containerPaddingTop
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

@@ -2,7 +2,7 @@
 .trajectory-page.data-v-bfa9c4cc {
   min-height: 100vh;
   background-color: #FFFAF4;
-  padding-bottom: 40rpx;
+  padding-bottom: 120rpx; /* 为自定义 TabBar 预留空间 */
 }
 
 /* 自定义导航栏样式 */
@@ -384,7 +384,7 @@
 .history-float-btn.data-v-bfa9c4cc {
   position: fixed;
   right: 30rpx;
-  bottom: 40rpx;
+  bottom: 180rpx;
   display: flex;
   align-items: center;
   justify-content: center;

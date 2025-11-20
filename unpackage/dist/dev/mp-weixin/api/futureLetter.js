@@ -118,79 +118,109 @@ function getReceivedLetters() {
     throw error;
   });
 }
+function getFutureLetterFonts() {
+  const url = utils_config.config.API.FUTURE_LETTER.FONTS;
+  const fullUrl = utils_config.config.baseURL + url;
+  common_vendor.index.__f__("log", "at api/futureLetter.js:250", "🔗 [未来情书API] 开始获取字体列表");
+  common_vendor.index.__f__("log", "at api/futureLetter.js:251", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/futureLetter.js:252", "📋 请求方法: GET");
+  common_vendor.index.__f__("log", "at api/futureLetter.js:253", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  return utils_http.http.get(url).then((response) => {
+    common_vendor.index.__f__("log", "at api/futureLetter.js:256", "✅ [未来情书API] 获取字体列表成功");
+    common_vendor.index.__f__("log", "at api/futureLetter.js:257", "📦 响应数据:", response);
+    let fonts = [];
+    if (response && Array.isArray(response.data)) {
+      fonts = response.data;
+    } else if (response && Array.isArray(response.fonts)) {
+      fonts = response.fonts;
+    } else if (response && response.data && Array.isArray(response.data.fonts)) {
+      fonts = response.data.fonts;
+    } else if (Array.isArray(response)) {
+      fonts = response;
+    } else {
+      common_vendor.index.__f__("warn", "at api/futureLetter.js:269", "⚠️ 字体列表响应数据格式异常:", response);
+    }
+    return { success: true, data: fonts };
+  }).catch((error) => {
+    common_vendor.index.__f__("error", "at api/futureLetter.js:274", "❌ [未来情书API] 获取字体列表失败");
+    common_vendor.index.__f__("error", "at api/futureLetter.js:275", "🔴 错误信息:", error);
+    throw error;
+  });
+}
 function getFutureLetterDetail(letterId) {
   const url = `${utils_config.config.API.FUTURE_LETTER.DETAIL}/${letterId}`;
   const fullUrl = utils_config.config.baseURL + url;
-  common_vendor.index.__f__("log", "at api/futureLetter.js:251", "🔗 [未来情书API] 开始获取情书详情");
-  common_vendor.index.__f__("log", "at api/futureLetter.js:252", "📍 请求地址:", fullUrl);
-  common_vendor.index.__f__("log", "at api/futureLetter.js:253", "📋 请求方法: GET");
-  common_vendor.index.__f__("log", "at api/futureLetter.js:254", "📝 情书ID:", letterId);
-  common_vendor.index.__f__("log", "at api/futureLetter.js:255", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  common_vendor.index.__f__("log", "at api/futureLetter.js:294", "🔗 [未来情书API] 开始获取情书详情");
+  common_vendor.index.__f__("log", "at api/futureLetter.js:295", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/futureLetter.js:296", "📋 请求方法: GET");
+  common_vendor.index.__f__("log", "at api/futureLetter.js:297", "📝 情书ID:", letterId);
+  common_vendor.index.__f__("log", "at api/futureLetter.js:298", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
   return utils_http.http.get(url).then((response) => {
-    common_vendor.index.__f__("log", "at api/futureLetter.js:258", "✅ [未来情书API] 获取情书详情成功");
-    common_vendor.index.__f__("log", "at api/futureLetter.js:259", "📦 响应数据:", response);
+    common_vendor.index.__f__("log", "at api/futureLetter.js:301", "✅ [未来情书API] 获取情书详情成功");
+    common_vendor.index.__f__("log", "at api/futureLetter.js:302", "📦 响应数据:", response);
     if (response && response.data) {
-      common_vendor.index.__f__("log", "at api/futureLetter.js:262", `📝 情书标题: ${response.data.title || "未知"}`);
+      common_vendor.index.__f__("log", "at api/futureLetter.js:305", `📝 情书标题: ${response.data.title || "未知"}`);
       return response;
     } else if (response && (response.id || response.letterId)) {
       return { success: true, data: response };
     } else {
-      common_vendor.index.__f__("warn", "at api/futureLetter.js:268", "⚠️ 响应数据格式异常:", response);
+      common_vendor.index.__f__("warn", "at api/futureLetter.js:311", "⚠️ 响应数据格式异常:", response);
       return response;
     }
   }).catch((error) => {
-    common_vendor.index.__f__("error", "at api/futureLetter.js:272", "❌ [未来情书API] 获取情书详情失败");
-    common_vendor.index.__f__("error", "at api/futureLetter.js:273", "🔴 错误信息:", error);
+    common_vendor.index.__f__("error", "at api/futureLetter.js:315", "❌ [未来情书API] 获取情书详情失败");
+    common_vendor.index.__f__("error", "at api/futureLetter.js:316", "🔴 错误信息:", error);
     throw error;
   });
 }
 function sendFutureLetter(letterId) {
   const url = `${utils_config.config.API.FUTURE_LETTER.SEND}/${letterId}/send`;
   const fullUrl = utils_config.config.baseURL + url;
-  common_vendor.index.__f__("log", "at api/futureLetter.js:325", "🔗 [未来情书API] 开始发送未来情书");
-  common_vendor.index.__f__("log", "at api/futureLetter.js:326", "📍 请求地址:", fullUrl);
-  common_vendor.index.__f__("log", "at api/futureLetter.js:327", "📋 请求方法: POST");
-  common_vendor.index.__f__("log", "at api/futureLetter.js:328", "📝 情书ID:", letterId);
-  common_vendor.index.__f__("log", "at api/futureLetter.js:329", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  common_vendor.index.__f__("log", "at api/futureLetter.js:368", "🔗 [未来情书API] 开始发送未来情书");
+  common_vendor.index.__f__("log", "at api/futureLetter.js:369", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/futureLetter.js:370", "📋 请求方法: POST");
+  common_vendor.index.__f__("log", "at api/futureLetter.js:371", "📝 情书ID:", letterId);
+  common_vendor.index.__f__("log", "at api/futureLetter.js:372", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
   return utils_http.http.post(url, {}).then((response) => {
-    common_vendor.index.__f__("log", "at api/futureLetter.js:332", "✅ [未来情书API] 发送未来情书成功");
-    common_vendor.index.__f__("log", "at api/futureLetter.js:333", "📦 响应数据:", response);
+    common_vendor.index.__f__("log", "at api/futureLetter.js:375", "✅ [未来情书API] 发送未来情书成功");
+    common_vendor.index.__f__("log", "at api/futureLetter.js:376", "📦 响应数据:", response);
     if (response && response.data) {
-      common_vendor.index.__f__("log", "at api/futureLetter.js:336", `📝 情书状态: ${response.data.status || "未知"}`);
+      common_vendor.index.__f__("log", "at api/futureLetter.js:379", `📝 情书状态: ${response.data.status || "未知"}`);
       if (response.data.sentAt) {
-        common_vendor.index.__f__("log", "at api/futureLetter.js:338", `📝 发送时间: ${response.data.sentAt}`);
+        common_vendor.index.__f__("log", "at api/futureLetter.js:381", `📝 发送时间: ${response.data.sentAt}`);
       }
       return response;
     } else {
       return response;
     }
   }).catch((error) => {
-    common_vendor.index.__f__("error", "at api/futureLetter.js:345", "❌ [未来情书API] 发送未来情书失败");
-    common_vendor.index.__f__("error", "at api/futureLetter.js:346", "🔴 错误信息:", error);
+    common_vendor.index.__f__("error", "at api/futureLetter.js:388", "❌ [未来情书API] 发送未来情书失败");
+    common_vendor.index.__f__("error", "at api/futureLetter.js:389", "🔴 错误信息:", error);
     throw error;
   });
 }
 function deleteFutureLetter(letterId) {
   const url = `${utils_config.config.API.FUTURE_LETTER.DELETE}/${letterId}`;
   const fullUrl = utils_config.config.baseURL + url;
-  common_vendor.index.__f__("log", "at api/futureLetter.js:365", "🔗 [未来情书API] 开始删除未来情书");
-  common_vendor.index.__f__("log", "at api/futureLetter.js:366", "📍 请求地址:", fullUrl);
-  common_vendor.index.__f__("log", "at api/futureLetter.js:367", "📋 请求方法: DELETE");
-  common_vendor.index.__f__("log", "at api/futureLetter.js:368", "📝 情书ID:", letterId);
-  common_vendor.index.__f__("log", "at api/futureLetter.js:369", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  common_vendor.index.__f__("log", "at api/futureLetter.js:408", "🔗 [未来情书API] 开始删除未来情书");
+  common_vendor.index.__f__("log", "at api/futureLetter.js:409", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/futureLetter.js:410", "📋 请求方法: DELETE");
+  common_vendor.index.__f__("log", "at api/futureLetter.js:411", "📝 情书ID:", letterId);
+  common_vendor.index.__f__("log", "at api/futureLetter.js:412", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
   return utils_http.http.delete(url).then((response) => {
-    common_vendor.index.__f__("log", "at api/futureLetter.js:372", "✅ [未来情书API] 删除未来情书成功");
-    common_vendor.index.__f__("log", "at api/futureLetter.js:373", "📦 响应数据:", response);
+    common_vendor.index.__f__("log", "at api/futureLetter.js:415", "✅ [未来情书API] 删除未来情书成功");
+    common_vendor.index.__f__("log", "at api/futureLetter.js:416", "📦 响应数据:", response);
     return response;
   }).catch((error) => {
-    common_vendor.index.__f__("error", "at api/futureLetter.js:376", "❌ [未来情书API] 删除未来情书失败");
-    common_vendor.index.__f__("error", "at api/futureLetter.js:377", "🔴 错误信息:", error);
+    common_vendor.index.__f__("error", "at api/futureLetter.js:419", "❌ [未来情书API] 删除未来情书失败");
+    common_vendor.index.__f__("error", "at api/futureLetter.js:420", "🔴 错误信息:", error);
     throw error;
   });
 }
 exports.createFutureLetter = createFutureLetter;
 exports.deleteFutureLetter = deleteFutureLetter;
 exports.getFutureLetterDetail = getFutureLetterDetail;
+exports.getFutureLetterFonts = getFutureLetterFonts;
 exports.getFutureLetterList = getFutureLetterList;
 exports.getReceivedLetters = getReceivedLetters;
 exports.getSentLetters = getSentLetters;

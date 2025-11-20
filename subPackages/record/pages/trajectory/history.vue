@@ -365,20 +365,26 @@ export default {
         console.log('轨迹点查询响应:', res);
         console.log('选择的日期范围:', this.startDate, '至', this.endDate);
         
-        if (res.success && res.data) {
+        const isSuccess = res && (res.success === true || res.code === 200);
+        const responseData = res?.data || res;
+        
+        if (isSuccess && responseData) {
           // 兼容多种数据格式：
           // 1. res.data.partnerTrajectories (只显示对方轨迹，showPartnerOnly=true)
           // 2. res.data.points (标准格式)
           // 3. res.data 直接是数组 (后端返回格式)
+          // 4. res.data.records（分页格式）
           let points = [];
           
-          if (res.data.partnerTrajectories && Array.isArray(res.data.partnerTrajectories)) {
+          if (responseData.partnerTrajectories && Array.isArray(responseData.partnerTrajectories)) {
             // 优先使用 partnerTrajectories（只显示对方轨迹）
-            points = res.data.partnerTrajectories;
-          } else if (Array.isArray(res.data)) {
-            points = res.data;
-          } else if (res.data.points && Array.isArray(res.data.points)) {
-            points = res.data.points;
+            points = responseData.partnerTrajectories;
+          } else if (responseData.records && Array.isArray(responseData.records)) {
+            points = responseData.records;
+          } else if (Array.isArray(responseData)) {
+            points = responseData;
+          } else if (responseData.points && Array.isArray(responseData.points)) {
+            points = responseData.points;
           }
           
           // 处理日期格式和字段映射
@@ -392,14 +398,18 @@ export default {
               point.visitTime = point.visit_time;
             }
             
-            // 确保 location_name 字段存在（用于显示）
+            // 兼容 placeName、photoUrl 等字段
             if (!point.location_name && !point.locationName) {
-              point.location_name = point.address || point.description || '未知地点';
+              point.location_name = point.placeName || point.address || point.description || '未知地点';
               point.locationName = point.location_name;
             } else if (point.locationName && !point.location_name) {
               point.location_name = point.locationName;
             } else if (point.location_name && !point.locationName) {
               point.locationName = point.location_name;
+            }
+            
+            if (!point.photos && point.photoUrl) {
+              point.photos = [point.photoUrl];
             }
             
             return point;
@@ -452,7 +462,8 @@ export default {
             this.mapScale = 13;
           }
         } else {
-          throw new Error(res.message || '加载失败');
+          const backendMsg = res?.msg || res?.message || responseData?.message;
+          throw new Error(backendMsg || '加载失败');
         }
       } catch (error) {
         console.error('加载历史轨迹失败:', error);

@@ -47,26 +47,53 @@ export function getTasks() {
   return http.get(url).then(response => {
     console.log('✅ [一百件事API] 获取任务列表成功');
     console.log('📦 响应数据:', response);
-    
-    // 处理响应数据格式
-    if (response && response.tasks) {
-      console.log(`📊 任务总数: ${response.tasks.length}`);
-      const presetCount = response.tasks.filter(t => t.category === 'preset').length;
-      const customCount = response.tasks.filter(t => t.category === 'custom').length;
-      const completedCount = response.tasks.filter(t => t.status === 'completed').length;
+
+    // 统一兼容多种返回格式
+    // 1）理想格式：{ success, tasks: [...] }
+    if (response && Array.isArray(response.tasks)) {
+      const tasks = response.tasks;
+      console.log(`📊 任务总数: ${tasks.length}`);
+      const presetCount = tasks.filter(t => t.category === 'preset').length;
+      const customCount = tasks.filter(t => t.category === 'custom').length;
+      const completedCount = tasks.filter(t => t.status === 'completed').length;
       console.log(`   - 预设任务: ${presetCount} 个`);
       console.log(`   - 自定义任务: ${customCount} 个`);
       console.log(`   - 已完成: ${completedCount} 个`);
-      
-      return response;
-    } else if (response && Array.isArray(response)) {
-      // 兼容直接返回数组的情况
-      console.log('📊 任务总数:', response.length);
-      return { success: true, tasks: response };
-    } else {
-      console.warn('⚠️ 响应数据格式异常:', response);
-      return { success: true, tasks: [] };
+
+      return { 
+        success: response.success ?? true,
+        msg: response.message || response.msg || '',
+        code: response.code ?? 200,
+        tasks 
+      };
     }
+
+    // 2）当前后端实际格式：{ msg, code, data: [...] }
+    if (response && Array.isArray(response.data)) {
+      const tasks = response.data;
+      console.log(`📊 任务总数(从 data 中解析): ${tasks.length}`);
+      const presetCount = tasks.filter(t => t.category === 'preset').length;
+      const customCount = tasks.filter(t => t.category === 'custom').length;
+      console.log(`   - 预设任务: ${presetCount} 个`);
+      console.log(`   - 自定义任务: ${customCount} 个`);
+
+      return {
+        success: response.code === 200,
+        msg: response.msg || response.message || '操作成功',
+        code: response.code,
+        tasks
+      };
+    }
+
+    // 3）直接返回数组：[ {...}, {...} ]
+    if (response && Array.isArray(response)) {
+      console.log('📊 任务总数(数组格式):', response.length);
+      return { success: true, tasks: response };
+    }
+
+    // 4）其他未知格式
+    console.warn('⚠️ 响应数据格式异常:', response);
+    return { success: false, tasks: [] };
   }).catch(error => {
     console.error('❌ [一百件事API] 获取任务列表失败');
     console.error('🔴 错误信息:', error);

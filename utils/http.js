@@ -8,7 +8,7 @@ const defaultOptions = {
   retryDelay: 1000,  // 重试间隔1秒
 }
 
-// 规范化可能的token（排除纯数字状态码/空值）
+// 规范化可能的token（排除纯数字状态码/空值/微信code）
 function normalizeTokenCandidate(candidate) {
   if (typeof candidate !== 'string') {
     return null;
@@ -17,8 +17,22 @@ function normalizeTokenCandidate(candidate) {
   if (!trimmed) {
     return null;
   }
+  // 排除纯数字状态码（如 200, 401）
   if (/^\d+$/.test(trimmed) && trimmed.length <= 6) {
     return null;
+  }
+  // 排除微信登录code（通常以"mock_code_"开头或长度较短）
+  if (trimmed.startsWith('mock_code_') || trimmed.length < 20) {
+    // JWT token通常很长（至少20个字符），微信code通常较短
+    // 但为了安全，我们只排除明显是code的情况
+    if (trimmed.startsWith('mock_code_')) {
+      return null;
+    }
+    // 如果长度小于20且看起来像code（字母数字组合，长度6-32），也排除
+    if (trimmed.length < 20 && /^[A-Za-z0-9]{6,32}$/.test(trimmed) && !trimmed.includes('.')) {
+      // JWT token通常包含点号（.），而微信code不包含
+      return null;
+    }
   }
   return trimmed;
 }
@@ -27,14 +41,16 @@ function resolveTokenFromLoginInfo(loginInfo) {
   if (!loginInfo || typeof loginInfo !== 'object') {
     return null;
   }
+  // 优先从标准token字段提取，避免从code字段提取（code是微信登录凭证，不是JWT token）
   const candidates = [
-    loginInfo.token,
-    loginInfo.data?.token,
-    loginInfo.accessToken,
-    loginInfo.authToken,
-    loginInfo.code,
-    loginInfo.data?.code,
-    loginInfo.rawToken
+    loginInfo.token,           // 标准token字段（最优先）
+    loginInfo.data?.token,     // 嵌套的token字段
+    loginInfo.accessToken,     // 备用token字段
+    loginInfo.authToken,       // 备用token字段
+    loginInfo.rawToken,        // 原始token字段
+    // 注意：不再从 code 字段提取token，因为code是微信登录凭证，不是JWT token
+    // loginInfo.code,          // ❌ 移除：这是微信登录code，不是JWT token
+    // loginInfo.data?.code,    // ❌ 移除：这是微信登录code，不是JWT token
   ];
   for (const candidate of candidates) {
     const normalized = normalizeTokenCandidate(candidate);
@@ -115,6 +131,95 @@ function handleUnauthorized(customMessage) {
   }
 }
 
+// 处理401错误的诊断逻辑（复用代码）
+function handle401Diagnosis(res, options, responseData) {
+  const urlForCheck401 = options.url || '';
+  const isLoginApi = urlForCheck401.includes('/api/login/') && 
+                     !urlForCheck401.includes('/api/login/logout');
+  
+  // 详细记录401错误的token诊断信息
+  console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.error('🔐 [401错误诊断] 认证失败');
+  console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.error('📍 [请求URL]', options.url);
+  console.error('📋 [请求方法]', options.method || 'GET');
+  console.error('📊 [HTTP状态码]', res.statusCode);
+  console.error('📊 [业务状态码]', responseData?.code || '无');
+  console.error('📦 [响应数据]', JSON.stringify(responseData || res.data, null, 2));
+  
+  // 检查请求头中的Authorization
+  const authHeader = options.header?.['Authorization'] || options.header?.['authorization'];
+  if (authHeader) {
+    console.error('✅ [Token传递] Authorization头已发送');
+    console.error('📋 [Authorization头长度]', authHeader.length, '字符');
+    console.error('🔍 [Authorization头预览]', authHeader.substring(0, 50) + '...');
+    console.error('💡 [可能原因] Token已过期或无效，需要重新登录');
+  } else {
+    console.error('❌ [Token传递] Authorization头未发送！');
+    console.error('💡 [可能原因] Token未正确添加到请求头');
+  }
+  
+  // 检查本地存储的token
+  const currentLoginInfo = uni.getStorageSync('login_info');
+  if (currentLoginInfo) {
+    const currentToken = resolveTokenFromLoginInfo(currentLoginInfo);
+    if (currentToken) {
+      console.error('📦 [本地Token] Token存在');
+      console.error('📏 [Token长度]', currentToken.length, '字符');
+      console.error('🔍 [Token预览]', currentToken.substring(0, 50) + '...');
+      console.error('💡 [诊断] Token已传递但后端认为无效，可能原因：');
+      console.error('   1. Token已过期（最常见）');
+      console.error('   2. Token格式不正确');
+      console.error('   3. 后端验证逻辑有问题');
+      console.error('   4. 后端服务重启导致token失效');
+    } else {
+      console.error('❌ [本地Token] Token不存在或无法解析');
+      console.error('💡 [诊断] 本地存储中没有有效的token');
+    }
+  } else {
+    console.error('❌ [本地Token] 登录信息不存在');
+    console.error('💡 [诊断] 本地存储中没有登录信息');
+  }
+  
+  console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  
+  if (isLoginApi) {
+    // 登录接口返回401，说明后端配置有问题
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('❌ [严重错误] 登录接口返回401错误！');
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('⚠️ 可能原因：');
+    console.error('   1. 后端配置错误：登录接口被错误地配置为需要认证');
+    console.error('   2. 后端Spring Security配置问题：/api/login/** 路径未正确放行');
+    console.error('   3. 请求参数错误：code、nickName或avatarUrl缺失或格式错误');
+    console.error('   4. 后端服务异常：认证拦截器误拦截了登录接口');
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('📍 [请求URL]', options.url);
+    console.error('📋 [请求方法]', options.method || 'POST');
+    if (options.data) {
+      console.error('📤 [请求参数]', JSON.stringify(options.data, null, 2));
+    }
+    console.error('📦 [响应数据]', JSON.stringify(responseData || res.data, null, 2));
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('💡 解决方案：');
+    console.error('   1. 检查后端Spring Security配置，确保 /api/login/** 路径已放行');
+    console.error('   2. 检查后端认证拦截器，确保登录接口不在拦截范围内');
+    console.error('   3. 检查请求参数是否完整且格式正确');
+    console.error('   4. 联系后端开发人员检查后端日志');
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    
+    // 显示用户友好的错误提示
+    uni.showToast({
+      title: '登录失败：后端配置错误',
+      icon: 'none',
+      duration: 3000
+    });
+  } else {
+    // 非登录接口的401错误，正常处理
+    handleUnauthorized();
+  }
+}
+
 // 基础请求方法
 function request(options) {
   // 合并默认配置
@@ -133,9 +238,28 @@ function request(options) {
   // 判断是否为一百件事相关API
   const isChallengeApi = options.url.includes('/api/challenge/')
   
+  // 提前判断开发环境和URL（用于token诊断日志）
+  let isDev = false;
+  try {
+    isDev = process.env.NODE_ENV === 'development' || 
+            typeof __wxConfig !== 'undefined' ||  // 微信小程序开发工具
+            (typeof uni !== 'undefined' && uni.getSystemInfoSync && uni.getSystemInfoSync().platform === 'devtools'); // 开发工具环境
+  } catch (e) {
+    // 如果获取系统信息失败，默认判断为开发环境（保守策略，确保日志输出）
+    isDev = process.env.NODE_ENV === 'development' || typeof __wxConfig !== 'undefined';
+  }
+  
+  const urlForCheck = options.url || originalUrl || '';
+  const isHeartWallApi = urlForCheck.includes('/api/heart-wall/') || 
+                         urlForCheck.includes('heart-wall') ||
+                         urlForCheck.includes('heartwall') ||
+                         urlForCheck.toLowerCase().includes('heart_wall');
+  
   // 添加token（登录接口除外）
   const loginInfo = uni.getStorageSync('login_info')
   let token = resolveTokenFromLoginInfo(loginInfo)
+  
+  // 如果从其他字段提取到了token，但loginInfo.token不存在，则写回标准字段
   if (token && loginInfo && !loginInfo.token) {
     loginInfo.token = token
     try {
@@ -143,6 +267,23 @@ function request(options) {
     } catch (storageError) {
       console.warn('⚠️ 写回标准token字段失败:', storageError)
     }
+  }
+  
+  // 如果token为空，记录详细日志（登录接口除外）
+  if (!token && !isLoginApi && process.env.NODE_ENV === 'development') {
+    console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.warn('⚠️ [Token诊断] 未找到有效token');
+    console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    if (loginInfo) {
+      console.warn('📦 登录信息存在，但token字段缺失');
+      console.warn('📦 loginInfo.token:', loginInfo.token || '❌ 不存在');
+      console.warn('📦 loginInfo.data?.token:', loginInfo.data?.token || '❌ 不存在');
+      console.warn('📦 loginInfo.accessToken:', loginInfo.accessToken || '❌ 不存在');
+      console.warn('📦 loginInfo.code:', loginInfo.code ? '⚠️ 存在（这是微信登录code，不是JWT token）' : '❌ 不存在');
+    } else {
+      console.warn('📦 登录信息不存在');
+    }
+    console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   }
   
   // 调试信息：检查token是否存在（登录接口除外）
@@ -211,36 +352,76 @@ function request(options) {
   }
   
   if (token) {
+    // 确保token不包含"Bearer "前缀（避免重复添加）
+    let cleanToken = token.trim();
+    if (cleanToken.startsWith('Bearer ')) {
+      cleanToken = cleanToken.substring(7); // 移除"Bearer "前缀
+    }
+    
+    // 验证token格式（JWT token通常包含点号，且长度较长）
+    if (cleanToken.length < 20) {
+      console.warn('⚠️ [Token警告] Token长度过短，可能不是有效的JWT token');
+      console.warn('⚠️ Token长度:', cleanToken.length);
+      console.warn('⚠️ Token值:', cleanToken.substring(0, 20) + '...');
+    }
+    
+    // 详细记录token传递信息（用于调试401错误）
+    if (isDev || isHeartWallApi || urlForCheck.includes('/api/couple/')) {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔑 [Token传递诊断]');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📍 [请求URL]', options.url);
+      console.log('📋 [请求方法]', options.method || 'GET');
+      console.log('✅ [Token状态] Token已找到');
+      console.log('📏 [Token长度]', cleanToken.length, '字符');
+      console.log('🔍 [Token预览]', cleanToken.substring(0, 50) + (cleanToken.length > 50 ? '...' : ''));
+      console.log('🔍 [Token格式]', cleanToken.includes('.') ? '✅ JWT格式（包含点号）' : '⚠️ 非JWT格式（不包含点号）');
+      console.log('📦 [Authorization头]', `Bearer ${cleanToken.substring(0, 30)}...`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    }
+    
+    // 确保header对象存在
+    if (!options.header) {
+      options.header = {};
+    }
+    
     options.header = {
       ...options.header,
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${cleanToken}`
+    }
+    
+    // 验证Authorization头是否正确设置
+    if (isDev || isHeartWallApi || urlForCheck.includes('/api/couple/')) {
+      const authHeader = options.header['Authorization'] || options.header['authorization'];
+      if (authHeader) {
+        console.log('✅ [验证] Authorization头已正确设置');
+        console.log('📋 [Authorization头长度]', authHeader.length, '字符');
+        console.log('🔍 [Authorization头预览]', authHeader.substring(0, 50) + '...');
+      } else {
+        console.error('❌ [验证失败] Authorization头未正确设置！');
+        console.error('📋 [当前请求头]', JSON.stringify(options.header, null, 2));
+      }
     }
   } else if (!isLoginApi) {
     // 如果没有token且不是登录接口，添加警告
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('⚠️ 请求未携带Authorization头，可能导致401错误')
-      console.warn('⚠️ 当前请求URL:', options.url)
+    console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.warn('⚠️ [Token缺失] 请求未携带Authorization头，可能导致401错误');
+    console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.warn('📍 [请求URL]', options.url);
+    console.warn('📋 [请求方法]', options.method || 'GET');
+    console.warn('📦 [登录信息]', loginInfo ? '存在但token为空' : '不存在');
+    if (loginInfo) {
+      console.warn('📋 [登录信息字段]');
+      console.warn('   - token:', loginInfo.token ? `✅ 存在（${loginInfo.token.length}字符）` : '❌ 不存在');
+      console.warn('   - data?.token:', loginInfo.data?.token ? `✅ 存在（${loginInfo.data.token.length}字符）` : '❌ 不存在');
+      console.warn('   - accessToken:', loginInfo.accessToken ? `✅ 存在（${loginInfo.accessToken.length}字符）` : '❌ 不存在');
+      console.warn('   - isLoggedIn:', loginInfo.isLoggedIn ? '✅ true' : '❌ false');
     }
+    console.warn('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   }
   
   // 开发环境下记录所有API请求信息
-  // 判断是否在开发环境：uni-app开发工具或本地调试
-  let isDev = false;
-  try {
-    isDev = process.env.NODE_ENV === 'development' || 
-            typeof __wxConfig !== 'undefined' ||  // 微信小程序开发工具
-            (typeof uni !== 'undefined' && uni.getSystemInfoSync && uni.getSystemInfoSync().platform === 'devtools'); // 开发工具环境
-  } catch (e) {
-    // 如果获取系统信息失败，默认判断为开发环境（保守策略，确保日志输出）
-    isDev = process.env.NODE_ENV === 'development' || typeof __wxConfig !== 'undefined';
-  }
-  
-  // 无论是否开发环境，都记录爱心墙相关的请求（便于调试）
-  const urlForCheck = options.url || originalUrl || '';
-  const isHeartWallApi = urlForCheck.includes('/api/heart-wall/') || 
-                         urlForCheck.includes('heart-wall') ||
-                         urlForCheck.includes('heartwall') ||
-                         urlForCheck.toLowerCase().includes('heart_wall');
+  // 注意：isDev、urlForCheck、isHeartWallApi 已在前面定义（用于token诊断）
   
   if (isDev || isHeartWallApi) {
     // 判断API类型（使用完整URL或原始URL进行判断）
@@ -357,6 +538,22 @@ function request(options) {
             
             console.log('⏰ [时间]', new Date().toLocaleString());
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          }
+          
+          // 检查业务状态码：如果后端返回 code: 401，也要按401错误处理
+          // 这种情况是后端返回HTTP 200，但业务code是401
+          if (res.data && typeof res.data === 'object' && res.data.code === 401) {
+            const errorMessage = res.data.msg || res.data.message || '认证失败，无法访问系统资源';
+            const error = new Error(errorMessage);
+            error.statusCode = 401; // 设置为401，便于统一处理
+            error.data = res.data;
+            error.responseData = res.data;
+            
+            // 调用401诊断函数
+            handle401Diagnosis(res, options, res.data);
+            
+            reject(error);
+            return;
           }
           
           // 如果后端返回的格式是 { success: false, message: "..." }，应该作为错误处理
@@ -492,51 +689,31 @@ function request(options) {
             error.responseData = responseData;
           }
           
+          // 检查业务状态码：如果后端返回 code: 401，也要按401错误处理
+          // 这种情况可能出现在非200-299状态码的情况下
+          if (responseData && typeof responseData === 'object' && responseData.code === 401) {
+            const errorMessage = responseData.msg || responseData.message || '认证失败，无法访问系统资源';
+            const error = new Error(errorMessage);
+            error.statusCode = 401; // 设置为401，便于统一处理
+            error.data = responseData;
+            error.responseData = responseData;
+            
+            // 调用401诊断函数
+            handle401Diagnosis(res, options, responseData);
+            
+            reject(error);
+            return;
+          }
+          
           // 如果是 401 错误，立即处理未授权情况
           // 但是登录接口返回401时不应该调用handleUnauthorized，因为：
           // 1. 登录接口本身不需要认证
           // 2. 如果登录接口返回401，说明后端配置有问题或请求参数有问题
           // 3. 不应该因为登录接口返回401就跳转到登录页（会导致死循环）
           if (res.statusCode === 401) {
-            const urlForCheck = options.url || '';
-            const isLoginApi = urlForCheck.includes('/api/login/') && 
-                             !urlForCheck.includes('/api/login/logout');
-            
-            if (isLoginApi) {
-              // 登录接口返回401，说明后端配置有问题
-              console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-              console.error('❌ [严重错误] 登录接口返回401错误！');
-              console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-              console.error('⚠️ 可能原因：');
-              console.error('   1. 后端配置错误：登录接口被错误地配置为需要认证');
-              console.error('   2. 后端Spring Security配置问题：/api/login/** 路径未正确放行');
-              console.error('   3. 请求参数错误：code、nickName或avatarUrl缺失或格式错误');
-              console.error('   4. 后端服务异常：认证拦截器误拦截了登录接口');
-              console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-              console.error('📍 [请求URL]', options.url);
-              console.error('📋 [请求方法]', options.method || 'POST');
-              if (options.data) {
-                console.error('📤 [请求参数]', JSON.stringify(options.data, null, 2));
-              }
-              console.error('📦 [响应数据]', JSON.stringify(responseData, null, 2));
-              console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-              console.error('💡 解决方案：');
-              console.error('   1. 检查后端Spring Security配置，确保 /api/login/** 路径已放行');
-              console.error('   2. 检查后端认证拦截器，确保登录接口不在拦截范围内');
-              console.error('   3. 检查请求参数是否完整且格式正确');
-              console.error('   4. 联系后端开发人员检查后端日志');
-              console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-              
-              // 显示用户友好的错误提示
-              uni.showToast({
-                title: '登录失败：后端配置错误',
-                icon: 'none',
-                duration: 3000
-              });
-            } else {
-              // 非登录接口的401错误，正常处理
-              handleUnauthorized();
-            }
+            // 调用401诊断函数（函数内部会处理跳转逻辑）
+            handle401Diagnosis(res, options, responseData);
+            // 继续执行，让错误被reject
           }
           
           // 如果是 404 错误且错误消息是"用户不存在"，也按未授权处理
@@ -710,7 +887,12 @@ function upload(options) {
   const token = loginInfo?.token
   
   if (token) {
-    options.header['Authorization'] = `Bearer ${token}`
+    // 确保token不包含"Bearer "前缀（避免重复添加）
+    let cleanToken = token.trim();
+    if (cleanToken.startsWith('Bearer ')) {
+      cleanToken = cleanToken.substring(7); // 移除"Bearer "前缀
+    }
+    options.header['Authorization'] = `Bearer ${cleanToken}`
   } else {
     console.warn('⚠️ 上传请求未携带Authorization头，可能导致401错误')
   }

@@ -2,5 +2,7 @@
   "navigationBarTitleText": "恋爱轨迹",
   "navigationStyle": "custom",
   "navigationBarTextStyle": "black",
-  "usingComponents": {}
+  "usingComponents": {
+    "custom-tabbar": "../../components/custom-tabbar/index"
+  }
 }

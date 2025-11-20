@@ -1,13 +1,13 @@
 // 开发环境配置
 const devConfig = {
-  baseURL: 'http://192.168.224.229:8080',
+  baseURL: 'http://62.234.12.214:8886',
   timeout: 10000,  // 普通请求超时时间
   uploadTimeout: 30000,  // 上传请求超时时间
   API: {
     LOGIN: {
       WECHAT: '/api/login/wechat',
       LOGOUT: '/api/login/logout',
-      INVITE: '/api/login/invite'  // 使用邀请码邀请用户
+      INVITE: '/api/couple/bind/accept'  // 使用邀请码邀请用户（已切换至情侣绑定接口）
     },
     USER: {
       INFO: '/api/user/info',
@@ -20,13 +20,6 @@ const devConfig = {
       CREATE: '/api/letter/create',
       UPDATE: '/api/letter/update',
       DELETE: '/api/letter/delete'
-    },
-    QA: {
-      LIST: '/api/qa/list',
-      DETAIL: '/api/qa/detail',
-      CREATE: '/api/qa/create',
-      UPDATE: '/api/qa/update',
-      DELETE: '/api/qa/delete'
     },
     QNA: {
       LIST: '/api/qna/questions',          // 获取问题列表
@@ -80,7 +73,8 @@ const devConfig = {
       SENT: '/api/future-letter/sent',                     // 获取已发送情书列表
       RECEIVED: '/api/future-letter/received',             // 获取收到情书列表
       STATS: '/api/future-letter/stats',                   // 获取统计信息
-      SEND: '/api/future-letter'                           // 发送未来情书 (需要拼接id/send)
+      SEND: '/api/future-letter',                          // 发送未来情书 (需要拼接id/send)
+      FONTS: '/api/future-letter/fonts'                    // 获取可选字体
     }
   }
 }

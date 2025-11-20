@@ -22,20 +22,22 @@ const _sfc_main = {
     await this.loadQuestionsFromServer();
     await this.loadHistoryFromServer();
     const qid = options && options.qid ? Number(options.qid) : null;
+    const qTextParam = options && typeof options.qtext === "string" ? options.qtext : "";
+    this.targetQuestionFallbackText = qTextParam ? decodeURIComponent(qTextParam) : "";
     if (qid) {
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:158", "📌 从历史记录跳转，目标问题ID:", qid);
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:160", "📌 从历史记录跳转，目标问题ID:", qid);
       this.targetQuestionId = qid;
       const idx = this.unansweredQuestions.findIndex((q) => q.id === qid);
       if (idx >= 0) {
         this.qIndex = idx;
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:166", "✅ 问题未回答，设置 qIndex:", idx);
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:168", "✅ 问题未回答，设置 qIndex:", idx);
       } else {
         const allQuestions = this.questions;
         const questionExists = allQuestions.some((q) => q.id === qid);
         if (questionExists) {
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:173", "✅ 问题已回答，但存在于问题列表中，将显示该问题");
+          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:175", "✅ 问题已回答，但存在于问题列表中，将显示该问题");
         } else {
-          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:175", "⚠️ 问题ID不存在于问题列表中:", qid);
+          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:177", "⚠️ 问题ID不存在于问题列表中:", qid);
           this.targetQuestionId = null;
           this.qIndex = 0;
         }
@@ -46,7 +48,7 @@ const _sfc_main = {
     }
     const time = options && options.time ? decodeURIComponent(options.time) : "";
     const targetQuestionId = qid || this.currentQuestion && this.currentQuestion.id;
-    common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:191", "📋 初始化答案加载:", {
+    common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:193", "📋 初始化答案加载:", {
       targetQuestionId,
       time,
       currentQuestionId: (_a = this.currentQuestion) == null ? void 0 : _a.id,
@@ -58,7 +60,7 @@ const _sfc_main = {
         return rQuestionId != null && Number(rQuestionId) === Number(targetQuestionId) && (!time || r.time === time);
       });
       if (rec) {
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:204", "✅ 从历史记录加载答案:", {
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:206", "✅ 从历史记录加载答案:", {
           questionId: targetQuestionId,
           hasMyAnswer: !!rec.myAnswer,
           hasPartnerAnswer: !!rec.partnerAnswer,
@@ -68,45 +70,23 @@ const _sfc_main = {
         this.myAnswer = rec.myAnswer || "";
         this.partnerAnswer = rec.partnerAnswer || "";
         this.hasSubmitted = true;
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:216", "📥 从后端获取最新的对方答案，问题ID:", targetQuestionId);
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:218", "📥 从后端获取最新的对方答案，问题ID:", targetQuestionId);
         try {
           const partnerRes = await api_qna.getPartnerAnswer(targetQuestionId);
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:219", "📥 后端返回的对方答案响应:", {
-            success: partnerRes == null ? void 0 : partnerRes.success,
-            data: partnerRes == null ? void 0 : partnerRes.data,
-            fullResponse: partnerRes
+          this.handlePartnerAnswerResponse(partnerRes, {
+            historyRecord: rec,
+            context: `onLoad questionId=${targetQuestionId}`
           });
-          if (partnerRes && partnerRes.success) {
-            const partnerData = partnerRes.data || partnerRes;
-            const hasAnswered = partnerData.hasAnswered !== false;
-            const answer = partnerData.answer || partnerData.partnerAnswer || partnerData.partner_answer || "";
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:231", "📥 解析后的对方答案数据:", {
-              hasAnswered,
-              answer: answer ? answer.substring(0, 30) + "..." : "空",
-              partnerData
-            });
-            if (hasAnswered && answer) {
-              common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:238", "✅ 更新对方答案:", answer.substring(0, 30) + "...");
-              this.partnerAnswer = answer;
-              if (rec) {
-                rec.partnerAnswer = answer;
-              }
-            } else {
-              common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:245", "⚠️ 对方暂未作答或答案为空");
-            }
-          } else {
-            common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:250", "⚠️ 后端返回失败，使用历史记录中的答案");
-          }
         } catch (e) {
-          common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:253", "❌ 获取对方答案失败:", e);
-          common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:254", "错误详情:", {
+          common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:226", "❌ 获取对方答案失败:", e);
+          common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:227", "错误详情:", {
             message: e.message,
             statusCode: e.statusCode,
             data: e.data
           });
         }
       } else {
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:263", "📋 历史记录中未找到，调用 loadAnswerForCurrentQuestion");
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:236", "📋 历史记录中未找到，调用 loadAnswerForCurrentQuestion");
         this.loadAnswerForCurrentQuestion();
       }
     } else {
@@ -135,8 +115,10 @@ const _sfc_main = {
       showCustomModal: false,
       newQuestion: "",
       history: [],
-      targetQuestionId: null
+      targetQuestionId: null,
       // 从历史记录跳转过来的目标问题ID
+      targetQuestionFallbackText: ""
+      // 历史跳转时携带的题干
     };
   },
   watch: {
@@ -144,7 +126,7 @@ const _sfc_main = {
     "currentQuestion.id": {
       handler(newId, oldId) {
         if (newId && oldId && newId !== oldId) {
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:301", "🔄 问题切换:", { from: oldId, to: newId });
+          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:275", "🔄 问题切换:", { from: oldId, to: newId });
           this.loadAnswerForCurrentQuestion();
         }
       },
@@ -171,19 +153,19 @@ const _sfc_main = {
       }).filter((id) => id != null);
       const unanswered = this.questions.filter((q) => {
         if (!q || q.id === void 0 || q.id === null) {
-          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:337", "⚠️ 发现无效的问题对象:", q);
+          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:311", "⚠️ 发现无效的问题对象:", q);
           return false;
         }
         const questionId = Number(q.id);
         if (isNaN(questionId)) {
-          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:343", "⚠️ 问题ID无效:", q.id);
+          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:317", "⚠️ 问题ID无效:", q.id);
           return false;
         }
         const isAnswered = answeredIds.includes(questionId);
         return !isAnswered && q.isActive !== false;
       });
       {
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:352", "🔍 未回答问题计算:", {
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:326", "🔍 未回答问题计算:", {
           totalQuestions: this.questions.length,
           answeredIds,
           unansweredCount: unanswered.length,
@@ -203,14 +185,24 @@ const _sfc_main = {
         const targetId = Number(this.targetQuestionId);
         const targetQuestion = this.questions.find((q) => q && q.id != null && Number(q.id) === targetId);
         if (targetQuestion) {
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:375", "🎯 显示目标问题:", {
+          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:349", "🎯 显示目标问题:", {
             id: targetQuestion.id,
             text: targetQuestion.text.substring(0, 20) + "..."
           });
           return targetQuestion;
         } else {
-          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:381", "⚠️ 目标问题不存在，回退到默认逻辑");
+          if (this.targetQuestionFallbackText) {
+            common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:356", "⚠️ 目标问题不在问题列表，使用历史记录携带的题干");
+            return {
+              id: targetId,
+              text: this.targetQuestionFallbackText,
+              category: "history",
+              isFallback: true
+            };
+          }
+          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:364", "⚠️ 目标问题不存在，回退到默认逻辑");
           this.targetQuestionId = null;
+          this.targetQuestionFallbackText = "";
         }
       }
       if (this.unansweredQuestions.length === 0) {
@@ -222,6 +214,110 @@ const _sfc_main = {
   mounted() {
   },
   methods: {
+    normalizeApiResponse(response, defaultMessage = "操作成功") {
+      if (response == null) {
+        return { success: false, message: "响应为空", data: null, raw: response };
+      }
+      if (typeof response === "string") {
+        return { success: false, message: response, data: null, raw: response };
+      }
+      if (typeof response.success === "boolean") {
+        return {
+          success: !!response.success,
+          message: response.message || response.msg || defaultMessage,
+          data: response.data !== void 0 ? response.data : null,
+          raw: response
+        };
+      }
+      if (response.code !== void 0) {
+        const success = Number(response.code) === 200;
+        return {
+          success,
+          message: response.msg || response.message || defaultMessage,
+          data: response.data !== void 0 ? response.data : null,
+          raw: response
+        };
+      }
+      if (Array.isArray(response)) {
+        return { success: true, message: defaultMessage, data: response, raw: response };
+      }
+      return {
+        success: true,
+        message: response.message || response.msg || defaultMessage,
+        data: response.data !== void 0 ? response.data : response,
+        raw: response
+      };
+    },
+    handlePartnerAnswerResponse(partnerRes, { historyRecord = null, context = "", updateState = true } = {}) {
+      var _a, _b, _c, _d, _e, _f;
+      const normalized = this.normalizeApiResponse(partnerRes, "获取对方答案成功");
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:418", "📥 对方答案响应（标准化）:", {
+        context,
+        success: normalized.success,
+        message: normalized.message,
+        data: normalized.data
+      });
+      if (!normalized.success) {
+        common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:426", "⚠️ 获取对方答案业务失败:", {
+          context,
+          message: normalized.message,
+          raw: normalized.raw
+        });
+        return { updated: false, answer: "", normalized };
+      }
+      const pickPayload = (candidate) => {
+        if (candidate && typeof candidate === "object") {
+          if (candidate.data && typeof candidate.data === "object") {
+            return candidate.data;
+          }
+          return candidate;
+        }
+        return null;
+      };
+      let payload = pickPayload(normalized.data) || pickPayload((_a = normalized.raw) == null ? void 0 : _a.data) || pickPayload(normalized.raw) || null;
+      if (!payload) {
+        common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:451", "⚠️ 对方答案响应缺少有效数据对象:", { context, normalized });
+        return { updated: false, answer: "", normalized };
+      }
+      const answer = payload.answer ?? payload.partnerAnswer ?? payload.partner_answer ?? ((_b = payload.data) == null ? void 0 : _b.answer) ?? ((_c = payload.data) == null ? void 0 : _c.partnerAnswer) ?? ((_d = payload.data) == null ? void 0 : _d.partner_answer) ?? "";
+      const answeredFlag = payload.hasAnswered ?? payload.hasPartnerAnswered ?? payload.has_partner_answered ?? payload.has_answered ?? ((_e = payload.data) == null ? void 0 : _e.hasAnswered) ?? ((_f = payload.data) == null ? void 0 : _f.hasPartnerAnswered);
+      const hasAnswered = answeredFlag === void 0 ? !!answer : answeredFlag !== false;
+      if (hasAnswered && answer) {
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:475", "✅ 解析到对方答案:", {
+          context,
+          preview: answer.substring(0, 30) + (answer.length > 30 ? "..." : "")
+        });
+        if (updateState) {
+          this.partnerAnswer = answer;
+          if (historyRecord) {
+            historyRecord.partnerAnswer = answer;
+            historyRecord.partnerAnsweredAt = payload.answeredAt || payload.partnerAnsweredAt || payload.answered_at || historyRecord.partnerAnsweredAt;
+          }
+        }
+        return { updated: true, answer, normalized };
+      }
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:493", "⚠️ 对方暂未作答或答案为空:", { context, payload });
+      return { updated: false, answer: "", normalized };
+    },
+    formatQuestionList(list, categoryFallback = "preset") {
+      if (!Array.isArray(list)) {
+        return [];
+      }
+      return list.filter((q) => q && q.id != null).map((q) => {
+        const formatted = {
+          ...q,
+          id: q.id,
+          text: q.text || q.questionText || "",
+          category: q.category || categoryFallback,
+          isActive: q.isActive !== false,
+          orderIndex: q.orderIndex ?? 999
+        };
+        if (formatted.questionText) {
+          delete formatted.questionText;
+        }
+        return formatted;
+      });
+    },
     goBack() {
       common_vendor.index.navigateBack();
     },
@@ -236,7 +332,7 @@ const _sfc_main = {
       try {
         common_vendor.index.setStorageSync("qna_history", this.history);
       } catch (e) {
-        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:417", "保存历史记录失败", e);
+        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:536", "保存历史记录失败", e);
       }
     },
     async submitAnswer() {
@@ -260,35 +356,30 @@ const _sfc_main = {
           answer: this.myAnswer,
           questionText: this.currentQuestion.text
         });
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:446", "📥 提交答案响应:", res);
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:565", "📥 提交答案响应:", res);
         if (res && res.success) {
           const submittedQuestionId = Number(this.currentQuestion.id);
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:451", "✅ 提交答案成功，问题ID:", submittedQuestionId);
+          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:570", "✅ 提交答案成功，问题ID:", submittedQuestionId);
           this.hasSubmitted = true;
           const responseData = res.data || res;
           let partnerAnswerFromSubmit = "";
           if (responseData && (responseData.hasPartnerAnswered || responseData.hasPartnerAnswer)) {
             partnerAnswerFromSubmit = responseData.partnerAnswer || "";
             this.partnerAnswer = partnerAnswerFromSubmit;
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:464", "📥 从提交接口获取到对方答案:", partnerAnswerFromSubmit ? partnerAnswerFromSubmit.substring(0, 20) + "..." : "空");
+            common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:583", "📥 从提交接口获取到对方答案:", partnerAnswerFromSubmit ? partnerAnswerFromSubmit.substring(0, 20) + "..." : "空");
           }
           try {
             const partnerRes = await api_qna.getPartnerAnswer(submittedQuestionId);
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:470", "📥 获取对方答案响应:", {
-              questionId: submittedQuestionId,
-              response: partnerRes
+            const partnerResult = this.handlePartnerAnswerResponse(partnerRes, {
+              context: `submit questionId=${submittedQuestionId}`
             });
-            if (partnerRes && partnerRes.success && partnerRes.data) {
-              const partnerData = partnerRes.data;
-              if (partnerData.hasAnswered && partnerData.answer) {
-                this.partnerAnswer = partnerData.answer;
-                partnerAnswerFromSubmit = partnerData.answer;
-              } else {
-                this.partnerAnswer = "";
-              }
+            if (partnerResult.updated && partnerResult.answer) {
+              partnerAnswerFromSubmit = partnerResult.answer;
+            } else if (!partnerAnswerFromSubmit) {
+              this.partnerAnswer = "";
             }
           } catch (partnerError) {
-            common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:488", "⚠️ 获取对方答案失败（不影响提交）:", partnerError);
+            common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:600", "⚠️ 获取对方答案失败（不影响提交）:", partnerError);
             if (!partnerAnswerFromSubmit) {
               this.partnerAnswer = "";
             }
@@ -303,7 +394,7 @@ const _sfc_main = {
             time: (/* @__PURE__ */ new Date()).toLocaleString(),
             createdAt: (/* @__PURE__ */ new Date()).toISOString()
           };
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:505", "💾 保存历史记录:", {
+          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:617", "💾 保存历史记录:", {
             questionId: record.questionId,
             questionText: record.question.substring(0, 20) + "...",
             hasPartnerAnswer: !!record.partnerAnswer
@@ -312,7 +403,7 @@ const _sfc_main = {
           this.saveHistory();
           common_vendor.index.showToast({ title: "提交成功", icon: "success" });
         } else {
-          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:518", "⚠️ 响应格式不符合预期:", res);
+          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:630", "⚠️ 响应格式不符合预期:", res);
           const record = {
             id: Date.now(),
             questionId: this.currentQuestion.id,
@@ -327,8 +418,8 @@ const _sfc_main = {
           common_vendor.index.showToast({ title: "提交成功（已保存到本地）", icon: "success" });
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:535", "提交答案失败", e);
-        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:536", "错误详情:", {
+        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:647", "提交答案失败", e);
+        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:648", "错误详情:", {
           statusCode: e.statusCode,
           message: e.message,
           data: e.data,
@@ -348,8 +439,8 @@ const _sfc_main = {
           return;
         }
         if (e.statusCode === 404) {
-          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:562", "⚠️ 后端接口未实现: POST /api/qna/answer/submit");
-          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:563", "💡 提示: 请联系后端开发人员实现该接口，或检查接口路径是否正确");
+          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:674", "⚠️ 后端接口未实现: POST /api/qna/answer/submit");
+          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:675", "💡 提示: 请联系后端开发人员实现该接口，或检查接口路径是否正确");
           common_vendor.index.showModal({
             title: "接口未实现",
             content: "提交答案接口暂未实现，已保存到本地。请联系后端开发人员实现接口：POST /api/qna/answer/submit",
@@ -389,11 +480,12 @@ const _sfc_main = {
     },
     nextQuestion() {
       if (this.targetQuestionId != null) {
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:611", "🔄 清除目标问题ID，恢复正常切换逻辑");
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:723", "🔄 清除目标问题ID，恢复正常切换逻辑");
         this.targetQuestionId = null;
+        this.targetQuestionFallbackText = "";
       }
       const currentId = this.currentQuestion && this.currentQuestion.id;
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:617", "➡️ 切换到下一题，当前问题ID:", currentId);
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:730", "➡️ 切换到下一题，当前问题ID:", currentId);
       const unansweredCount = this.unansweredQuestions.length;
       if (unansweredCount === 0) {
         common_vendor.index.showToast({ title: "所有问题已回答完毕！", icon: "success" });
@@ -405,16 +497,27 @@ const _sfc_main = {
         this.qIndex = 0;
       }
       const nextId = this.currentQuestion && this.currentQuestion.id;
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:639", "➡️ 下一题ID:", nextId);
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:752", "➡️ 下一题ID:", nextId);
     },
     // 加载当前问题的答案（从历史记录或后端）
     async loadAnswerForCurrentQuestion() {
-      if (!this.currentQuestion || !this.currentQuestion.id) {
-        common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:644", "⚠️ loadAnswerForCurrentQuestion: 当前问题无效", this.currentQuestion);
+      if (!this.currentQuestion) {
+        common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:757", "⚠️ loadAnswerForCurrentQuestion: 当前问题不存在");
         return;
       }
       const questionId = Number(this.currentQuestion.id);
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:649", "📋 加载问题答案:", {
+      if (!Number.isFinite(questionId)) {
+        common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:764", "⚠️ loadAnswerForCurrentQuestion: 当前问题ID无效", this.currentQuestion);
+        return;
+      }
+      if (questionId === 0) {
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:769", "🎉 所有问题已回答完毕，停止加载答案流程");
+        this.myAnswer = "";
+        this.partnerAnswer = "";
+        this.hasSubmitted = false;
+        return;
+      }
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:776", "📋 加载问题答案:", {
         questionId,
         questionText: this.currentQuestion.text,
         historyCount: this.history.length
@@ -427,7 +530,7 @@ const _sfc_main = {
         const hIdNum = hQuestionId != null ? Number(hQuestionId) : null;
         const match = hIdNum !== null && hIdNum === questionId;
         if (match) {
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:666", "✅ 找到历史记录:", {
+          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:793", "✅ 找到历史记录:", {
             questionId: hIdNum,
             myAnswer: h.myAnswer ? h.myAnswer.substring(0, 20) + "..." : "",
             partnerAnswer: h.partnerAnswer ? h.partnerAnswer.substring(0, 20) + "..." : ""
@@ -439,44 +542,22 @@ const _sfc_main = {
         this.myAnswer = historyRecord.myAnswer || "";
         this.partnerAnswer = historyRecord.partnerAnswer || "";
         this.hasSubmitted = true;
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:681", "📋 从历史记录加载答案:", {
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:808", "📋 从历史记录加载答案:", {
           questionId,
           hasMyAnswer: !!this.myAnswer,
           hasPartnerAnswer: !!this.partnerAnswer,
           partnerAnswer: this.partnerAnswer ? this.partnerAnswer.substring(0, 30) + "..." : "空"
         });
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:689", "📥 从后端获取最新的对方答案，问题ID:", questionId);
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:816", "📥 从后端获取最新的对方答案，问题ID:", questionId);
         try {
           const partnerRes = await api_qna.getPartnerAnswer(questionId);
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:692", "📥 后端返回的对方答案响应:", {
-            success: partnerRes == null ? void 0 : partnerRes.success,
-            data: partnerRes == null ? void 0 : partnerRes.data,
-            fullResponse: partnerRes
+          this.handlePartnerAnswerResponse(partnerRes, {
+            historyRecord,
+            context: `loadHistory questionId=${questionId}`
           });
-          if (partnerRes && partnerRes.success) {
-            const partnerData = partnerRes.data || partnerRes;
-            const hasAnswered = partnerData.hasAnswered !== false;
-            const answer = partnerData.answer || partnerData.partnerAnswer || partnerData.partner_answer || "";
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:704", "📥 解析后的对方答案数据:", {
-              hasAnswered,
-              answer: answer ? answer.substring(0, 30) + "..." : "空",
-              partnerData
-            });
-            if (hasAnswered && answer) {
-              common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:711", "✅ 更新对方答案:", answer.substring(0, 30) + "...");
-              this.partnerAnswer = answer;
-              if (historyRecord) {
-                historyRecord.partnerAnswer = answer;
-              }
-            } else {
-              common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:718", "⚠️ 对方暂未作答或答案为空");
-            }
-          } else {
-            common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:723", "⚠️ 后端返回失败，使用历史记录中的答案");
-          }
         } catch (e) {
-          common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:726", "❌ 获取对方答案失败:", e);
-          common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:727", "错误详情:", {
+          common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:824", "❌ 获取对方答案失败:", e);
+          common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:825", "错误详情:", {
             message: e.message,
             statusCode: e.statusCode,
             data: e.data
@@ -485,14 +566,12 @@ const _sfc_main = {
       } else {
         try {
           const partnerRes = await api_qna.getPartnerAnswer(questionId);
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:738", "📥 检查对方是否已回答:", partnerRes);
-          if (partnerRes && partnerRes.success && partnerRes.data) {
-            const partnerData = partnerRes.data;
-            if (partnerData.hasAnswered && partnerData.answer) {
-            }
-          }
+          this.handlePartnerAnswerResponse(partnerRes, {
+            context: `pre-submit check questionId=${questionId}`,
+            updateState: false
+          });
         } catch (e) {
-          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:750", "⚠️ 检查对方答案失败:", e);
+          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:842", "⚠️ 检查对方答案失败:", e);
         }
       }
     },
@@ -509,24 +588,39 @@ const _sfc_main = {
     },
     // 从后端加载历史记录
     async loadHistoryFromServer() {
+      var _a, _b, _c, _d, _e, _f, _g, _h;
       try {
         const res = await api_qna.getHistory({ page: 1, pageSize: 100 });
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:770", "📥 历史记录响应:", res);
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:862", "📥 历史记录响应:", res);
+        const normalizedRes = this.normalizeApiResponse(res, "获取历史记录成功");
+        if (!normalizedRes.success) {
+          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:865", "⚠️ 历史记录业务状态返回失败:", {
+            message: normalizedRes.message,
+            raw: normalizedRes.raw
+          });
+        }
+        const dataSources = [
+          (_a = normalizedRes.data) == null ? void 0 : _a.list,
+          (_b = normalizedRes.data) == null ? void 0 : _b.history,
+          (_c = normalizedRes.data) == null ? void 0 : _c.answers,
+          Array.isArray(normalizedRes.data) ? normalizedRes.data : null,
+          res == null ? void 0 : res.history,
+          res == null ? void 0 : res.answers,
+          (_d = res == null ? void 0 : res.data) == null ? void 0 : _d.list,
+          (_e = res == null ? void 0 : res.data) == null ? void 0 : _e.history,
+          (_f = res == null ? void 0 : res.data) == null ? void 0 : _f.answers,
+          Array.isArray(res == null ? void 0 : res.data) ? res.data : null,
+          res == null ? void 0 : res.list,
+          Array.isArray(res) ? res : null
+        ];
         let historyList = [];
-        if (res && res.success && Array.isArray(res.history)) {
-          historyList = res.history;
-        } else if (res && res.success && Array.isArray(res.answers)) {
-          historyList = res.answers;
-        } else if (res && res.success && res.data && res.data.list) {
-          historyList = Array.isArray(res.data.list) ? res.data.list : [];
-        } else if (res && res.success && res.data && Array.isArray(res.data)) {
-          historyList = res.data;
-        } else if (res && res.list) {
-          historyList = Array.isArray(res.list) ? res.list : [];
-        } else if (Array.isArray(res)) {
-          historyList = res;
-        } else {
-          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:794", "⚠️ 历史记录响应格式不符合预期:", res);
+        for (const candidate of dataSources) {
+          if (Array.isArray(candidate)) {
+            historyList = candidate;
+            break;
+          }
+        }
+        if (!Array.isArray(historyList)) {
           historyList = [];
         }
         this.history = historyList.map((item) => {
@@ -560,14 +654,14 @@ const _sfc_main = {
             ...item
           };
         });
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:838", "✅ 历史记录加载成功:", {
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:938", "✅ 历史记录加载成功:", {
           count: this.history.length,
-          totalCount: res == null ? void 0 : res.totalCount,
+          totalCount: ((_g = normalizedRes.raw) == null ? void 0 : _g.totalCount) ?? ((_h = normalizedRes.data) == null ? void 0 : _h.totalCount),
           sample: this.history.slice(0, 3)
         });
       } catch (e) {
-        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:844", "加载历史记录失败", e);
-        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:845", "错误详情:", {
+        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:944", "加载历史记录失败", e);
+        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:945", "错误详情:", {
           message: e.message,
           statusCode: e.statusCode,
           data: e.data
@@ -588,67 +682,54 @@ const _sfc_main = {
       try {
         common_vendor.index.showLoading({ title: "加载中..." });
         const res = await api_qna.getQuestions();
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:870", "📥 问题列表响应:", res);
-        if (res && res.success && Array.isArray(res.questions)) {
-          const presetQuestions = [];
-          const customQuestions = [];
-          res.questions.forEach((q) => {
-            if (!q || q.id === void 0 || q.id === null) {
-              common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:881", "⚠️ 跳过无效的问题对象:", q);
-              return;
-            }
-            const question = {
-              id: q.id,
-              text: q.questionText || q.text || "",
-              // 兼容两种字段名，确保有默认值
-              category: q.category || "preset",
-              isActive: q.isActive !== false,
-              // 默认为 true
-              orderIndex: q.orderIndex ?? 999,
-              createdBy: q.createdBy,
-              // 保留其他可能存在的字段
-              ...q
-            };
-            if (question.questionText) {
-              delete question.questionText;
-            }
-            if (q.category === "preset") {
-              presetQuestions.push(question);
-            } else if (q.category === "custom") {
-              customQuestions.push(question);
-            }
-          });
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:970", "📥 问题列表响应:", res);
+        const normalizedRes = this.normalizeApiResponse(res, "获取问题成功");
+        const rawData = normalizedRes.data ?? (res == null ? void 0 : res.data) ?? {};
+        let topLevelQuestions = null;
+        if (Array.isArray(res == null ? void 0 : res.questions)) {
+          topLevelQuestions = res.questions;
+        } else if (Array.isArray(rawData == null ? void 0 : rawData.questions)) {
+          topLevelQuestions = rawData.questions;
+        } else if (Array.isArray(rawData)) {
+          topLevelQuestions = rawData;
+        }
+        let presetQuestions = null;
+        let customQuestions = null;
+        if (Array.isArray(topLevelQuestions)) {
+          const formatted = this.formatQuestionList(topLevelQuestions);
+          presetQuestions = formatted.filter((q) => (q.category || "preset") === "preset");
+          customQuestions = formatted.filter((q) => (q.category || "preset") === "custom");
+        } else if (rawData && (Array.isArray(rawData.defaultQuestions) || Array.isArray(rawData.customQuestions))) {
+          presetQuestions = this.formatQuestionList(rawData.defaultQuestions, "preset");
+          customQuestions = this.formatQuestionList(rawData.customQuestions, "custom");
+        } else if (res && res.code === 200 && res.data && (Array.isArray(res.data.defaultQuestions) || Array.isArray(res.data.customQuestions))) {
+          presetQuestions = this.formatQuestionList(res.data.defaultQuestions, "preset");
+          customQuestions = this.formatQuestionList(res.data.customQuestions, "custom");
+        }
+        if (presetQuestions !== null) {
           presetQuestions.sort((a, b) => {
             const orderA = a.orderIndex ?? 999;
             const orderB = b.orderIndex ?? 999;
             return orderA - orderB;
           });
           this.defaultQuestions = presetQuestions;
+        }
+        if (customQuestions !== null) {
           this.customQuestions = customQuestions;
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:920", "✅ 问题列表加载成功:", {
-            preset: presetQuestions.length,
-            custom: customQuestions.length,
-            total: presetQuestions.length + customQuestions.length
+        }
+        if (presetQuestions !== null || customQuestions !== null) {
+          common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:1012", "✅ 问题列表加载成功:", {
+            preset: this.defaultQuestions.length,
+            custom: this.customQuestions.length,
+            total: this.defaultQuestions.length + this.customQuestions.length
           });
-        } else if (res && res.success && res.data) {
-          this.defaultQuestions = Array.isArray(res.data.defaultQuestions) ? res.data.defaultQuestions.filter((q) => q && q.id != null).map((q) => ({
-            id: q.id,
-            text: q.questionText || q.text || "",
-            ...q
-          })) : [];
-          this.customQuestions = Array.isArray(res.data.customQuestions) ? res.data.customQuestions.filter((q) => q && q.id != null).map((q) => ({
-            id: q.id,
-            text: q.questionText || q.text || "",
-            ...q
-          })) : [];
         } else {
-          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:946", "⚠️ 问题列表响应格式不符合预期:", res);
-          this.defaultQuestions = [];
-          this.customQuestions = [];
+          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:1018", "⚠️ 问题列表响应格式不符合预期:", res);
+          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/qna/index.vue:1019", "⚠️ 保留本地预设问题，避免页面空白");
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:951", "加载问题失败", e);
-        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:952", "错误详情:", {
+        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:1022", "加载问题失败", e);
+        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:1023", "错误详情:", {
           message: e.message,
           statusCode: e.statusCode,
           data: e.data
@@ -689,36 +770,39 @@ const _sfc_main = {
       try {
         common_vendor.index.showLoading({ title: "添加中..." });
         const res = await api_qna.addCustomQuestion(this.newQuestion.trim());
-        if (res.success) {
-          const newQuestionData = res.data || {};
-          const formattedQuestion = {
-            id: newQuestionData.id,
-            text: newQuestionData.text || newQuestionData.questionText || this.newQuestion.trim(),
-            category: "custom",
-            isActive: true,
-            orderIndex: 999,
-            createdBy: newQuestionData.userId || newQuestionData.createdBy,
-            createdAt: newQuestionData.createdAt,
-            // 保留其他字段
-            ...newQuestionData
-          };
-          this.customQuestions.push(formattedQuestion);
-          this.newQuestion = "";
-          this.showCustomModal = false;
-          setTimeout(() => {
-            const newQuestionIndex = this.unansweredQuestions.findIndex(
-              (q) => q.id === formattedQuestion.id
-            );
-            if (newQuestionIndex >= 0) {
-              this.qIndex = newQuestionIndex;
-              this.loadAnswerForCurrentQuestion();
-              common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:1039", "✅ 已切换到新添加的问题:", formattedQuestion);
-            }
-          }, 100);
-          common_vendor.index.showToast({ title: "问题添加成功", icon: "success" });
+        const normalizedRes = this.normalizeApiResponse(res, "添加问题成功");
+        if (!normalizedRes.success) {
+          common_vendor.index.showToast({ title: normalizedRes.message || "添加失败，请重试", icon: "none" });
+          return;
         }
+        const newQuestionData = normalizedRes.data || {};
+        const formattedQuestion = {
+          id: newQuestionData.id,
+          text: newQuestionData.text || newQuestionData.questionText || this.newQuestion.trim(),
+          category: "custom",
+          isActive: true,
+          orderIndex: 999,
+          createdBy: newQuestionData.userId || newQuestionData.createdBy,
+          createdAt: newQuestionData.createdAt,
+          // 保留其他字段
+          ...newQuestionData
+        };
+        this.customQuestions.push(formattedQuestion);
+        this.newQuestion = "";
+        this.showCustomModal = false;
+        setTimeout(() => {
+          const newQuestionIndex = this.unansweredQuestions.findIndex(
+            (q) => q.id === formattedQuestion.id
+          );
+          if (newQuestionIndex >= 0) {
+            this.qIndex = newQuestionIndex;
+            this.loadAnswerForCurrentQuestion();
+            common_vendor.index.__f__("log", "at subPackages/interaction/pages/qna/index.vue:1114", "✅ 已切换到新添加的问题:", formattedQuestion);
+          }
+        }, 100);
+        common_vendor.index.showToast({ title: normalizedRes.message || "问题添加成功", icon: "success" });
       } catch (e) {
-        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:1046", "添加问题失败", e);
+        common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:1120", "添加问题失败", e);
         if (e.statusCode === 401) {
           common_vendor.index.showModal({
             title: "登录已过期",
@@ -755,7 +839,7 @@ const _sfc_main = {
                 common_vendor.index.showToast({ title: "已删除", icon: "success" });
               }
             } catch (e) {
-              common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:1094", "删除问题失败", e);
+              common_vendor.index.__f__("error", "at subPackages/interaction/pages/qna/index.vue:1168", "删除问题失败", e);
               if (e.statusCode === 401) {
                 common_vendor.index.showModal({
                   title: "登录已过期",

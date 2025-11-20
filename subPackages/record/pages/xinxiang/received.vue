@@ -90,18 +90,18 @@
             <!-- 信件内容层 -->
             <view class="letter-content">
               <view class="letter-header">
-                <text class="letter-title">{{ currentLetter.title }}</text>
-                <text class="letter-date">送达时间：{{ currentLetter.deliveryDate }}</text>
-                <text v-if="currentLetter.sentAt" class="letter-date">收到时间：{{ currentLetter.sentAt }}</text>
+                <text class="letter-title" :class="getFontClass(currentLetter)">{{ currentLetter.title }}</text>
+                <text class="letter-date" :class="getFontClass(currentLetter)">送达时间：{{ currentLetter.deliveryDate }}</text>
+                <text v-if="currentLetter.sentAt" class="letter-date" :class="getFontClass(currentLetter)">收到时间：{{ currentLetter.sentAt }}</text>
               </view>
               
               <view class="letter-body">
-                <text class="letter-text">{{ currentLetter.content }}</text>
+                <text class="letter-text" :class="getFontClass(currentLetter)">{{ currentLetter.content }}</text>
               </view>
               
               <view class="letter-footer">
-                <text class="letter-info">—— 来自对方的信</text>
-                <text class="letter-time">创建于 {{ currentLetter.createTime }}</text>
+                <text class="letter-info" :class="getFontClass(currentLetter)">—— 来自对方的信</text>
+                <text class="letter-time" :class="getFontClass(currentLetter)">创建于 {{ currentLetter.createTime }}</text>
               </view>
             </view>
           </view>
@@ -168,26 +168,33 @@ export default {
       try {
         const response = await getReceivedLetters();
         
-        if (response && response.data) {
-          // 转换后端数据格式为前端显示格式
-          const backendLetters = Array.isArray(response.data) ? response.data : [];
-          this.letters = backendLetters.map(letter => ({
+        const backendLetters = this.extractLetterArray(response);
+        this.letters = backendLetters.map(letter => {
+          const opacityValue = Number(letter.backgroundOpacity);
+          const normalizedOpacity = isNaN(opacityValue)
+            ? 100
+            : opacityValue <= 1
+              ? opacityValue * 100
+              : opacityValue;
+          const deliveryDateRaw = letter.scheduledDate || letter.deliveryDate;
+          const createTimeRaw = letter.createdAt || letter.createTime;
+          const sentAtRaw = letter.sentAt;
+              
+          return {
             id: letter.id,
             title: letter.title,
             content: letter.content,
-            deliveryDate: letter.scheduledDate, // 后端字段名
-            createTime: letter.createdAt || letter.createTime,
-            sentAt: letter.sentAt,
+            deliveryDate: this.formatToMinute(deliveryDateRaw),
+            createTime: this.formatToMinute(createTimeRaw),
+            sentAt: this.formatToMinute(sentAtRaw),
             status: letter.status,
             style: this.getStyleFromBackground(letter.backgroundImage),
             customImage: letter.backgroundImage,
-            opacity: 100, // 默认透明度
-            // 保留后端原始数据
+            opacity: Math.min(100, Math.max(0, normalizedOpacity)),
+            fontStyle: letter.fontStyle || letter.font_style || 'default',
             _backendData: letter
-          }));
-        } else {
-          this.letters = [];
-        }
+          };
+        });
       } catch (error) {
         console.error('加载收到的信件失败', error);
         this.letters = [];
@@ -201,6 +208,56 @@ export default {
           });
         }
       }
+    },
+    
+    // 兼容多种响应结构
+    extractLetterArray(response) {
+      if (!response) return [];
+      
+      const candidates = [
+        response,
+        response?.data,
+        response?.letters,
+        response?.records,
+        response?.items,
+        response?.list,
+        response?.result,
+        response?.body,
+        response?.data?.letters,
+        response?.data?.records,
+        response?.data?.items,
+        response?.data?.list,
+        response?.data?.result,
+        response?.data?.content,
+        response?.data?.rows
+      ];
+      
+      for (const candidate of candidates) {
+        if (Array.isArray(candidate)) {
+          return candidate;
+        }
+      }
+      
+      return [];
+    },
+    
+    // 将时间统一格式化到分钟
+    formatToMinute(dateInput) {
+      if (!dateInput) return '--';
+      
+      const dateValue = dateInput instanceof Date ? dateInput : new Date(dateInput);
+      if (Number.isNaN(dateValue.getTime())) {
+        return typeof dateInput === 'string' ? dateInput : '--';
+      }
+      
+      const pad = num => (num < 10 ? `0${num}` : `${num}`);
+      const year = dateValue.getFullYear();
+      const month = pad(dateValue.getMonth() + 1);
+      const day = pad(dateValue.getDate());
+      const hours = pad(dateValue.getHours());
+      const minutes = pad(dateValue.getMinutes());
+      
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
     },
     
     // 从背景图片URL提取样式ID
@@ -220,7 +277,7 @@ export default {
       if (letter.style === 'custom') {
         return letter.customImage;
       }
-      return `../../static/xinxiang/xin${letter.style}.jpg`;
+      return `/static/xinxiang/xin${letter.style}.jpg`;
     },
     
     // 查看信件详情
@@ -237,6 +294,9 @@ export default {
         // 处理响应数据
         if (response && response.data) {
           const detailData = response.data;
+          const detailDeliveryDate = detailData.scheduledDate || detailData.deliveryDate || letter.deliveryDate;
+          const detailCreateTime = detailData.createdAt || detailData.createTime || letter.createTime;
+          const detailSentAt = detailData.sentAt || letter.sentAt;
           // 合并详情数据到当前信件对象
           this.currentLetter = {
             ...letter,
@@ -245,13 +305,14 @@ export default {
             id: detailData.id || letter.id,
             title: detailData.title || letter.title,
             content: detailData.content || letter.content,
-            deliveryDate: detailData.scheduledDate || detailData.deliveryDate || letter.deliveryDate,
-            createTime: detailData.createdAt || detailData.createTime || letter.createTime,
-            sentAt: detailData.sentAt || letter.sentAt,
+            deliveryDate: this.formatToMinute(detailDeliveryDate),
+            createTime: this.formatToMinute(detailCreateTime),
+            sentAt: this.formatToMinute(detailSentAt),
             status: detailData.status || letter.status,
             style: this.getStyleFromBackground(detailData.backgroundImage || letter.backgroundImage),
             customImage: detailData.backgroundImage || letter.customImage,
             opacity: detailData.opacity !== undefined ? detailData.opacity : (letter.opacity || 100),
+            fontStyle: detailData.fontStyle || detailData.font_style || letter.fontStyle || 'default',
             _backendData: detailData
           };
         } else {
@@ -277,6 +338,13 @@ export default {
           duration: 2000
         });
       }
+    },
+    
+    // 获取字体样式类
+    getFontClass(letter) {
+      if (!letter) return 'font-style-default';
+      const fontStyle = letter.fontStyle || letter.font_style || 'default';
+      return `font-style-${fontStyle}`;
     },
     
     // 关闭详情弹窗
@@ -630,14 +698,12 @@ export default {
   font-size: 36rpx;
   font-weight: 600;
   color: #4A4A4A;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-date {
   font-size: 24rpx;
   color: #888888;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-body {
@@ -653,7 +719,6 @@ export default {
   white-space: pre-wrap;
   word-break: break-all;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-footer {
@@ -668,7 +733,6 @@ export default {
   font-size: 24rpx;
   color: #888888;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-time {
@@ -676,7 +740,37 @@ export default {
   color: #888888;
   margin-top: 8rpx;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+/* 字体样式类 */
+.font-style-default {
+  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  letter-spacing: 0;
+}
+
+.font-style-mashanzheng {
+  font-family: 'MaShanZheng', 'Ma Shan Zheng', 'KaiTi', cursive;
+  letter-spacing: 2rpx;
+}
+
+.font-style-zcoolkuaile {
+  font-family: 'ZCOOLKuaiLe', 'ZCOOL KuaiLe', 'KaiTi', cursive;
+  letter-spacing: 1rpx;
+}
+
+.font-style-qingsong {
+  font-family: 'QingSong', 'KaiTi', 'STKaiti', cursive;
+  letter-spacing: 1.5rpx;
+}
+
+.font-style-zcoolxiaowei {
+  font-family: 'ZCOOLXiaoWei', 'ZCOOL XiaoWei', 'KaiTi', cursive;
+  letter-spacing: 1rpx;
+}
+
+.font-style-zcoolwenyi {
+  font-family: 'ZCOOLWenYi', 'ZCOOL WenYi', 'KaiTi', cursive;
+  letter-spacing: 1.5rpx;
 }
 
 .detail-modal-actions {

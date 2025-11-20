@@ -18,8 +18,8 @@
       </view>
     </view>
     
-    <!-- 顶部背景图 -->
-    <image class="top-bg" src="../../static/hundred/shangmian.jpg" mode="aspectFill"></image>
+    <!-- 顶部背景图（从项目根 static 目录加载，避免分包相对路径问题） -->
+    <image class="top-bg" src="/static/hundred/shangmian.jpg" mode="aspectFill"></image>
     
     <!-- 标题和进度 -->
     <view class="header-section">

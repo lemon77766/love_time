@@ -2,5 +2,7 @@
   "navigationBarTitleText": "我们",
   "navigationStyle": "custom",
   "navigationBarTextStyle": "black",
-  "usingComponents": {}
+  "usingComponents": {
+    "custom-tabbar": "../../components/custom-tabbar/index"
+  }
 }

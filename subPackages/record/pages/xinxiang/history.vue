@@ -121,17 +121,17 @@
             <!-- 信件内容层 -->
             <view class="letter-content">
               <view class="letter-header">
-                <text class="letter-title">{{ currentLetter.title }}</text>
-                <text class="letter-date">送达时间：{{ currentLetter.deliveryDate }}</text>
+                <text class="letter-title" :class="getFontClass(currentLetter)">{{ currentLetter.title }}</text>
+                <text class="letter-date" :class="getFontClass(currentLetter)">送达时间：{{ currentLetter.deliveryDate }}</text>
               </view>
               
               <view class="letter-body">
-                <text class="letter-text">{{ currentLetter.content }}</text>
+                <text class="letter-text" :class="getFontClass(currentLetter)">{{ currentLetter.content }}</text>
               </view>
               
               <view class="letter-footer">
-                <text class="letter-info">—— 给未来的你</text>
-                <text class="letter-time">创建于 {{ currentLetter.createTime }}</text>
+                <text class="letter-info" :class="getFontClass(currentLetter)">—— 给未来的你</text>
+                <text class="letter-time" :class="getFontClass(currentLetter)">创建于 {{ currentLetter.createTime }}</text>
               </view>
             </view>
           </view>
@@ -225,30 +225,23 @@ export default {
       try {
         // 加载未发送的信件（草稿和已安排）
         const response = await getFutureLetterList();
-        
-        if (response && response.data) {
-          // 转换后端数据格式为前端显示格式
-          const backendLetters = Array.isArray(response.data) ? response.data : [];
-          this.letters = backendLetters
-            .filter(letter => letter.status !== 'SENT') // 过滤掉已发送的
-            .map(letter => ({
-              id: letter.id,
-              title: letter.title,
-              content: letter.content,
-              deliveryDate: letter.scheduledDate, // 后端字段名
-              createTime: letter.createdAt || letter.createTime,
-              status: letter.status,
-              style: this.getStyleFromBackground(letter.backgroundImage),
-              customImage: letter.backgroundImage,
-              opacity: 100, // 默认透明度
-              // 保留后端原始数据
-              _backendData: letter
-            }));
-        } else {
-          // 如果后端没有数据，尝试从本地存储加载（兼容旧数据）
-          const localLetters = uni.getStorageSync('xinxiang_letters') || [];
-          this.letters = localLetters.filter(letter => letter.status !== 'SENT');
-        }
+        const backendLetters = this.extractLetterArray(response).filter(Boolean);
+        this.letters = backendLetters
+          .filter(letter => letter.status !== 'SENT') // 过滤掉已发送的
+          .map(letter => ({
+            id: letter.id,
+            title: letter.title,
+            content: letter.content,
+            deliveryDate: letter.scheduledDate || letter.deliveryDate, // 兼容不同字段
+            createTime: letter.createdAt || letter.createTime,
+            status: letter.status,
+            style: this.getStyleFromBackground(letter.backgroundImage),
+            customImage: letter.backgroundImage,
+            opacity: 100, // 默认透明度
+            fontStyle: letter.fontStyle || letter.font_style || 'default',
+            // 保留后端原始数据
+            _backendData: letter
+          }));
       } catch (error) {
         console.error('加载信件失败', error);
         // 如果API调用失败，尝试从本地存储加载（降级方案）
@@ -270,22 +263,21 @@ export default {
       // 加载已发送的信件
       try {
         const sentResponse = await getSentLetters();
-        if (sentResponse && sentResponse.data) {
-          const backendSentLetters = Array.isArray(sentResponse.data) ? sentResponse.data : [];
-          this.sentLetters = backendSentLetters.map(letter => ({
-            id: letter.id,
-            title: letter.title,
-            content: letter.content,
-            deliveryDate: letter.scheduledDate,
-            createTime: letter.createdAt || letter.createTime,
-            sentAt: letter.sentAt,
-            status: letter.status,
-            style: this.getStyleFromBackground(letter.backgroundImage),
-            customImage: letter.backgroundImage,
-            opacity: 100,
-            _backendData: letter
-          }));
-        }
+        const backendSentLetters = this.extractLetterArray(sentResponse);
+        this.sentLetters = backendSentLetters.map(letter => ({
+          id: letter.id,
+          title: letter.title,
+          content: letter.content,
+          deliveryDate: letter.scheduledDate || letter.deliveryDate,
+          createTime: letter.createdAt || letter.createTime,
+          sentAt: letter.sentAt,
+          status: letter.status,
+          style: this.getStyleFromBackground(letter.backgroundImage),
+          customImage: letter.backgroundImage,
+          opacity: 100,
+          fontStyle: letter.fontStyle || letter.font_style || 'default',
+          _backendData: letter
+        }));
       } catch (error) {
         console.error('加载已发送信件失败', error);
         if (error.statusCode !== 401) {
@@ -331,7 +323,38 @@ export default {
       if (letter.style === 'custom') {
         return letter.customImage;
       }
-      return `../../static/xinxiang/xin${letter.style}.jpg`;
+      return `/static/xinxiang/xin${letter.style}.jpg`;
+    },
+    
+    // 兼容多种响应结构
+    extractLetterArray(response) {
+      if (!response) return [];
+      
+      const candidates = [
+        response,
+        response?.data,
+        response?.letters,
+        response?.records,
+        response?.items,
+        response?.list,
+        response?.result,
+        response?.body,
+        response?.data?.letters,
+        response?.data?.records,
+        response?.data?.items,
+        response?.data?.list,
+        response?.data?.result,
+        response?.data?.content,
+        response?.data?.rows
+      ];
+      
+      for (const candidate of candidates) {
+        if (Array.isArray(candidate)) {
+          return candidate;
+        }
+      }
+      
+      return [];
     },
     
     // 查看信件详情
@@ -363,6 +386,7 @@ export default {
             style: this.getStyleFromBackground(detailData.backgroundImage || letter.backgroundImage),
             customImage: detailData.backgroundImage || letter.customImage,
             opacity: detailData.opacity !== undefined ? detailData.opacity : (letter.opacity || 100),
+            fontStyle: detailData.fontStyle || detailData.font_style || letter.fontStyle || 'default',
             _backendData: detailData
           };
         } else {
@@ -388,6 +412,13 @@ export default {
           duration: 2000
         });
       }
+    },
+    
+    // 获取字体样式类
+    getFontClass(letter) {
+      if (!letter) return 'font-style-default';
+      const fontStyle = letter.fontStyle || letter.font_style || 'default';
+      return `font-style-${fontStyle}`;
     },
     
     // 关闭详情弹窗
@@ -876,14 +907,12 @@ export default {
   font-size: 36rpx;
   font-weight: 600;
   color: #4A4A4A;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-date {
   font-size: 24rpx;
   color: #888888;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-body {
@@ -899,7 +928,6 @@ export default {
   white-space: pre-wrap;
   word-break: break-all;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-footer {
@@ -914,7 +942,6 @@ export default {
   font-size: 24rpx;
   color: #888888;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .letter-time {
@@ -922,7 +949,37 @@ export default {
   color: #888888;
   margin-top: 8rpx;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+/* 字体样式类 */
+.font-style-default {
+  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  letter-spacing: 0;
+}
+
+.font-style-mashanzheng {
+  font-family: 'MaShanZheng', 'Ma Shan Zheng', 'KaiTi', cursive;
+  letter-spacing: 2rpx;
+}
+
+.font-style-zcoolkuaile {
+  font-family: 'ZCOOLKuaiLe', 'ZCOOL KuaiLe', 'KaiTi', cursive;
+  letter-spacing: 1rpx;
+}
+
+.font-style-qingsong {
+  font-family: 'QingSong', 'KaiTi', 'STKaiti', cursive;
+  letter-spacing: 1.5rpx;
+}
+
+.font-style-zcoolxiaowei {
+  font-family: 'ZCOOLXiaoWei', 'ZCOOL XiaoWei', 'KaiTi', cursive;
+  letter-spacing: 1rpx;
+}
+
+.font-style-zcoolwenyi {
+  font-family: 'ZCOOLWenYi', 'ZCOOL WenYi', 'KaiTi', cursive;
+  letter-spacing: 1.5rpx;
 }
 
 .detail-modal-actions {

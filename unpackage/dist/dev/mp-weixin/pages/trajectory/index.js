@@ -2,7 +2,11 @@
 const common_vendor = require("../../common/vendor.js");
 const api_trajectory = require("../../api/trajectory.js");
 const common_assets = require("../../common/assets.js");
+const CustomTabbar = () => "../../components/custom-tabbar/index.js";
 const _sfc_main = {
+  components: {
+    CustomTabbar
+  },
   data() {
     return {
       statusBarHeight: 0,
@@ -106,7 +110,7 @@ const _sfc_main = {
           await this.loadCurrentLocations();
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:257", "初始化定位失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:264", "初始化定位失败:", error);
       }
     },
     /**
@@ -194,22 +198,22 @@ const _sfc_main = {
             latitude,
             longitude
           });
-          common_vendor.index.__f__("log", "at pages/trajectory/index.vue:358", "位置上传成功");
+          common_vendor.index.__f__("log", "at pages/trajectory/index.vue:365", "位置上传成功");
         } catch (error) {
-          common_vendor.index.__f__("error", "at pages/trajectory/index.vue:360", "位置上传失败:", error);
+          common_vendor.index.__f__("error", "at pages/trajectory/index.vue:367", "位置上传失败:", error);
           if (error.message && error.message.includes("用户不存在")) {
-            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:363", "⚠️ 位置上传失败：用户信息已失效，请重新登录");
+            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:370", "⚠️ 位置上传失败：用户信息已失效，请重新登录");
           }
         }
         try {
           await this.loadCurrentLocations();
         } catch (error) {
           if (error.message && error.message.includes("用户不存在")) {
-            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:376", "⚠️ 加载双方位置失败：用户信息已失效");
+            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:383", "⚠️ 加载双方位置失败：用户信息已失效");
           }
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:381", "获取位置失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:388", "获取位置失败:", error);
         this.locationError = error.errMsg || "获取位置失败";
         if (error.errMsg && error.errMsg.includes("auth deny")) {
           common_vendor.index.showToast({
@@ -228,64 +232,76 @@ const _sfc_main = {
     async loadCurrentLocations() {
       try {
         const res = await api_trajectory.getCurrentLocations();
-        if (res.success && res.data) {
-          const myLocationData = res.data.myLocation || res.data.my_location;
-          const partnerLocationData = res.data.partnerLocation || res.data.partner_location;
-          const distance = res.data.distance;
-          const distanceText = res.data.distance_text || res.data.distanceText;
-          if (myLocationData) {
-            this.myLocation = {
-              latitude: myLocationData.latitude,
-              longitude: myLocationData.longitude,
-              address: myLocationData.address || myLocationData.description || null,
-              location_name: myLocationData.location_name || myLocationData.locationName || null,
-              updateTime: myLocationData.update_time || myLocationData.updatedAt || myLocationData.createdAt || /* @__PURE__ */ new Date()
-            };
-            if (!this.myLocation.address && !this.myLocation.location_name) {
-              await this.reverseGeocode(this.myLocation.latitude, this.myLocation.longitude, "my");
-            }
-          }
-          if (partnerLocationData) {
-            this.partnerLocation = {
-              latitude: partnerLocationData.latitude,
-              longitude: partnerLocationData.longitude,
-              address: partnerLocationData.address || partnerLocationData.description || null,
-              location_name: partnerLocationData.location_name || partnerLocationData.locationName || null,
-              updateTime: partnerLocationData.update_time || partnerLocationData.updatedAt || partnerLocationData.createdAt || /* @__PURE__ */ new Date()
-            };
-            if (!this.partnerLocation.address && !this.partnerLocation.location_name) {
-              await this.reverseGeocode(this.partnerLocation.latitude, this.partnerLocation.longitude, "partner");
-            }
-          } else {
-            this.partnerLocation = null;
-          }
-          this.distance = distance;
-          if (this.distance === null || this.distance === void 0) {
-            if (this.myLocation && this.partnerLocation) {
-              this.distance = this.calculateDistance(
-                this.myLocation.latitude,
-                this.myLocation.longitude,
-                this.partnerLocation.latitude,
-                this.partnerLocation.longitude
-              );
-            }
-          }
-          common_vendor.index.__f__("log", "at pages/trajectory/index.vue:457", "双方位置加载成功", {
-            myLocation: this.myLocation,
-            partnerLocation: this.partnerLocation,
-            distance: distanceText || this.distance,
-            rawData: res.data
-          });
-          this.updateMap();
+        const isSuccess = (res == null ? void 0 : res.success) === true || (res == null ? void 0 : res.code) === 200 || (res == null ? void 0 : res.status) === 0;
+        const responseData = (res == null ? void 0 : res.data) || (res == null ? void 0 : res.result) || null;
+        if (!isSuccess || !responseData) {
+          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:413", "⚠️ 双方位置接口返回数据格式不符合预期", res);
+          return;
         }
+        const normalizeLocation = (locationData = {}) => {
+          if (!locationData || !locationData.latitude && !locationData.longitude) {
+            return null;
+          }
+          const latitude = Number(locationData.latitude || locationData.lat || locationData.latitudeDecimal);
+          const longitude = Number(locationData.longitude || locationData.lng || locationData.longitudeDecimal);
+          if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+            return null;
+          }
+          return {
+            latitude,
+            longitude,
+            address: locationData.address || locationData.description || locationData.detail || null,
+            location_name: locationData.location_name || locationData.locationName || locationData.name || null,
+            updateTime: locationData.update_time || locationData.updatedAt || locationData.updateTime || locationData.createdAt || locationData.timestamp || /* @__PURE__ */ new Date()
+          };
+        };
+        const myLocationData = responseData.myLocation || responseData.my_location || responseData.self || responseData.mine;
+        const partnerLocationData = responseData.partnerLocation || responseData.partner_location || responseData.partner || responseData.lover;
+        const distanceText = responseData.distance_text || responseData.distanceText || responseData.distanceFormatted;
+        const normalizedMyLocation = normalizeLocation(myLocationData);
+        if (normalizedMyLocation) {
+          this.myLocation = normalizedMyLocation;
+          if (!this.myLocation.address && !this.myLocation.location_name) {
+            await this.reverseGeocode(this.myLocation.latitude, this.myLocation.longitude, "my");
+          }
+        }
+        const normalizedPartnerLocation = normalizeLocation(partnerLocationData);
+        if (normalizedPartnerLocation) {
+          this.partnerLocation = normalizedPartnerLocation;
+          if (!this.partnerLocation.address && !this.partnerLocation.location_name) {
+            await this.reverseGeocode(this.partnerLocation.latitude, this.partnerLocation.longitude, "partner");
+          }
+        } else {
+          this.partnerLocation = null;
+        }
+        let distance = responseData.distance;
+        if ((distance === null || distance === void 0) && typeof responseData.distanceMeters === "number") {
+          distance = responseData.distanceMeters / 1e3;
+        }
+        this.distance = distance;
+        if ((this.distance === null || this.distance === void 0) && this.myLocation && this.partnerLocation) {
+          this.distance = this.calculateDistance(
+            this.myLocation.latitude,
+            this.myLocation.longitude,
+            this.partnerLocation.latitude,
+            this.partnerLocation.longitude
+          );
+        }
+        common_vendor.index.__f__("log", "at pages/trajectory/index.vue:475", "双方位置加载成功", {
+          myLocation: this.myLocation,
+          partnerLocation: this.partnerLocation,
+          distance: distanceText || this.formatDistance(this.distance),
+          rawData: responseData
+        });
+        this.updateMap();
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:468", "加载双方位置失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:485", "加载双方位置失败:", error);
         if (error.message && error.message.includes("用户不存在")) {
-          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:471", "⚠️ 加载双方位置失败：用户信息已失效");
+          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:488", "⚠️ 加载双方位置失败：用户信息已失效");
           return;
         }
         {
-          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:478", "⚠️ 后端接口可能未实现，跳过加载双方位置");
+          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:495", "⚠️ 后端接口可能未实现，跳过加载双方位置");
         }
       }
     },
@@ -408,7 +424,7 @@ const _sfc_main = {
         const location = {
           latitude,
           longitude,
-          address: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+          address: "定位中…",
           location_name: "当前位置"
         };
         if (type === "my" && this.myLocation) {
@@ -419,7 +435,7 @@ const _sfc_main = {
           this.partnerLocation.location_name = this.partnerLocation.location_name || location.location_name;
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:644", "地址反解析失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:661", "地址反解析失败:", error);
       }
     },
     /**
@@ -534,13 +550,13 @@ const _sfc_main = {
      * 地图点击事件
      */
     onMapTap(e) {
-      common_vendor.index.__f__("log", "at pages/trajectory/index.vue:781", "地图点击:", e);
+      common_vendor.index.__f__("log", "at pages/trajectory/index.vue:798", "地图点击:", e);
     },
     /**
      * 地图标记点点击事件
      */
     onMarkerTap(e) {
-      common_vendor.index.__f__("log", "at pages/trajectory/index.vue:788", "标记点点击:", e);
+      common_vendor.index.__f__("log", "at pages/trajectory/index.vue:805", "标记点点击:", e);
     },
     /**
      * 格式化轨迹点日期
@@ -579,6 +595,10 @@ const _sfc_main = {
     }
   }
 };
+if (!Array) {
+  const _component_custom_tabbar = common_vendor.resolveComponent("custom-tabbar");
+  _component_custom_tabbar();
+}
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
     a: $data.statusBarHeight + "px",
@@ -661,7 +681,10 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     V: common_vendor.o((...args) => $options.hidePointDetail && $options.hidePointDetail(...args))
   }) : {}, {
     W: common_vendor.o((...args) => $options.goToHistoryPage && $options.goToHistoryPage(...args)),
-    X: $options.containerPaddingTop
+    X: common_vendor.p({
+      current: 1
+    }),
+    Y: $options.containerPaddingTop
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-bfa9c4cc"]]);
