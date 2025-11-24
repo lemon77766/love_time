@@ -1,6 +1,6 @@
 "use strict";
 const devConfig = {
-  baseURL: "http://62.234.12.214:8886",
+  baseURL: "http://192.168.94.229:8886",
   timeout: 1e4,
   // 普通请求超时时间
   uploadTimeout: 3e4,

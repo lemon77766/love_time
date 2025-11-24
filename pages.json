@@ -10,7 +10,7 @@
     {
       "path": "pages/index/index",
       "style": {
-        "navigationBarTitleText": "甜蜜小屋",
+        "navigationBarTitleText": "恋与小屋",
         "navigationStyle": "custom",
         "navigationBarTextStyle": "black"
       }
@@ -58,9 +58,9 @@
     "iconWidth": "48rpx",
     "spacing": "4rpx",
     "list": [
-      { "pagePath": "pages/index/index", "text": "首页", "iconPath": "/static/love.png", "selectedIconPath": "/static/love.png" },
-      { "pagePath": "pages/trajectory/index", "text": "轨迹", "iconPath": "/static/trajectory.png", "selectedIconPath": "/static/trajectory.png" },
-      { "pagePath": "pages/we/index", "text": "我们", "iconPath": "/static/we.png", "selectedIconPath": "/static/we.png" }
+      { "pagePath": "pages/index/index", "text": "首页", "iconPath": "static/love.png", "selectedIconPath": "static/love.png" },
+      { "pagePath": "pages/trajectory/index", "text": "轨迹", "iconPath": "static/trajectory.png", "selectedIconPath": "static/trajectory.png" },
+      { "pagePath": "pages/we/index", "text": "我们", "iconPath": "static/we.png", "selectedIconPath": "static/we.png" }
     ]
   },
   "globalStyle": {
@@ -157,14 +157,14 @@
         {
           "path": "pages/qna/index",
           "style": {
-            "navigationBarTitleText": "甜蜜问答",
+            "navigationBarTitleText": "恋与问答",
             "navigationStyle": "custom"
           }
         },
         {
           "path": "pages/qna/history",
           "style": {
-            "navigationBarTitleText": "甜蜜小问答",
+            "navigationBarTitleText": "恋与小问答",
             "navigationStyle": "custom"
           }
         },

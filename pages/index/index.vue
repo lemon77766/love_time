@@ -90,7 +90,7 @@
               <view class="grid-icon-wrapper">
                 <iconify-icon icon="mdi:chat-question" :size="48" color="#FF9EBC" />
               </view>
-              <text class="grid-text">甜蜜问答</text>
+              <text class="grid-text">恋与问答</text>
             </view>
             <view class="grid-item" @click="goToHundredThings">
               <view class="grid-icon-wrapper">
@@ -268,7 +268,7 @@ export default {
       // #endif
     },
     goToSweetQA() {
-      // 跳转到甜蜜问答页面
+      // 跳转到恋与问答页面
       uni.navigateTo({
         url: '/subPackages/interaction/pages/qna/index'
       });

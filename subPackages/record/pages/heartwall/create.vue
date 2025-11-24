@@ -596,7 +596,7 @@ export default {
         // 方式2：使用JSON格式（先上传文件获取URL，再发送JSON数据）
         // 这里使用方式1（直接上传），如果需要使用方式2，可以取消注释下面的代码
         
-        const USE_DIRECT_UPLOAD = false; // 设置为true使用直接上传，false使用JSON格式
+        const USE_DIRECT_UPLOAD = true; // 设置为true使用直接上传，false使用JSON格式
         
         let savePromises;
         let validPhotos;

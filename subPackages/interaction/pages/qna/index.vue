@@ -12,7 +12,7 @@
           <text class="back-icon">←</text>
         </view>
         <view class="navbar-title">
-          <text class="title-text">甜蜜问答</text>
+          <text class="title-text">恋与问答</text>
         </view>
         <view class="navbar-right"></view>
       </view>
@@ -137,7 +137,7 @@ export default {
     if (!loginInfo || !loginInfo.token) {
       uni.showModal({
         title: '需要登录',
-        content: '甜蜜问答功能需要登录后才能使用，请先登录',
+        content: '恋与问答功能需要登录后才能使用，请先登录',
         showCancel: false,
         success: () => {
           uni.reLaunch({
@@ -263,7 +263,8 @@ export default {
       newQuestion: '',
       history: [],
       targetQuestionId: null, // 从历史记录跳转过来的目标问题ID
-      targetQuestionFallbackText: '' // 历史跳转时携带的题干
+      targetQuestionFallbackText: '', // 历史跳转时携带的题干
+      preventAutoSwitch: false // 添加标志防止提交后自动切换问题
     };
   },
   watch: {
@@ -294,6 +295,11 @@ export default {
     },
     // 计算未回答的问题列表
     unansweredQuestions() {
+      // 如果设置了防止自动切换标志，则返回所有问题（不进行过滤）
+      if (this.preventAutoSwitch) {
+        return this.questions.filter(q => q && q.id != null && q.isActive !== false);
+      }
+      
       // 获取已回答的问题ID列表（确保类型一致）
       const answeredIds = this.history
         .map(h => {
@@ -552,6 +558,9 @@ export default {
         return;
       }
       
+      // 设置防止自动切换标志
+      this.preventAutoSwitch = true;
+      
       try {
         uni.showLoading({ title: '提交中...' });
         
@@ -624,7 +633,8 @@ export default {
           
           uni.showToast({ title: '提交成功', icon: 'success' });
           
-          // 保留在当前题目，用户手动点击“下一题”
+          // 保留在当前题目，用户手动点击"下一题"
+          // 不再自动更新历史记录导致问题切换，而是保持当前题目状态
         } else {
           // 即使响应格式不符合预期，也保存到本地
           console.warn('⚠️ 响应格式不符合预期:', res);
@@ -641,7 +651,7 @@ export default {
           this.saveHistory();
           uni.showToast({ title: '提交成功（已保存到本地）', icon: 'success' });
           
-          // 保留在当前题目，用户手动点击“下一题”
+          // 保留在当前题目，用户手动点击"下一题"
         }
       } catch (e) {
         console.error('提交答案失败', e);
@@ -696,7 +706,7 @@ export default {
               this.saveHistory();
               uni.showToast({ title: '已保存到本地', icon: 'none' });
               
-              // 保留在当前题目，用户手动点击“下一题”
+              // 保留在当前题目，用户手动点击"下一题"
             }
           });
           return;
@@ -711,10 +721,15 @@ export default {
       } finally {
         // 确保loading关闭（使用 try-catch 避免重复隐藏导致的错误）
         try {
-        uni.hideLoading();
+          uni.hideLoading();
         } catch (e) {
           // 忽略 hideLoading 错误（可能已经隐藏过了）
         }
+        
+        // 延迟重置防止自动切换标志，确保页面更新完成
+        setTimeout(() => {
+          this.preventAutoSwitch = false;
+        }, 100);
       }
     },
     nextQuestion() {

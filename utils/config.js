@@ -1,6 +1,6 @@
 // 开发环境配置
 const devConfig = {
-  baseURL: 'http://62.234.12.214:8886',
+  baseURL: 'http://192.168.94.229:8886',
   timeout: 10000,  // 普通请求超时时间
   uploadTimeout: 30000,  // 上传请求超时时间
   API: {

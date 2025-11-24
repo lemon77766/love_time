@@ -161,8 +161,8 @@ export function getProjectDetail(projectId) {
  * - 请求头：需携带 Authorization token
  * - 请求参数：
  *   {
- *     "projectName": "我们的甜蜜回忆",
- *     "description": "记录我们的甜蜜时光",
+ *     "projectName": "我们的恋与时光册",
+ *     "description": "记录我们的恋与时光册",
  *     "isPublic": true
  *   }
  */

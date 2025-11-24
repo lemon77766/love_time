@@ -507,76 +507,71 @@ const _sfc_main = {
           }
         }
         common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/create.vue:592", `📋 [爱心墙创建页] 准备上传 ${photoTasks.length} 张照片`);
-        const USE_DIRECT_UPLOAD = false;
+        const USE_DIRECT_UPLOAD = true;
         let savePromises;
         let validPhotos;
-        if (USE_DIRECT_UPLOAD)
-          ;
-        else {
-          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/create.vue:687", "📤 [爱心墙创建页] 使用JSON格式上传方式（两步完成）");
-          const photoUploadPromises = photoTasks.map(async (task) => {
+        if (USE_DIRECT_UPLOAD) {
+          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/create.vue:606", "📤 [爱心墙创建页] 使用直接上传方式（multipart/form-data）");
+          savePromises = photoTasks.map(async (task) => {
             const { positionIndex, imagePath } = task;
             const isTmpPath = imagePath && (imagePath.startsWith("http://tmp/") || imagePath.startsWith("https://tmp/"));
             const isRealUrl = imagePath && (imagePath.startsWith("http://") || imagePath.startsWith("https://")) && !isTmpPath;
             const isLocalPath = !isRealUrl && !imagePath.startsWith("data:");
+            const existingPhotoId = this.photoMap[positionIndex];
             if (isLocalPath || isTmpPath) {
               try {
-                common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/create.vue:703", `📤 [爱心墙创建页] 上传图片 ${positionIndex} 到服务器...`);
-                const photoUrl = await this.uploadImageToServer(imagePath);
-                common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/create.vue:705", `✅ [爱心墙创建页] 图片 ${positionIndex} 上传成功`);
-                return {
-                  positionIndex,
-                  photoUrl,
-                  thumbnailUrl: photoUrl
-                };
+                if (existingPhotoId) {
+                  common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/create.vue:630", `🔄 [爱心墙创建页] 位置 ${positionIndex} 已有照片(photoId: ${existingPhotoId})，先上传文件...`);
+                  const photoUrl = await this.uploadImageToServer(imagePath);
+                  const photoData = {
+                    photoUrl,
+                    thumbnailUrl: photoUrl,
+                    positionIndex
+                  };
+                  return api_heartwall.updatePhoto(existingPhotoId, photoData).catch((error) => {
+                    common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/create.vue:638", `❌ [爱心墙创建页] 照片 ${positionIndex} 更新失败:`, error);
+                    return null;
+                  });
+                } else {
+                  common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/create.vue:643", `📤 [爱心墙创建页] 直接上传照片 ${positionIndex}（文件+元数据）...`);
+                  const result = await api_heartwall.uploadPhotoWithFile({
+                    filePath: imagePath,
+                    projectId,
+                    positionIndex
+                  });
+                  common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/create.vue:649", `✅ [爱心墙创建页] 照片 ${positionIndex} 上传成功`);
+                  return result;
+                }
               } catch (uploadError) {
-                common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/create.vue:712", `❌ [爱心墙创建页] 图片 ${positionIndex} 上传失败:`, uploadError);
+                common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/create.vue:653", `❌ [爱心墙创建页] 照片 ${positionIndex} 上传失败:`, uploadError);
                 return null;
               }
             } else {
-              return {
-                positionIndex,
+              const photoData = {
                 photoUrl: imagePath,
-                thumbnailUrl: imagePath
+                thumbnailUrl: imagePath,
+                positionIndex
               };
+              if (existingPhotoId) {
+                common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/create.vue:665", `🔄 [爱心墙创建页] 位置 ${positionIndex} 已有照片(photoId: ${existingPhotoId})，使用更新接口`);
+                return api_heartwall.updatePhoto(existingPhotoId, photoData).catch((error) => {
+                  common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/create.vue:667", `❌ [爱心墙创建页] 照片 ${positionIndex} 更新失败:`, error);
+                  return null;
+                });
+              } else {
+                common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/create.vue:671", `➕ [爱心墙创建页] 位置 ${positionIndex} 为新照片，使用新增接口`);
+                const createData = {
+                  ...photoData,
+                  projectId
+                };
+                return api_heartwall.uploadPhoto(createData).catch((error) => {
+                  common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/create.vue:677", `❌ [爱心墙创建页] 照片 ${positionIndex} 保存失败:`, error);
+                  return null;
+                });
+              }
             }
           });
-          const photoUrls = await Promise.all(photoUploadPromises);
-          validPhotos = photoUrls.filter((photo) => photo !== null);
-          const failedCount = photoUrls.length - validPhotos.length;
-          if (failedCount > 0) {
-            common_vendor.index.__f__("warn", "at subPackages/record/pages/heartwall/create.vue:733", `⚠️ [爱心墙创建页] ${failedCount} 张图片上传失败`);
-            common_vendor.index.showToast({
-              title: `${failedCount} 张照片上传失败，其余照片将继续保存`,
-              icon: "none",
-              duration: 3e3
-            });
-          }
-          savePromises = validPhotos.map((photo) => {
-            const photoData = {
-              photoUrl: photo.photoUrl,
-              thumbnailUrl: photo.thumbnailUrl,
-              positionIndex: photo.positionIndex
-            };
-            const existingPhotoId = this.photoMap[photo.positionIndex];
-            if (existingPhotoId) {
-              common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/create.vue:754", `🔄 [爱心墙创建页] 位置 ${photo.positionIndex} 已有照片(photoId: ${existingPhotoId})，使用更新接口`);
-              return api_heartwall.updatePhoto(existingPhotoId, photoData).catch((error) => {
-                common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/create.vue:756", `❌ [爱心墙创建页] 照片 ${photo.positionIndex} 更新失败:`, error);
-                return null;
-              });
-            } else {
-              common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/create.vue:761", `➕ [爱心墙创建页] 位置 ${photo.positionIndex} 为新照片，使用新增接口`);
-              const createData = {
-                ...photoData,
-                projectId
-              };
-              return api_heartwall.uploadPhoto(createData).catch((error) => {
-                common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/create.vue:767", `❌ [爱心墙创建页] 照片 ${photo.positionIndex} 保存失败:`, error);
-                return null;
-              });
-            }
-          });
+          validPhotos = photoTasks;
         }
         common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/create.vue:775", `💾 [爱心墙创建页] 开始保存 ${savePromises.length} 张照片信息`);
         const saveResults = await Promise.all(savePromises);
@@ -587,10 +582,8 @@ const _sfc_main = {
           if (result && result.data) {
             const photoId = result.data.photoId || result.data.photo_id || result.data.id;
             let photo;
-            if (USE_DIRECT_UPLOAD)
-              ;
-            else {
-              photo = validPhotos[index];
+            if (USE_DIRECT_UPLOAD) {
+              photo = photoTasks[index];
             }
             if (photoId && photo) {
               const positionIndex = photo.positionIndex || photo.index;
