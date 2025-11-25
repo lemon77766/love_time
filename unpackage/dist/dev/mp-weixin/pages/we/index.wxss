@@ -67,9 +67,11 @@
   z-index: 1;
 }
 .navbar-title.data-v-5f4b3cd0 {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 12rpx;
+  justify-content: center;
+  text-align: center;
 }
 .title-text.data-v-5f4b3cd0 {
   font-size: 36rpx;
@@ -77,12 +79,9 @@
   color: #4A4A4A;
 }
 .navbar-right.data-v-5f4b3cd0 {
-  width: 60rpx;
-  height: 60rpx;
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  gap: 20rpx;
 }
 .navbar-right.data-v-5f4b3cd0:active {
   opacity: 0.7;
@@ -91,18 +90,20 @@
 /* 内容区域 */
 .content.data-v-5f4b3cd0 {
   padding: 30rpx;
-  padding-top: calc(10rpx + var(--status-bar-height, 0px) + 54px);
+  padding-top: 40rpx;
 }
 
 /* 用户信息卡片 */
 .user-info-card.data-v-5f4b3cd0 {
   display: flex;
   align-items: center;
-  background: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
+  /* 更柔和的渐变 */
   border-radius: 20rpx;
   padding: 20rpx 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  box-shadow: none;
+  /* 移除阴影 */
   position: relative;
   overflow: hidden;
 }
@@ -150,12 +151,13 @@
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 .couple-avatars-section.data-v-5f4b3cd0 {
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: center;
+  gap: 20rpx;
   margin-top: 20rpx;
 }
 .couple-avatar-item.data-v-5f4b3cd0 {
@@ -196,7 +198,7 @@
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 .achievements-grid.data-v-5f4b3cd0 {
   display: grid;
@@ -230,7 +232,7 @@
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 .settings-list.data-v-5f4b3cd0 {
   display: flex;
@@ -242,8 +244,12 @@
   align-items: center;
   justify-content: space-between;
   padding: 20rpx;
-  background: #f8f8f8;
+  background: #ffffff;
+  /* 保持白色背景 */
   border-radius: 16rpx;
+  /* 统一圆角 */
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  /* 添加轻微阴影 */
   cursor: pointer;
 }
 .setting-item.data-v-5f4b3cd0:active {
@@ -283,7 +289,8 @@
   justify-content: center;
   gap: 16rpx;
   padding: 20rpx;
-  background: #FFF0F0;
+  background: #FFF5F5;
+  /* 调整为更柔和的粉色 */
   border-radius: 16rpx;
   cursor: pointer;
 }
@@ -306,7 +313,7 @@
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 .profile-settings-content.data-v-5f4b3cd0 {
   margin-top: 20rpx;
@@ -479,10 +486,12 @@
 /* 区块样式 */
 .section.data-v-5f4b3cd0 {
   background: #ffffff;
-  border-radius: 16rpx;
+  border-radius: 20rpx;
+  /* 统一圆角 */
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+  box-shadow: none;
+  /* 移除阴影 */
 }
 .section-title.data-v-5f4b3cd0 {
   display: block;

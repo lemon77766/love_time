@@ -5,7 +5,7 @@ if (!Math) {
   "./pages/index/index.js";
   "./pages/login/index.js";
   "./pages/we/index.js";
-  "./pages/we/profile.js";
+  "./pages/profile/index.js";
   "./pages/trajectory/index.js";
   "./pages/invite/index.js";
   "./subPackages/record/pages/jiyi/index.js";

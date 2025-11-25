@@ -139,12 +139,25 @@ function uploadChallengePhoto(filePath) {
     filePath,
     name: "file"
   }).then((response) => {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e, _f, _g, _h;
     common_vendor.index.__f__("log", "at api/hundred.js:326", "✅ [一百件事API] 上传任务完成照片成功");
     common_vendor.index.__f__("log", "at api/hundred.js:327", "📦 响应数据:", response);
-    const photoUrl = (response == null ? void 0 : response.photoUrl) || (response == null ? void 0 : response.url) || ((_a = response == null ? void 0 : response.data) == null ? void 0 : _a.photoUrl) || ((_b = response == null ? void 0 : response.data) == null ? void 0 : _b.url) || ((_d = (_c = response == null ? void 0 : response.data) == null ? void 0 : _c.photo) == null ? void 0 : _d.url) || (typeof response === "string" ? response : null);
+    common_vendor.index.__f__("log", "at api/hundred.js:328", "📦 响应数据类型:", typeof response);
+    common_vendor.index.__f__("log", "at api/hundred.js:329", "📦 响应数据结构:", Object.keys ? Object.keys(response) : "无法获取键名");
+    common_vendor.index.__f__("log", "at api/hundred.js:332", "🔍 [响应分析] 详细字段检查:");
+    common_vendor.index.__f__("log", "at api/hundred.js:333", "   - response.photoUrl:", response == null ? void 0 : response.photoUrl);
+    common_vendor.index.__f__("log", "at api/hundred.js:334", "   - response.url:", response == null ? void 0 : response.url);
+    common_vendor.index.__f__("log", "at api/hundred.js:335", "   - response.data:", response == null ? void 0 : response.data);
+    common_vendor.index.__f__("log", "at api/hundred.js:336", "   - response.data?.photoUrl:", (_a = response == null ? void 0 : response.data) == null ? void 0 : _a.photoUrl);
+    common_vendor.index.__f__("log", "at api/hundred.js:337", "   - response.data?.url:", (_b = response == null ? void 0 : response.data) == null ? void 0 : _b.url);
+    common_vendor.index.__f__("log", "at api/hundred.js:338", "   - response.data?.photo?.url:", (_d = (_c = response == null ? void 0 : response.data) == null ? void 0 : _c.photo) == null ? void 0 : _d.url);
+    common_vendor.index.__f__("log", "at api/hundred.js:339", "   - response.message:", response == null ? void 0 : response.message);
+    common_vendor.index.__f__("log", "at api/hundred.js:340", "   - response.msg:", response == null ? void 0 : response.msg);
+    common_vendor.index.__f__("log", "at api/hundred.js:341", "   - response.success:", response == null ? void 0 : response.success);
+    const photoUrl = (response == null ? void 0 : response.photoUrl) || (response == null ? void 0 : response.url) || ((_e = response == null ? void 0 : response.data) == null ? void 0 : _e.photoUrl) || ((_f = response == null ? void 0 : response.data) == null ? void 0 : _f.url) || ((_h = (_g = response == null ? void 0 : response.data) == null ? void 0 : _g.photo) == null ? void 0 : _h.url) || (typeof response === "string" ? response : null);
+    common_vendor.index.__f__("log", "at api/hundred.js:351", "🖼️ [图片URL提取] 提取结果:", photoUrl);
     if (!photoUrl) {
-      common_vendor.index.__f__("error", "at api/hundred.js:338", "❌ [一百件事API] 上传成功但未返回 photoUrl，响应：", response);
+      common_vendor.index.__f__("error", "at api/hundred.js:354", "❌ [一百件事API] 上传成功但未返回 photoUrl，响应：", response);
       const error = new Error("上传成功但未返回照片地址");
       error.response = response;
       throw error;
@@ -152,12 +165,12 @@ function uploadChallengePhoto(filePath) {
     return {
       success: true,
       photoUrl,
-      message: (response == null ? void 0 : response.message) || "照片上传成功",
+      message: (response == null ? void 0 : response.message) || (response == null ? void 0 : response.msg) || "照片上传成功",
       raw: response
     };
   }).catch((error) => {
-    common_vendor.index.__f__("error", "at api/hundred.js:351", "❌ [一百件事API] 上传任务完成照片失败");
-    common_vendor.index.__f__("error", "at api/hundred.js:352", "🔴 错误信息:", error);
+    common_vendor.index.__f__("error", "at api/hundred.js:367", "❌ [一百件事API] 上传任务完成照片失败");
+    common_vendor.index.__f__("error", "at api/hundred.js:368", "🔴 错误信息:", error);
     throw error;
   });
 }
@@ -165,22 +178,22 @@ function favoriteTask(favoriteData) {
   const url = utils_config.config.API.CHALLENGE.FAVORITE;
   const fullUrl = utils_config.config.baseURL + url;
   const action = favoriteData.favorited ? "收藏" : "取消收藏";
-  common_vendor.index.__f__("log", "at api/hundred.js:379", `🔗 [一百件事API] 开始${action}任务`);
-  common_vendor.index.__f__("log", "at api/hundred.js:380", "📍 请求地址:", fullUrl);
-  common_vendor.index.__f__("log", "at api/hundred.js:381", "📋 请求方法: POST");
-  common_vendor.index.__f__("log", "at api/hundred.js:382", "📤 请求参数:", favoriteData);
-  common_vendor.index.__f__("log", "at api/hundred.js:383", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  common_vendor.index.__f__("log", "at api/hundred.js:395", `🔗 [一百件事API] 开始${action}任务`);
+  common_vendor.index.__f__("log", "at api/hundred.js:396", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/hundred.js:397", "📋 请求方法: POST");
+  common_vendor.index.__f__("log", "at api/hundred.js:398", "📤 请求参数:", favoriteData);
+  common_vendor.index.__f__("log", "at api/hundred.js:399", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
   return utils_http.http.post(url, {
     taskId: favoriteData.taskId,
     favorited: favoriteData.favorited
   }).then((response) => {
-    common_vendor.index.__f__("log", "at api/hundred.js:389", `✅ [一百件事API] ${action}任务成功`);
-    common_vendor.index.__f__("log", "at api/hundred.js:390", "📦 响应数据:", response);
-    common_vendor.index.__f__("log", "at api/hundred.js:391", `⭐ 任务ID: ${favoriteData.taskId}, 收藏状态: ${favoriteData.favorited ? "已收藏" : "未收藏"}`);
+    common_vendor.index.__f__("log", "at api/hundred.js:405", `✅ [一百件事API] ${action}任务成功`);
+    common_vendor.index.__f__("log", "at api/hundred.js:406", "📦 响应数据:", response);
+    common_vendor.index.__f__("log", "at api/hundred.js:407", `⭐ 任务ID: ${favoriteData.taskId}, 收藏状态: ${favoriteData.favorited ? "已收藏" : "未收藏"}`);
     return response;
   }).catch((error) => {
-    common_vendor.index.__f__("error", "at api/hundred.js:395", `❌ [一百件事API] ${action}任务失败`);
-    common_vendor.index.__f__("error", "at api/hundred.js:396", "🔴 错误信息:", error);
+    common_vendor.index.__f__("error", "at api/hundred.js:411", `❌ [一百件事API] ${action}任务失败`);
+    common_vendor.index.__f__("error", "at api/hundred.js:412", "🔴 错误信息:", error);
     throw error;
   });
 }

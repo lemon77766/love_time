@@ -494,16 +494,30 @@ export default {
             loadingShown = true;
             
             console.log('📡 [后端] 上传图片到服务器...');
+            console.log('📤 [上传参数] 文件路径:', tempFilePath);
+            
             const uploadResult = await uploadChallengePhoto(tempFilePath);
+            
+            console.log('📥 [上传结果] 完整响应:', uploadResult);
+            console.log('📥 [上传结果] 数据类型:', typeof uploadResult);
+            
             const uploadedPhotoUrl = uploadResult?.photoUrl;
             const successMessage = uploadResult?.message || '图片已上传';
             
+            console.log('🖼️ [图片URL] 提取结果:', uploadedPhotoUrl);
+            console.log('💬 [成功消息] 提取结果:', successMessage);
+            
             if (uploadedPhotoUrl) {
+              console.log('💾 [本地更新] 更新图片URL:', uploadedPhotoUrl);
               item.image = uploadedPhotoUrl;
+            } else {
+              console.warn('⚠️ [警告] 未获取到图片URL，使用临时路径');
             }
+            
             item.done = true;
             this.saveItemsToLocal();
             
+            console.log('🔄 [同步] 开始同步任务完成状态到后端');
             await this.syncTaskComplete(item, true, uploadedPhotoUrl);
             console.log('✅ [后端] 图片同步成功');
             

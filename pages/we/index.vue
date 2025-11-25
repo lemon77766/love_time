@@ -11,7 +11,10 @@
         <view class="navbar-title">
           <text class="title-text">个人中心</text>
         </view>
-        <view class="navbar-right"></view>
+        <view class="navbar-right">
+          <text class="navbar-icon">···</text>
+          <text class="navbar-icon">◎</text>
+        </view>
       </view>
     </view>
 
@@ -112,7 +115,7 @@
 
       <!-- 账号与安全 -->
       <view class="section account-section">
-        <view class="setting-item" @click="toggleProfileSettings">
+        <view class="setting-item" @click="goToProfileSettings">
           <view class="setting-left">
             <text class="setting-icon">🔒</text>
             <text class="setting-text">账号与安全</text>
@@ -120,61 +123,6 @@
           <text class="setting-arrow" :class="{ expanded: showProfileSettings }">›</text>
         </view>
         
-        <!-- 个人资料设置内容 -->
-        <view v-if="showProfileSettings" class="profile-settings-content">
-          <!-- 头像设置 -->
-          <view class="profile-setting-block">
-            <text class="profile-setting-title">头像设置</text>
-            <view class="avatar-section">
-              <view class="current-avatar">
-                <image class="avatar" :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/login/love.jpg'" mode="aspectFill" />
-                <text class="avatar-label">当前头像</text>
-              </view>
-              
-              <view class="avatar-options">
-                <button class="avatar-btn" @click="selectWechatAvatar">
-                  <text class="btn-icon">📱</text>
-                  <text class="btn-text">使用微信头像</text>
-                </button>
-                
-                <button class="avatar-btn" @click="uploadCustomAvatar">
-                  <text class="btn-icon">🖼️</text>
-                  <text class="btn-text">上传自定义头像</text>
-                </button>
-              </view>
-        </view>
-      </view>
-
-          <!-- 昵称设置 -->
-          <view class="profile-setting-block">
-            <text class="profile-setting-title">昵称设置</text>
-            <view class="nickname-section">
-              <view class="nickname-option" @click="toggleUseWechatNickname">
-                <view class="checkbox" :class="{ checked: useWechatNickname }"></view>
-                <text class="option-text">使用微信昵称</text>
-                <text class="current-nickname">{{ userInfo.nickName }}</text>
-              </view>
-              
-              <view v-if="!useWechatNickname" class="custom-nickname">
-                <input 
-                  v-model="customNickname" 
-                  class="nickname-input" 
-                  placeholder="请输入自定义昵称"
-                  maxlength="20"
-                />
-                <text class="char-count">{{ customNickname.length }}/20</text>
-              </view>
-      </view>
-    </view>
-
-          <!-- 保存按钮 -->
-          <view class="save-section">
-            <button class="save-btn" @click="saveProfile" :disabled="isLoading">
-              <text class="save-icon">💾</text>
-              <text class="save-text">保存设置</text>
-            </button>
-          </view>
-        </view>
       </view>
     </view>
     
@@ -208,11 +156,7 @@ export default {
         displayName: '',
         displayAvatar: ''
       },
-      // 个人资料设置相关
-      showProfileSettings: false,
-      useWechatNickname: true,
-      customNickname: '',
-      isLoading: false,
+
       // 情侣关系相关
       isBound: false,
       partnerInfo: null,
@@ -244,7 +188,7 @@ export default {
       const totalHeightPx = this.statusBarHeight + this.navBarHeight;
       const pxToRpx = 750 / this.screenWidth;
       const totalHeightRpx = totalHeightPx * pxToRpx;
-      return totalHeightRpx + 20 + 'rpx';
+      return totalHeightRpx + 'rpx';
     }
   },
   
@@ -274,6 +218,13 @@ export default {
     goToLogin() {
       uni.redirectTo({
         url: '/pages/login/index'
+      });
+    },
+
+    // 跳转到账号与安全页面
+    goToProfileSettings() {
+      uni.navigateTo({
+        url: '/pages/profile/index'
       });
     },
     
@@ -331,10 +282,7 @@ export default {
       }
     },
     
-    // 切换个人资料设置展开/收起
-    toggleProfileSettings() {
-      this.showProfileSettings = !this.showProfileSettings;
-    },
+
     // 加载情侣信息
     async loadCoupleInfo() {
       // 游客用户不加载情侣信息
@@ -427,219 +375,15 @@ export default {
       }
     },
     
-    // 选择微信头像
-    async selectWechatAvatar() {
-      if (this.isLoading) return;
-      
-      this.isLoading = true;
-      try {
-        // 调用微信选择图片API
-        const [err, res] = await uni.chooseImage({
-          count: 1,
-          sizeType: ['compressed'],
-          sourceType: ['album', 'camera']
-        });
-        
-        if (err) {
-          console.error('选择图片失败', err);
-          uni.showToast({
-            title: '选择图片失败',
-            icon: 'none'
-          });
-          return;
-        }
-        
-        const tempFilePath = res.tempFilePaths[0];
-        if (!tempFilePath) {
-          uni.showToast({
-            title: '未选择图片',
-            icon: 'none'
-          });
-          return;
-        }
-        
-        // 上传头像
-        await this.uploadAvatar(tempFilePath);
-      } catch (error) {
-        console.error('选择微信头像失败', error);
-        uni.showToast({
-          title: '操作失败，请重试',
-          icon: 'none'
-        });
-      } finally {
-        this.isLoading = false;
-      }
-    },
+
     
-    // 上传自定义头像
-    async uploadCustomAvatar() {
-      if (this.isLoading) return;
-      
-      this.isLoading = true;
-      try {
-        // 调用微信选择图片API
-        const [err, res] = await uni.chooseImage({
-          count: 1,
-          sizeType: ['compressed'],
-          sourceType: ['album']
-        });
-        
-        if (err) {
-          console.error('选择图片失败', err);
-          uni.showToast({
-            title: '选择图片失败',
-            icon: 'none'
-          });
-          return;
-        }
-        
-        const tempFilePath = res.tempFilePaths[0];
-        if (!tempFilePath) {
-          uni.showToast({
-            title: '未选择图片',
-            icon: 'none'
-          });
-          return;
-        }
-        
-        // 上传头像
-        await this.uploadAvatar(tempFilePath);
-      } catch (error) {
-        console.error('上传自定义头像失败', error);
-        uni.showToast({
-          title: '操作失败，请重试',
-          icon: 'none'
-        });
-      } finally {
-        this.isLoading = false;
-      }
-    },
+
     
-    // 上传头像到服务器
-    async uploadAvatar(filePath) {
-      try {
-        // 上传文件
-        const [uploadErr, uploadRes] = await uni.uploadFile({
-          url: config.API.USER.UPLOAD_AVATAR,
-          filePath: filePath,
-          name: 'file',
-          header: {
-            'Authorization': http.getAuthToken()
-          }
-        });
-        
-        if (uploadErr) {
-          console.error('上传头像失败', uploadErr);
-          uni.showToast({
-            title: '上传失败',
-            icon: 'none'
-          });
-          return;
-        }
-        
-        const data = JSON.parse(uploadRes.data);
-        if (data.code === 200 && data.data) {
-          // 更新用户信息
-          this.userInfo.displayAvatar = data.data.url;
-          uni.showToast({
-            title: '上传成功',
-            icon: 'success'
-          });
-        } else {
-          console.error('上传头像失败', data);
-          uni.showToast({
-            title: data.message || '上传失败',
-            icon: 'none'
-          });
-        }
-      } catch (error) {
-        console.error('上传头像异常', error);
-        uni.showToast({
-          title: '上传异常',
-          icon: 'none'
-        });
-      }
-    },
+
     
-    // 切换使用微信昵称
-    toggleUseWechatNickname() {
-      this.useWechatNickname = !this.useWechatNickname;
-      if (this.useWechatNickname) {
-        this.customNickname = '';
-      }
-    },
+
     
-    // 保存个人资料
-    async saveProfile() {
-      if (this.isLoading) return;
-      
-      // 验证输入
-      if (!this.useWechatNickname && !this.customNickname.trim()) {
-        uni.showToast({
-          title: '请输入昵称',
-          icon: 'none'
-        });
-        return;
-      }
-      
-      this.isLoading = true;
-      try {
-        // 准备要更新的数据
-        const updateData = {};
-        if (this.useWechatNickname) {
-          // 使用微信昵称，清空自定义昵称
-          updateData.displayName = this.userInfo.nickName;
-        } else {
-          // 使用自定义昵称
-          updateData.displayName = this.customNickname.trim();
-        }
-        
-        // 如果头像已更改，也更新头像
-        if (this.userInfo.displayAvatar && this.userInfo.displayAvatar !== this.userInfo.avatarUrl) {
-          updateData.displayAvatar = this.userInfo.displayAvatar;
-        }
-        
-        // 调用API更新用户资料
-        const response = await updateUserProfile(updateData);
-        
-        if (response && response.code === 200) {
-          // 更新本地存储的用户信息
-          const loginInfo = uni.getStorageSync('login_info');
-          if (loginInfo && loginInfo.userInfo) {
-            loginInfo.userInfo.displayName = updateData.displayName;
-            if (updateData.displayAvatar) {
-              loginInfo.userInfo.displayAvatar = updateData.displayAvatar;
-            }
-            uni.setStorageSync('login_info', loginInfo);
-          }
-          
-          // 更新页面数据
-          this.userInfo.displayName = updateData.displayName;
-          if (updateData.displayAvatar) {
-            this.userInfo.displayAvatar = updateData.displayAvatar;
-          }
-          
-          uni.showToast({
-            title: '保存成功',
-            icon: 'success'
-          });
-        } else {
-          console.error('保存个人资料失败', response);
-          uni.showToast({
-            title: response?.message || '保存失败',
-            icon: 'none'
-          });
-        }
-      } catch (error) {
-        console.error('保存个人资料异常', error);
-        uni.showToast({
-          title: '保存异常，请重试',
-          icon: 'none'
-        });
-      } finally {
-        this.isLoading = false;
-      }
-    },
+
     
     // 处理设置项点击
     handleSetting(type) {
@@ -758,11 +502,13 @@ export default {
   z-index: 1;
 }
 
-.navbar-title {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
+  .navbar-title {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
 
 .title-text {
   font-size: 36rpx;
@@ -771,33 +517,31 @@ export default {
 }
 
 .navbar-right {
-  width: 60rpx;
-  height: 60rpx;
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  gap: 20rpx;
 }
 
 .navbar-right:active {
   opacity: 0.7;
 }
 
+
 /* 内容区域 */
 .content {
   padding: 30rpx;
-  padding-top: calc(10rpx + var(--status-bar-height, 0px) + 54px);
+  padding-top: 40rpx;
 }
 
 /* 用户信息卡片 */
 .user-info-card {
   display: flex;
   align-items: center;
-  background: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%); /* 更柔和的渐变 */
   border-radius: 20rpx;
   padding: 20rpx 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  box-shadow: none; /* 移除阴影 */
   position: relative;
   overflow: hidden;
 }
@@ -851,15 +595,16 @@ export default {
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
-.couple-avatars-section {
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  margin-top: 20rpx;
-}
+  .couple-avatars-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20rpx;
+    margin-top: 20rpx;
+  }
 
 .couple-avatar-item {
   display: flex;
@@ -903,7 +648,7 @@ export default {
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 .achievements-grid {
@@ -941,7 +686,7 @@ export default {
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 .settings-list {
@@ -955,8 +700,9 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 20rpx;
-  background: #f8f8f8;
-  border-radius: 16rpx;
+  background: #ffffff; /* 保持白色背景 */
+  border-radius: 16rpx; /* 统一圆角 */
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05); /* 添加轻微阴影 */
   cursor: pointer;
 }
 
@@ -1003,7 +749,7 @@ export default {
   justify-content: center;
   gap: 16rpx;
   padding: 20rpx;
-  background: #FFF0F0;
+  background: #FFF5F5; /* 调整为更柔和的粉色 */
   border-radius: 16rpx;
   cursor: pointer;
 }
@@ -1029,7 +775,7 @@ export default {
   border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 .profile-settings-content {
@@ -1227,10 +973,10 @@ export default {
 /* 区块样式 */
 .section {
   background: #ffffff;
-  border-radius: 16rpx;
+  border-radius: 20rpx; /* 统一圆角 */
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+  box-shadow: none; /* 移除阴影 */
 }
 
 .section-title {

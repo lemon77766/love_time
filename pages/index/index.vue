@@ -241,7 +241,7 @@ export default {
           success: (res) => {
             if (res.confirm) {
               uni.navigateTo({
-                url: '/pages/we/index'
+                url: '/pages/login/index'
               });
             }
           }

@@ -87,7 +87,7 @@ const _sfc_main = {
           success: (res) => {
             if (res.confirm) {
               common_vendor.index.navigateTo({
-                url: "/pages/we/index"
+                url: "/pages/login/index"
               });
             }
           }

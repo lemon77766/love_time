@@ -900,22 +900,69 @@ function upload(options) {
     uni.uploadFile({
       ...uploadOptions,
       success: (uploadRes) => {
+        console.log('📥 [上传响应] 原始响应:', uploadRes);
+        console.log('📥 [上传响应] 响应数据类型:', typeof uploadRes.data);
+        console.log('📥 [上传响应] 响应数据内容:', uploadRes.data);
+            
         try {
-          const result = JSON.parse(uploadRes.data)
-          if (result.success) {
-            console.log('✅ [上传] 文件上传成功')
+          // 尝试解析响应数据
+          let result;
+          if (typeof uploadRes.data === 'string') {
+            try {
+              result = JSON.parse(uploadRes.data);
+              console.log('📥 [上传响应] JSON解析成功:', result);
+            } catch (parseError) {
+              console.warn('⚠️ [上传响应] JSON解析失败，使用原始数据:', uploadRes.data);
+              // 如果解析失败，直接使用原始数据
+              result = uploadRes.data;
+            }
+          } else {
+            result = uploadRes.data;
+            console.log('📥 [上传响应] 使用原始数据对象:', result);
+          }
+              
+          // 检查响应格式
+          console.log('📥 [上传响应] 响应结构分析:');
+          console.log('   - 是否有success字段:', result.hasOwnProperty('success'));
+          console.log('   - success字段值:', result.success);
+          console.log('   - 是否有message字段:', result.hasOwnProperty('message'));
+          console.log('   - message字段值:', result.message);
+          console.log('   - 是否有data字段:', result.hasOwnProperty('data'));
+          console.log('   - data字段值:', result.data);
+          console.log('   - 是否有photoUrl字段:', result.hasOwnProperty('photoUrl'));
+          console.log('   - photoUrl字段值:', result.photoUrl);
+          console.log('   - 是否有url字段:', result.hasOwnProperty('url'));
+          console.log('   - url字段值:', result.url);
+              
+          // 判断成功条件
+          const isSuccess = result.success === true || 
+                           (result.hasOwnProperty('success') === false && 
+                            (result.photoUrl || result.url || result.data));
+                                
+          if (isSuccess) {
+            console.log('✅ [上传] 文件上传成功');
+            // 尝试提取图片URL
+            let photoUrl = result.photoUrl || result.url || (result.data && result.data.photoUrl) || (result.data && result.data.url);
+            if (photoUrl) {
+              console.log('🖼️ [上传] 提取到图片URL:', photoUrl);
+            } else {
+              console.warn('⚠️ [上传] 未找到图片URL字段');
+            }
+                
             const normalizedData = result.data !== undefined && result.data !== null
               ? result.data
-              : result
-            resolve(normalizedData)
+              : result;
+            resolve(normalizedData);
           } else {
-            const errorMsg = result.message || '上传失败'
-            console.error('❌ [上传] 服务器返回失败:', errorMsg)
-            reject(new Error(errorMsg))
+            const errorMsg = result.message || result.msg || '上传失败';
+            console.error('❌ [上传] 服务器返回失败:', errorMsg);
+            console.error('📋 [上传] 完整响应数据:', result);
+            reject(new Error(errorMsg));
           }
         } catch (e) {
-          console.error('❌ [上传] 解析响应失败:', e)
-          reject(new Error('解析上传响应失败'))
+          console.error('❌ [上传] 解析响应失败:', e);
+          console.error('📋 [上传] 原始响应数据:', uploadRes.data);
+          reject(new Error('解析上传响应失败'));
         }
       },
       fail: (error) => {

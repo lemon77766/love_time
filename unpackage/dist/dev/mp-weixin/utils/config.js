@@ -1,10 +1,10 @@
 "use strict";
 const devConfig = {
-  baseURL: "https://smallpeppers.cn",
+  baseURL: "http://192.168.94.229:8886",
   timeout: 1e4,
   // 普通请求超时时间
-  uploadTimeout: 3e4,
-  // 上传请求超时时间
+  uploadTimeout: 12e4,
+  // 上传请求超时时间（2分钟）
   API: {
     LOGIN: {
       WECHAT: "/api/login/wechat",

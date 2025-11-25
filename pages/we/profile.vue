@@ -4,7 +4,7 @@
     <view class="content">
       <!-- 头像设置 -->
       <view class="section">
-        <text class="section-title">头像设置</text>
+        <text class="section-title">头像设</text>
         <view class="avatar-section">
           <view class="current-avatar">
             <image class="avatar" :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/login/love.jpg'" mode="aspectFill" />

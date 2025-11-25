@@ -682,36 +682,71 @@ function upload(options) {
     common_vendor.index.uploadFile({
       ...uploadOptions,
       success: (uploadRes) => {
+        common_vendor.index.__f__("log", "at utils/http.js:903", "📥 [上传响应] 原始响应:", uploadRes);
+        common_vendor.index.__f__("log", "at utils/http.js:904", "📥 [上传响应] 响应数据类型:", typeof uploadRes.data);
+        common_vendor.index.__f__("log", "at utils/http.js:905", "📥 [上传响应] 响应数据内容:", uploadRes.data);
         try {
-          const result = JSON.parse(uploadRes.data);
-          if (result.success) {
-            common_vendor.index.__f__("log", "at utils/http.js:906", "✅ [上传] 文件上传成功");
+          let result;
+          if (typeof uploadRes.data === "string") {
+            try {
+              result = JSON.parse(uploadRes.data);
+              common_vendor.index.__f__("log", "at utils/http.js:913", "📥 [上传响应] JSON解析成功:", result);
+            } catch (parseError) {
+              common_vendor.index.__f__("warn", "at utils/http.js:915", "⚠️ [上传响应] JSON解析失败，使用原始数据:", uploadRes.data);
+              result = uploadRes.data;
+            }
+          } else {
+            result = uploadRes.data;
+            common_vendor.index.__f__("log", "at utils/http.js:921", "📥 [上传响应] 使用原始数据对象:", result);
+          }
+          common_vendor.index.__f__("log", "at utils/http.js:925", "📥 [上传响应] 响应结构分析:");
+          common_vendor.index.__f__("log", "at utils/http.js:926", "   - 是否有success字段:", result.hasOwnProperty("success"));
+          common_vendor.index.__f__("log", "at utils/http.js:927", "   - success字段值:", result.success);
+          common_vendor.index.__f__("log", "at utils/http.js:928", "   - 是否有message字段:", result.hasOwnProperty("message"));
+          common_vendor.index.__f__("log", "at utils/http.js:929", "   - message字段值:", result.message);
+          common_vendor.index.__f__("log", "at utils/http.js:930", "   - 是否有data字段:", result.hasOwnProperty("data"));
+          common_vendor.index.__f__("log", "at utils/http.js:931", "   - data字段值:", result.data);
+          common_vendor.index.__f__("log", "at utils/http.js:932", "   - 是否有photoUrl字段:", result.hasOwnProperty("photoUrl"));
+          common_vendor.index.__f__("log", "at utils/http.js:933", "   - photoUrl字段值:", result.photoUrl);
+          common_vendor.index.__f__("log", "at utils/http.js:934", "   - 是否有url字段:", result.hasOwnProperty("url"));
+          common_vendor.index.__f__("log", "at utils/http.js:935", "   - url字段值:", result.url);
+          const isSuccess = result.success === true || result.hasOwnProperty("success") === false && (result.photoUrl || result.url || result.data);
+          if (isSuccess) {
+            common_vendor.index.__f__("log", "at utils/http.js:943", "✅ [上传] 文件上传成功");
+            let photoUrl = result.photoUrl || result.url || result.data && result.data.photoUrl || result.data && result.data.url;
+            if (photoUrl) {
+              common_vendor.index.__f__("log", "at utils/http.js:947", "🖼️ [上传] 提取到图片URL:", photoUrl);
+            } else {
+              common_vendor.index.__f__("warn", "at utils/http.js:949", "⚠️ [上传] 未找到图片URL字段");
+            }
             const normalizedData = result.data !== void 0 && result.data !== null ? result.data : result;
             resolve(normalizedData);
           } else {
-            const errorMsg = result.message || "上传失败";
-            common_vendor.index.__f__("error", "at utils/http.js:913", "❌ [上传] 服务器返回失败:", errorMsg);
+            const errorMsg = result.message || result.msg || "上传失败";
+            common_vendor.index.__f__("error", "at utils/http.js:958", "❌ [上传] 服务器返回失败:", errorMsg);
+            common_vendor.index.__f__("error", "at utils/http.js:959", "📋 [上传] 完整响应数据:", result);
             reject(new Error(errorMsg));
           }
         } catch (e) {
-          common_vendor.index.__f__("error", "at utils/http.js:917", "❌ [上传] 解析响应失败:", e);
+          common_vendor.index.__f__("error", "at utils/http.js:963", "❌ [上传] 解析响应失败:", e);
+          common_vendor.index.__f__("error", "at utils/http.js:964", "📋 [上传] 原始响应数据:", uploadRes.data);
           reject(new Error("解析上传响应失败"));
         }
       },
       fail: (error) => {
-        common_vendor.index.__f__("error", "at utils/http.js:922", "❌ [上传] 上传失败:", error);
-        common_vendor.index.__f__("error", "at utils/http.js:923", "❌ [上传] 原始路径:", originalFilePath);
-        common_vendor.index.__f__("error", "at utils/http.js:924", "❌ [上传] 使用路径:", validFilePath);
+        common_vendor.index.__f__("error", "at utils/http.js:969", "❌ [上传] 上传失败:", error);
+        common_vendor.index.__f__("error", "at utils/http.js:970", "❌ [上传] 原始路径:", originalFilePath);
+        common_vendor.index.__f__("error", "at utils/http.js:971", "❌ [上传] 使用路径:", validFilePath);
         if (error.errMsg && (error.errMsg.includes("未找到") || error.errMsg.includes("file not found") || error.errMsg.includes("no such file") || error.errMsg.includes("file doesn't exist"))) {
           if (originalFilePath && (originalFilePath.startsWith("http://tmp/") || originalFilePath.startsWith("https://tmp/"))) {
-            common_vendor.index.__f__("error", "at utils/http.js:930", "❌ [上传] 微信小程序临时文件路径可能已过期，请重新选择图片");
+            common_vendor.index.__f__("error", "at utils/http.js:977", "❌ [上传] 微信小程序临时文件路径可能已过期，请重新选择图片");
             reject(new Error("图片选择已过期，请重新选择图片"));
             return;
           }
           if (validFilePath !== originalFilePath && originalFilePath) {
-            common_vendor.index.__f__("warn", "at utils/http.js:937", "⚠️ [上传] 转换后的路径无效，尝试使用原始路径:", originalFilePath);
+            common_vendor.index.__f__("warn", "at utils/http.js:984", "⚠️ [上传] 转换后的路径无效，尝试使用原始路径:", originalFilePath);
           }
-          common_vendor.index.__f__("error", "at utils/http.js:940", "❌ [上传] 文件路径无效，无法找到文件");
+          common_vendor.index.__f__("error", "at utils/http.js:987", "❌ [上传] 文件路径无效，无法找到文件");
           reject(new Error(`未找到上传的文件: ${validFilePath} (原始路径: ${originalFilePath})`));
         } else {
           handleRequestError(error, options).then(resolve).catch(reject);

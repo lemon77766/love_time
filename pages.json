@@ -24,13 +24,12 @@
       }
     },
     {
-      "path": "pages/we/profile",
+      "path": "pages/profile/index",
       "style": {
-        "navigationBarTitleText": "个人资料",
-        "navigationStyle": "custom",
-        "navigationBarTextStyle": "black"
-      }
-    },
+        "navigationBarTitleText": "账号与安全",
+\n        "navigationStyle": "custom",\r\n        "navigationBarTextStyle": "black"
+\n      }
+\n    },
     {
       "path": "pages/trajectory/index",
       "style": {

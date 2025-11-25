@@ -325,6 +325,20 @@ export function uploadChallengePhoto(filePath) {
   }).then(response => {
     console.log('✅ [一百件事API] 上传任务完成照片成功');
     console.log('📦 响应数据:', response);
+    console.log('📦 响应数据类型:', typeof response);
+    console.log('📦 响应数据结构:', Object.keys ? Object.keys(response) : '无法获取键名');
+
+    // 更详细地检查响应数据
+    console.log('🔍 [响应分析] 详细字段检查:');
+    console.log('   - response.photoUrl:', response?.photoUrl);
+    console.log('   - response.url:', response?.url);
+    console.log('   - response.data:', response?.data);
+    console.log('   - response.data?.photoUrl:', response?.data?.photoUrl);
+    console.log('   - response.data?.url:', response?.data?.url);
+    console.log('   - response.data?.photo?.url:', response?.data?.photo?.url);
+    console.log('   - response.message:', response?.message);
+    console.log('   - response.msg:', response?.msg);
+    console.log('   - response.success:', response?.success);
 
     const photoUrl =
       response?.photoUrl ||
@@ -333,6 +347,8 @@ export function uploadChallengePhoto(filePath) {
       response?.data?.url ||
       response?.data?.photo?.url ||
       (typeof response === 'string' ? response : null);
+
+    console.log('🖼️ [图片URL提取] 提取结果:', photoUrl);
 
     if (!photoUrl) {
       console.error('❌ [一百件事API] 上传成功但未返回 photoUrl，响应：', response);
@@ -344,7 +360,7 @@ export function uploadChallengePhoto(filePath) {
     return {
       success: true,
       photoUrl,
-      message: response?.message || '照片上传成功',
+      message: response?.message || response?.msg || '照片上传成功',
       raw: response
     };
   }).catch(error => {
