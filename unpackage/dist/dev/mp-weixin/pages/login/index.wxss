@@ -280,26 +280,30 @@ to {
   font-weight: 500;
 }
 
-/* 提示信息 */
-.tips.data-v-d08ef7d4 {
+/* 浏览功能提示 */
+.browse-tip.data-v-d08ef7d4 {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
   align-items: center;
-  gap: 8rpx;
-  padding: 24rpx 32rpx;
-  margin-top: 20rpx;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 24rpx 0;
+  margin-bottom: 20rpx;
   background: rgba(255, 255, 255, 0.6);
   border-radius: 24rpx;
   -webkit-backdrop-filter: blur(10px);
           backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.browse-tip.data-v-d08ef7d4:active {
+  background: rgba(255, 255, 255, 0.8);
+  transform: scale(0.98);
+}
+.tip-icon.data-v-d08ef7d4 {
+  font-size: 28rpx;
 }
 .tip-text.data-v-d08ef7d4 {
-  font-size: 24rpx;
-  color: #666;
-}
-.link-text.data-v-d08ef7d4 {
-  font-size: 24rpx;
+  font-size: 28rpx;
   color: #FFD699;
   font-weight: 500;
 }

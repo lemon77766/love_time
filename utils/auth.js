@@ -9,9 +9,24 @@
 export function isLoggedIn() {
   try {
     const loginInfo = uni.getStorageSync('login_info');
-    return loginInfo && loginInfo.isLoggedIn === true;
+    // 检查是否为有效的登录状态（排除游客状态）
+    return loginInfo && loginInfo.isLoggedIn === true && loginInfo.isGuest !== true;
   } catch (e) {
     console.error('检查登录状态失败', e);
+    return false;
+  }
+}
+
+/**
+ * 检查是否为游客用户
+ * @returns {boolean} 是否为游客用户
+ */
+export function isGuestUser() {
+  try {
+    const loginInfo = uni.getStorageSync('login_info');
+    return loginInfo && loginInfo.isGuest === true;
+  } catch (e) {
+    console.error('检查游客状态失败', e);
     return false;
   }
 }
@@ -61,6 +76,24 @@ export function logout(silent = false) {
       // 清除本地存储
       uni.removeStorageSync('login_info');
       
+      // 设置游客状态
+      const guestUserInfo = {
+        nickName: '游客用户',
+        avatarUrl: '/static/zhuye/smile.png',
+        displayName: '游客用户',
+        displayAvatar: '/static/zhuye/smile.png',
+        isGuest: true
+      };
+      
+      const guestLoginInfo = {
+        isLoggedIn: true,
+        userInfo: guestUserInfo,
+        isGuest: true,
+        loginTime: new Date().toISOString()
+      };
+      
+      uni.setStorageSync('login_info', guestLoginInfo);
+      
       // 如果不是静默模式，显示退出成功提示
       if (!silent) {
         uni.showToast({
@@ -70,10 +103,10 @@ export function logout(silent = false) {
         });
       }
       
-      // 延迟跳转到登录页（静默模式延迟更短）
+      // 延迟跳转到首页（静默模式延迟更短）
       setTimeout(() => {
         uni.reLaunch({
-          url: '/pages/login/index'
+          url: '/pages/index/index'
         });
       }, silent ? 500 : 1500);
       
@@ -97,9 +130,10 @@ export function logout(silent = false) {
  * 跳转到登录页
  */
 export function goToLogin() {
-  uni.reLaunch({
-    url: '/pages/login/index'
-  });
+  // 修改为不强制跳转登录页，允许用户继续浏览
+  // uni.reLaunch({
+  //   url: '/pages/login/index'
+  // });
 }
 
 /**
@@ -108,8 +142,9 @@ export function goToLogin() {
  */
 export function checkLogin() {
   const loggedIn = isLoggedIn();
-  if (!loggedIn) {
-    goToLogin();
-  }
+  // 不再强制跳转登录页，允许用户继续浏览
+  // if (!loggedIn) {
+  //   goToLogin();
+  // }
   return loggedIn;
 }

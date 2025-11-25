@@ -80,8 +80,13 @@
 		onLaunch: function() {
 			console.log('App Launch');
 			
-			// 检查登录状态
-			this.checkLoginStatus();
+			// 应用启动时设置游客状态
+			this.setGuestStatus();
+			
+			// 直接跳转到首页
+			uni.reLaunch({
+				url: '/pages/index/index'
+			});
 		},
 		onShow: function() {
 			console.log('App Show')
@@ -90,121 +95,36 @@
 			console.log('App Hide')
 		},
 		methods: {
-			// 检查登录状态
-			checkLoginStatus() {
+			// 设置游客状态
+			setGuestStatus() {
 				try {
+					// 检查是否已有登录信息
 					const loginInfo = uni.getStorageSync('login_info');
-					const pages = getCurrentPages();
-					const currentPage = pages[pages.length - 1];
-					const currentRoute = currentPage ? currentPage.route : '';
 					
-					// 白名单页面（不需要登录的页面）
-					const whiteList = ['pages/login/index'];
-					
-					// 检查是否有有效的token
-					const hasToken = loginInfo && (
-						(loginInfo.token && loginInfo.token.trim()) ||
-						(loginInfo.data?.token && loginInfo.data.token.trim()) ||
-						(loginInfo.accessToken && loginInfo.accessToken.trim())
-					);
-					
-					// 如果登录信息存在但token缺失，清除无效的登录信息
-					if (loginInfo && loginInfo.isLoggedIn && !hasToken) {
-						console.warn('⚠️ 检测到无效的登录信息（缺少token），正在清除...');
-						uni.removeStorageSync('login_info');
-						console.warn('✅ 已清除无效的登录信息');
-					}
-					
-					// 如果未登录且不在白名单中，跳转到登录页
-					if (!loginInfo || !loginInfo.isLoggedIn || !hasToken) {
-						if (!whiteList.includes(currentRoute)) {
-							uni.reLaunch({
-								url: '/pages/login/index'
-							});
-						}
+					// 如果没有登录信息，设置游客状态
+					if (!loginInfo || !loginInfo.isLoggedIn) {
+						const guestUserInfo = {
+							nickName: '游客用户',
+							avatarUrl: '/static/zhuye/smile.png',
+							displayName: '游客用户',
+							displayAvatar: '/static/zhuye/smile.png',
+							isGuest: true
+						};
+						
+						const guestLoginInfo = {
+							isLoggedIn: true,
+							userInfo: guestUserInfo,
+							isGuest: true,
+							loginTime: new Date().toISOString()
+						};
+						
+						uni.setStorageSync('login_info', guestLoginInfo);
+						console.log('已设置游客状态');
 					}
 				} catch (e) {
-					console.error('检查登录状态失败', e);
+					console.error('设置游客状态失败', e);
 				}
 			}
 		}
 	}
 </script>
-
-<style>
-	/* #ifndef MP-WEIXIN */
-	@font-face {
-		font-family: 'MaShanZheng';
-		src: url('/static/fonts/MaShanZheng-Regular.ttf') format('truetype');
-		font-weight: 400;
-		font-style: normal;
-		font-display: swap;
-	}
-	/* #endif */
-	
-	/*每个页面公共css */
-	
-	/* 底部导航栏字体样式 - 与主页导航栏一致 */
-	/* #ifdef MP-WEIXIN */
-	/* 微信小程序底部导航栏字体样式 */
-	/deep/ .uni-tabbar {
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-	}
-	
-	/deep/ .uni-tabbar__bd {
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-		font-weight: 500;
-	}
-	/* #endif */
-	
-	/* #ifdef H5 */
-	/* H5底部导航栏字体样式 */
-	.uni-tabbar {
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-	}
-	
-	.uni-tabbar__bd {
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-		font-weight: 500;
-	}
-	/* #endif */
-	
-	/* 方案1：底部导航栏淡黄色渐变效果 */
-	/* #ifdef MP-WEIXIN */
-	/* 未选中状态：淡黄色图标 */
-	/deep/ .uni-tabbar .uni-tabbar__icon {
-		filter: sepia(20%) saturate(150%) hue-rotate(15deg) brightness(1.1);
-		transition: all 0.3s ease;
-	}
-	
-	/* 选中状态：深黄色图标，带渐变效果 */
-	/deep/ .uni-tabbar .uni-tabbar__icon.uni-tabbar__icon--active {
-		filter: sepia(40%) saturate(200%) hue-rotate(10deg) brightness(0.9);
-		transform: scale(1.05);
-		transition: all 0.3s ease;
-	}
-	
-	/* 文字颜色过渡 */
-	/deep/ .uni-tabbar .uni-tabbar__bd {
-		transition: color 0.3s ease;
-	}
-	/* #endif */
-	
-	/* #ifdef H5 */
-	/* H5 环境下的样式 */
-	.uni-tabbar .uni-tabbar__icon {
-		filter: sepia(20%) saturate(150%) hue-rotate(15deg) brightness(1.1);
-		transition: all 0.3s ease;
-	}
-	
-	.uni-tabbar .uni-tabbar__icon.uni-tabbar__icon--active {
-		filter: sepia(40%) saturate(200%) hue-rotate(10deg) brightness(0.9);
-		transform: scale(1.05);
-		transition: all 0.3s ease;
-	}
-	
-	.uni-tabbar .uni-tabbar__bd {
-		transition: color 0.3s ease;
-	}
-	/* #endif */
-</style>

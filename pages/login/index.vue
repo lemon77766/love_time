@@ -55,6 +55,12 @@
           </view>
         </button>
 
+        <!-- 浏览功能提示 -->
+        <view class="browse-tip" @click="browseFeatures">
+          <text class="tip-icon">👀</text>
+          <text class="tip-text">先浏览功能</text>
+        </view>
+
         <!-- 隐私协议复选框 -->
         <view class="privacy-section">
           <label class="checkbox-wrapper" @click="togglePrivacyAgreement">
@@ -67,6 +73,11 @@
           <text class="privacy-text">和</text>
           <text class="link-text" @click="showPrivacyPolicy">《隐私政策》</text>
         </view>
+      </view>
+      
+      <!-- 底部提示 -->
+      <view class="footer">
+        <text class="footer-text">登录后可享受完整功能并保存数据</text>
       </view>
     </view>
       <!-- 用户协议弹窗 -->
@@ -110,6 +121,7 @@
 <script>
 import http from '@/utils/http.js';
 import config from '@/utils/config.js';
+import { isGuestUser } from '../../utils/auth.js';
 
 export default {
   data() {
@@ -209,8 +221,22 @@ export default {
   onLoad() {
     // 检查是否已登录
     this.checkLoginStatus();
+    // 加载用户信息
+    this.loadUserInfo();
   },
   methods: {
+    // 加载用户信息
+    loadUserInfo() {
+      try {
+        const loginInfo = uni.getStorageSync('login_info');
+        if (loginInfo && loginInfo.userInfo) {
+          this.userInfo = { ...loginInfo.userInfo };
+        }
+      } catch (e) {
+        console.error('加载用户信息失败', e);
+      }
+    },
+    
     // 切换隐私协议同意状态
     togglePrivacyAgreement() {
       this.agreedToPrivacy = !this.agreedToPrivacy;
@@ -236,6 +262,14 @@ export default {
       this.showPrivacyPolicyModal = false;
     },
     
+    // 浏览功能
+    browseFeatures() {
+      // 直接跳转到首页，允许用户先浏览功能
+      uni.reLaunch({
+        url: '/pages/index/index'
+      });
+    },
+    
     // 检查登录状态
     checkLoginStatus() {
       try {
@@ -247,7 +281,7 @@ export default {
           (loginInfo.accessToken && loginInfo.accessToken.trim())
         );
         
-        if (loginInfo && loginInfo.isLoggedIn && hasToken) {
+        if (loginInfo && loginInfo.isLoggedIn && hasToken && !loginInfo.isGuest) {
           // 注意：这里只检查本地是否有token，不验证token是否有效
           // 如果token已过期，会在后续API请求时被后端返回401，然后由handleUnauthorized处理
           console.log('检测到本地登录信息，自动跳转到首页');
@@ -364,306 +398,113 @@ export default {
         let loginResult;
         try {
           loginResult = await http.post(config.API.LOGIN.WECHAT, {
-            code,
-            nickName: userProfile.userInfo.nickName,
-            avatarUrl: userProfile.userInfo.avatarUrl
+            code: code,
+            userInfo: userProfile.userInfo
           });
         } catch (apiError) {
-          console.warn('后端API调用失败，使用模拟登录', apiError);
-          // 使用模拟登录数据
-          loginResult = {
-            token: 'mock_token_' + Date.now(),
-            openid: 'mock_openid_' + Date.now(),
-            session_key: 'mock_session_' + Date.now(),
-            success: true
+          console.error('调用登录API失败', apiError);
+          // API调用失败，使用模拟登录
+          loginResult = this.createMockLoginResult(code, userProfile.userInfo);
+        }
+
+        // 4. 处理登录结果
+        if (loginResult && (loginResult.code === 200 || loginResult.success)) {
+          // 登录成功
+          const userData = loginResult.data || loginResult.result || {};
+          
+          // 构造用户信息对象
+          const userInfo = {
+            nickName: userProfile.userInfo.nickName,
+            avatarUrl: userProfile.userInfo.avatarUrl,
+            displayName: userData.displayName || userProfile.userInfo.nickName,
+            displayAvatar: userData.displayAvatar || userProfile.userInfo.avatarUrl,
+            ...userData
           };
           
-          // 提示用户使用模拟登录
+          // 保存登录信息
+          const loginInfo = {
+            isLoggedIn: true,
+            userInfo: userInfo,
+            token: userData.token || userData.accessToken || '',
+            loginTime: new Date().toISOString(),
+            isGuest: false
+          };
+          
+          uni.setStorageSync('login_info', loginInfo);
+          
+          // 提示登录成功
           uni.showToast({
-            title: '后端服务未就绪，使用模拟登录',
+            title: '登录成功',
+            icon: 'success',
+            duration: 1500
+          });
+          
+          // 延迟跳转到首页
+          setTimeout(() => {
+            this.enterApp();
+          }, 1500);
+        } else {
+          // 登录失败
+          console.error('登录失败', loginResult);
+          uni.showToast({
+            title: loginResult?.message || '登录失败，请重试',
             icon: 'none',
             duration: 2000
           });
         }
-
-        // 4. 保存登录信息到本地
-        // 处理后端响应格式：支持多种格式以兼容不同情况
-        // 标准格式: {success: true, message: "登录成功", data: {token: ..., openid: ..., session_key: ...}}
-        // 兼容格式1: {token: ..., openid: ..., session_key: ...}
-        // 兼容格式2: {success: true, token: ..., openid: ..., session_key: ...}
-        // 兼容格式3: {data: {success: true, data: {token: ...}}}
-        // 统一处理响应数据，兼容多种返回结构
-        let responseData = loginResult;
-        if (loginResult.data && typeof loginResult.data === 'object') {
-          responseData = loginResult.data;
-        }
-
-        // 规范化可能的token字段（排除纯数字的状态码）
-        const normalizeTokenCandidate = (candidate) => {
-          if (typeof candidate !== 'string') {
-            return '';
-          }
-          const trimmed = candidate.trim();
-          if (!trimmed) {
-            return '';
-          }
-          if (/^\d+$/.test(trimmed) && trimmed.length <= 6) {
-            // 像 200 / 401 这样的状态码不视为token
-            return '';
-          }
-          return trimmed;
-        };
-
-        const tokenCandidates = [];
-        const pushTokenCandidate = (candidate) => {
-          const normalized = normalizeTokenCandidate(candidate);
-          if (normalized) {
-            tokenCandidates.push(normalized);
-          }
-        };
-
-        if (responseData && typeof responseData === 'object') {
-          pushTokenCandidate(responseData.token);
-          pushTokenCandidate(responseData.data?.token);
-        }
-        pushTokenCandidate(loginResult.token);
-        pushTokenCandidate(loginResult.data?.token);
-
-        // 兼容后端直接把token放在 data 字符串或 code 字段里的情况
-        if (typeof loginResult.data === 'string') {
-          pushTokenCandidate(loginResult.data);
-        }
-        if (responseData && typeof responseData === 'string') {
-          pushTokenCandidate(responseData);
-        }
-        pushTokenCandidate(loginResult.code);
-        if (responseData && typeof responseData === 'object') {
-          pushTokenCandidate(responseData.code);
-        }
-
-        const token = tokenCandidates.length > 0 ? tokenCandidates[0] : '';
-        
-        // 尝试从多个可能的路径获取openid
-        const openid = responseData.openid || 
-                      responseData.user?.openid ||
-                      loginResult.openid || 
-                      loginResult.data?.openid || 
-                      loginResult.data?.user?.openid ||
-                      (responseData.data && responseData.data.openid) || 
-                      '';
-        
-        // 尝试从多个可能的路径获取session_key（可选字段，后端通常不返回给前端）
-        // 注意：session_key 主要用于后端解密敏感数据，前端通常不需要
-        const sessionKey = responseData.session_key || 
-                           responseData.sessionKey ||
-                           responseData.user?.session_key ||
-                           responseData.user?.sessionKey ||
-                           loginResult.session_key || 
-                           loginResult.sessionKey ||
-                           loginResult.data?.session_key || 
-                           loginResult.data?.sessionKey ||
-                           loginResult.data?.user?.session_key ||
-                           loginResult.data?.user?.sessionKey ||
-                           (responseData.data && responseData.data.session_key) || 
-                           (responseData.data && responseData.data.sessionKey) || 
-                           undefined; // 使用 undefined 而不是空字符串，表示未提供
-        
-        const isSuccess = loginResult.success !== false; // 如果没有success字段，默认为成功
-        
-        const loginInfo = {
-          isLoggedIn: true,
-          token: token,
-          openid: openid,
-          sessionKey: sessionKey,
-          userInfo: {
-            nickName: userProfile.userInfo.nickName,
-            avatarUrl: userProfile.userInfo.avatarUrl,
-            displayName: userProfile.userInfo.nickName,
-            displayAvatar: userProfile.userInfo.avatarUrl
-          },
-          loginTime: new Date().toISOString(),
-          isMock: !isSuccess // 标记是否为模拟登录
-        };
-        
-        // 调试信息：检查token是否正确提取
-        if (process.env.NODE_ENV === 'development') {
-          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          console.log('🔍 [登录响应分析]');
-          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          console.log('📦 原始响应数据:', loginResult);
-          console.log('📦 响应数据类型:', typeof loginResult);
-          console.log('📦 responseData:', responseData);
-          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          console.log('🔑 Token提取结果:');
-          console.log('   - responseData.token:', responseData.token || '未找到');
-          console.log('   - loginResult.token:', loginResult.token || '未找到');
-          console.log('   - loginResult.data?.token:', loginResult.data?.token || '未找到');
-          console.log('   - 最终提取的Token:', token ? `✅ 已找到，长度: ${token.length}` : '❌ 未找到');
-          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          console.log('👤 OpenID提取结果:');
-          console.log('   - responseData.openid:', responseData.openid || '未找到');
-          console.log('   - responseData.user?.openid:', responseData.user?.openid || '未找到');
-          console.log('   - loginResult.openid:', loginResult.openid || '未找到');
-          console.log('   - loginResult.data?.openid:', loginResult.data?.openid || '未找到');
-          console.log('   - loginResult.data?.user?.openid:', loginResult.data?.user?.openid || '未找到');
-          console.log('   - 最终提取的OpenID:', openid ? `✅ 已找到: ${openid}` : '❌ 未找到');
-          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          console.log('🔐 SessionKey提取结果:');
-          console.log('   - 最终提取的SessionKey:', sessionKey ? `✅ 已找到，长度: ${sessionKey.length}` : 'ℹ️ 未提供（这是正常的）');
-          console.log('   - 💡 说明: session_key 主要用于后端解密敏感数据，前端通常不需要');
-          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          if (!token) {
-            console.error('❌ Token提取失败！');
-            console.error('📋 完整响应结构:', JSON.stringify(loginResult, null, 2));
-            console.error('💡 提示: 请检查后端返回的数据结构是否符合预期');
-          }
-          if (!openid) {
-            console.error('❌ OpenID提取失败！');
-            console.error('💡 提示: OpenID 是必需的，请检查后端是否返回了 openid');
-          }
-        }
-        
-        uni.setStorageSync('login_info', loginInfo);
-        this.userInfo = loginInfo.userInfo;
-        this.isLoggedIn = true;
-        
-        // 验证token是否保存成功
-        const savedLoginInfo = uni.getStorageSync('login_info');
-        if (process.env.NODE_ENV === 'development') {
-          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          console.log('💾 [存储验证]');
-          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          console.log('📦 保存后的登录信息:', savedLoginInfo);
-          console.log('🔑 保存后的Token:', savedLoginInfo?.token ? `✅ 已保存，长度: ${savedLoginInfo.token.length}` : '❌ 未保存');
-          console.log('👤 保存后的OpenID:', savedLoginInfo?.openid ? `✅ 已保存: ${savedLoginInfo.openid}` : '❌ 未保存');
-          console.log('🔐 保存后的SessionKey:', savedLoginInfo?.sessionKey ? `✅ 已保存，长度: ${savedLoginInfo.sessionKey.length}` : 'ℹ️ 未保存（这是正常的，前端通常不需要）');
-          console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        }
-        
-        // 如果token为空，给出警告
-        if (!token || !token.trim()) {
-          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          console.error('⚠️ [警告] Token为空！');
-          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          console.error('🔍 可能的原因:');
-          console.error('   1. 后端返回的数据结构中不包含token字段');
-          console.error('   2. 后端返回的token字段名为空字符串');
-          console.error('   3. 后端返回的数据结构不符合预期');
-          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-          uni.showModal({
-            title: '登录警告',
-            content: '未获取到有效的登录凭证，部分功能可能无法使用。请检查后端服务是否正常。',
-            showCancel: false
-          });
-        }
-
-        // 5. 提示登录成功
+      } catch (error) {
+        console.error('微信登录失败', error);
         uni.showToast({
-          title: '登录成功',
-          icon: 'success',
-          duration: 1500
-        });
-
-        // 6. 延迟跳转到首页（头像修改功能将在个人资料页面提供）
-        setTimeout(() => {
-          this.enterApp();
-        }, 1500);
-        
-      } catch (e) {
-        console.error('微信登录失败', e);
-        uni.showToast({
-          title: e.errMsg || '登录失败，请重试',
-          icon: 'none'
+          title: '登录异常，请重试',
+          icon: 'none',
+          duration: 2000
         });
       } finally {
         this.isLoading = false;
       }
     },
-
-
-
-    /**
-     * 调用微信 wx.login 接口获取临时登录凭证 code
-     * @returns {Promise<string>} 返回 code字符串
-     */
+    
+    // 获取微信登录code
     getWxLoginCode() {
       return new Promise((resolve, reject) => {
-        // #ifdef MP-WEIXIN
-        uni.login({
-          provider: 'weixin',
+        wx.login({
           success: (res) => {
             if (res.code) {
               resolve(res.code);
             } else {
-              reject(new Error('获取code失败'));
+              reject(new Error('获取微信登录code失败'));
             }
           },
           fail: (err) => {
             reject(err);
           }
         });
-        // #endif
-
-        // #ifndef MP-WEIXIN
-        // H5 或其他平台返回模拟 code
-        resolve('mock_code_' + Date.now());
-        // #endif
       });
     },
-
-    /**
-     * 获取用户信息（微信小程序）
-     * @returns {Promise<Object>} 返回用户信息对象
-     */
-    getUserProfile() {
-      return new Promise((resolve, reject) => {
-        // #ifdef MP-WEIXIN
-        uni.getUserProfile({
-          desc: '用于完善用户资料',
-          success: (res) => {
-            resolve(res.userInfo);
-          },
-          fail: (err) => {
-            reject(err);
-          }
-        });
-        // #endif
-
-        // #ifndef MP-WEIXIN
-        // H5 或其他平台使用模拟数据
-        resolve({
-          nickName: '游客用户',
-          avatarUrl: '/static/zhuye/smile.png'
-        });
-        // #endif
-      });
+    
+    // 创建模拟登录结果（用于API调用失败时）
+    createMockLoginResult(code, userInfo) {
+      return {
+        code: 200,
+        success: true,
+        message: '登录成功',
+        data: {
+          userId: 'mock_' + Date.now(),
+          token: 'mock_token_' + Date.now(),
+          nickName: userInfo.nickName,
+          avatarUrl: userInfo.avatarUrl,
+          displayName: userInfo.nickName,
+          displayAvatar: userInfo.avatarUrl
+        }
+      };
     },
-
-    /**
-     * 将登录信息发送到后端服务器（使用封装好的API）
-     * @param {string} code - 微信登录凭证
-     * @param {Object} userInfo - 用户信息
-     * @returns {Promise<Object>} 返回后端响应数据
-     */
-    async sendLoginToBackend(code, userInfo) {
-      try {
-        // 调用封装好的登录API
-        const result = await wxLogin(code, userInfo);
-        return result;
-      } catch (error) {
-        // 直接抛出错误，不返回模拟数据
-        throw error;
-      }
-    },
-
-    // 进入应用
+    
+    // 进入应用（跳转到首页）
     enterApp() {
       uni.reLaunch({
         url: '/pages/index/index'
       });
-    },
-
-
+    }
   }
 };
 </script>
@@ -951,27 +792,32 @@ export default {
   font-weight: 500;
 }
 
-/* 提示信息 */
-.tips {
+/* 浏览功能提示 */
+.browse-tip {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
   align-items: center;
-  gap: 8rpx;
-  padding: 24rpx 32rpx;
-  margin-top: 20rpx;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 24rpx 0;
+  margin-bottom: 20rpx;
   background: rgba(255, 255, 255, 0.6);
   border-radius: 24rpx;
   backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.browse-tip:active {
+  background: rgba(255, 255, 255, 0.8);
+  transform: scale(0.98);
+}
+
+.tip-icon {
+  font-size: 28rpx;
 }
 
 .tip-text {
-  font-size: 24rpx;
-  color: #666;
-}
-
-.link-text {
-  font-size: 24rpx;
+  font-size: 28rpx;
   color: #FFD699;
   font-weight: 500;
 }

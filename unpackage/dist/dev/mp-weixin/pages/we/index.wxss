@@ -25,11 +25,13 @@
 /* 文章场景相关 */
 .profile-page.data-v-5f4b3cd0 {
   min-height: 100vh;
-  background: #FFFAF4;
-  padding-bottom: 120rpx;
+  background-color: #FFFAF4;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
+  position: relative;
+  overflow-x: hidden;
 }
 
-/* 自定义导航栏样式 */
+/* 自定义导航栏 */
 .custom-navbar.data-v-5f4b3cd0 {
   position: fixed;
   top: 0;
@@ -65,117 +67,118 @@
   z-index: 1;
 }
 .navbar-title.data-v-5f4b3cd0 {
-  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
+  gap: 12rpx;
 }
 .title-text.data-v-5f4b3cd0 {
-  font-size: 32rpx;
+  font-size: 36rpx;
   font-weight: 500;
   color: #4A4A4A;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 .navbar-right.data-v-5f4b3cd0 {
-  width: 80rpx;
+  width: 60rpx;
+  height: 60rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+}
+.navbar-right.data-v-5f4b3cd0:active {
+  opacity: 0.7;
 }
 
 /* 内容区域 */
 .content.data-v-5f4b3cd0 {
   padding: 30rpx;
+  padding-top: calc(10rpx + var(--status-bar-height, 0px) + 54px);
 }
 
 /* 用户信息卡片 */
 .user-info-card.data-v-5f4b3cd0 {
-  background: #ffffff;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
-  gap: 20rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 20rpx 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
 }
 .user-avatar-large.data-v-5f4b3cd0 {
-  width: 128rpx;
-  height: 128rpx;
-  border-radius: 64rpx;
-  border: 4rpx solid #e5e5e5;
-  flex-shrink: 0;
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  border: 6rpx solid #ffffff;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.1);
+  margin-right: 30rpx;
 }
 .user-info-text.data-v-5f4b3cd0 {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8rpx;
+  gap: 12rpx;
 }
 .user-name.data-v-5f4b3cd0 {
-  font-size: 32rpx;
+  font-size: 36rpx;
   font-weight: 600;
-  color: #4A4A4A;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  color: #000000;
 }
 .user-days.data-v-5f4b3cd0 {
-  font-size: 24rpx;
-  color: #000000;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-size: 26rpx;
+  color: #666666;
 }
 .edit-icon.data-v-5f4b3cd0 {
-  width: 48rpx;
-  height: 48rpx;
+  width: 60rpx;
+  height: 60rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32rpx;
-  color: #999;
+  background: #f8f8f8;
+  border-radius: 30rpx;
+  font-size: 28rpx;
   cursor: pointer;
 }
 .edit-icon.data-v-5f4b3cd0:active {
-  opacity: 0.6;
+  background: #f0f0f0;
 }
 
 /* 情侣信息卡片 */
 .couple-info-card.data-v-5f4b3cd0 {
   background: #ffffff;
-  border-radius: 16rpx;
+  border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
-}
-.couple-info-card .section-title.data-v-5f4b3cd0 {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #6B5B95;
-  margin-bottom: 24rpx;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
 }
 .couple-avatars-section.data-v-5f4b3cd0 {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 24rpx;
+  justify-content: space-around;
+  margin-top: 20rpx;
 }
 .couple-avatar-item.data-v-5f4b3cd0 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12rpx;
+  gap: 16rpx;
 }
 .couple-avatar.data-v-5f4b3cd0 {
-  width: 120rpx;
-  height: 120rpx;
-  border-radius: 60rpx;
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50rpx;
   border: 4rpx solid #ffffff;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.1);
 }
 .couple-name.data-v-5f4b3cd0 {
   font-size: 24rpx;
   color: #000000;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  max-width: 120rpx;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .heart-connector.data-v-5f4b3cd0 {
   display: flex;
@@ -183,18 +186,22 @@
   justify-content: center;
 }
 .heart-icon.data-v-5f4b3cd0 {
-  font-size: 36rpx;
+  font-size: 48rpx;
+  color: #FF6B6B;
 }
 
-/* 成就展示 */
+/* 成就区域 */
 .achievements-section.data-v-5f4b3cd0 {
-  padding-bottom: 20rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
 }
 .achievements-grid.data-v-5f4b3cd0 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24rpx;
-  margin-top: 20rpx;
+  gap: 20rpx;
 }
 .achievement-item.data-v-5f4b3cd0 {
   display: flex;
@@ -203,48 +210,49 @@
   gap: 12rpx;
 }
 .achievement-icon.data-v-5f4b3cd0 {
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 48rpx;
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.achievement-emoji.data-v-5f4b3cd0 {
-  font-size: 48rpx;
+  font-size: 36rpx;
 }
 .achievement-name.data-v-5f4b3cd0 {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: #000000;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  text-align: center;
 }
 
-/* 设置列表 */
+/* 设置区域 */
 .settings-section.data-v-5f4b3cd0 {
-  padding-bottom: 0;
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
 }
 .settings-list.data-v-5f4b3cd0 {
-  margin-top: 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
 }
 .setting-item.data-v-5f4b3cd0 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24rpx 0;
-  border-bottom: 1rpx solid #f0f0f0;
+  padding: 20rpx;
+  background: #f8f8f8;
+  border-radius: 16rpx;
   cursor: pointer;
 }
-.setting-item.data-v-5f4b3cd0:last-child {
-  border-bottom: none;
-}
 .setting-item.data-v-5f4b3cd0:active {
-  background-color: rgba(0, 0, 0, 0.02);
+  background: #f0f0f0;
 }
 .setting-left.data-v-5f4b3cd0 {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  flex: 1;
+  gap: 20rpx;
 }
 .setting-icon.data-v-5f4b3cd0 {
   font-size: 32rpx;
@@ -252,13 +260,11 @@
 .setting-text.data-v-5f4b3cd0 {
   font-size: 28rpx;
   color: #000000;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-weight: 500;
 }
 .setting-arrow.data-v-5f4b3cd0 {
-  font-size: 36rpx;
-  color: #999;
-  font-weight: 300;
-  flex-shrink: 0;
+  font-size: 28rpx;
+  color: #999999;
   transition: transform 0.3s ease;
 }
 .setting-arrow.expanded.data-v-5f4b3cd0 {
@@ -269,37 +275,43 @@
 .unbind-section.data-v-5f4b3cd0 {
   margin-top: 30rpx;
   padding-top: 30rpx;
-  border-top: 1rpx solid #f0f0f0;
+  border-top: 2rpx solid #f0f0f0;
 }
 .unbind-content.data-v-5f4b3cd0 {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12rpx;
-  padding: 24rpx 0;
+  gap: 16rpx;
+  padding: 20rpx;
+  background: #FFF0F0;
+  border-radius: 16rpx;
   cursor: pointer;
-  transition: opacity 0.2s ease;
 }
 .unbind-content.data-v-5f4b3cd0:active {
-  opacity: 0.6;
+  background: #ffe0e0;
 }
 .unbind-icon.data-v-5f4b3cd0 {
-  font-size: 28rpx;
+  font-size: 32rpx;
+  color: #FF6B6B;
 }
 .unbind-text.data-v-5f4b3cd0 {
-  font-size: 26rpx;
-  color: #999;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-}
-.account-section.data-v-5f4b3cd0 {
-  padding-bottom: 0;
+  font-size: 28rpx;
+  color: #FF6B6B;
+  font-weight: 500;
 }
 
-/* 个人资料设置内容 */
+/* 账号与安全区域 */
+.account-section.data-v-5f4b3cd0 {
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+}
 .profile-settings-content.data-v-5f4b3cd0 {
   margin-top: 20rpx;
   padding-top: 20rpx;
-  border-top: 1rpx solid #f0f0f0;
+  border-top: 2rpx solid #f0f0f0;
 }
 .profile-setting-block.data-v-5f4b3cd0 {
   margin-bottom: 30rpx;

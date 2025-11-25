@@ -149,7 +149,7 @@
 import { getCoupleInfo, getPartnerInfo, isBound as checkIsBound, clearCoupleInfo } from '../../utils/couple.js';
 import { getCoupleStatus, getLoveDays } from '../../api/couple.js';
 import { saveCoupleInfo } from '../../utils/couple.js';
-import { getUserInfo } from '../../utils/auth.js';
+import { getUserInfo, isLoggedIn, isGuestUser } from '../../utils/auth.js';
 import CustomTabbar from '@/components/custom-tabbar/index.vue';
 
 export default {
@@ -216,6 +216,7 @@ export default {
   async onLoad() {
     this.getSystemInfo();
     this.loadUserInfo();
+    // 不再强制要求登录，允许未登录用户浏览
     await this.loadCoupleInfo();
     this.loadLoveDays();
     this.loadRecentActivities();
@@ -228,6 +229,28 @@ export default {
     this.loadRecentActivities();
   },
   methods: {
+    // 检查是否需要登录
+    checkLoginRequired() {
+      // 如果是游客用户，提示需要登录
+      if (isGuestUser()) {
+        uni.showModal({
+          title: '需要登录',
+          content: '该功能需要登录后才能使用，是否前往登录？',
+          confirmText: '去登录',
+          cancelText: '继续浏览',
+          success: (res) => {
+            if (res.confirm) {
+              uni.navigateTo({
+                url: '/pages/we/index'
+              });
+            }
+          }
+        });
+        return false;
+      }
+      return true;
+    },
+    
     getSystemInfo() {
 
       // 使用新的 API 替代已弃用的 getSystemInfoSync
@@ -268,24 +291,36 @@ export default {
       // #endif
     },
     goToSweetQA() {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) return;
+      
       // 跳转到恋与问答页面
       uni.navigateTo({
         url: '/subPackages/interaction/pages/qna/index'
       });
     },
     goToHundredThings() {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) return;
+      
       // 跳转到一百件事页面
       uni.navigateTo({
         url: '/subPackages/interaction/pages/hundred/index'
       });
     },
     goToHeartWall() {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) return;
+      
       // 跳转到心形墙页面
       uni.navigateTo({
         url: '/subPackages/record/pages/heartwall/index'
       });
     },
     goToFutureLetter() {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) return;
+      
       // 跳转到未来情书页面
       uni.navigateTo({
         url: '/subPackages/record/pages/xinxiang/index'
@@ -320,6 +355,15 @@ export default {
     },
     // 加载情侣信息
     async loadCoupleInfo() {
+      // 游客用户不加载情侣信息
+      if (isGuestUser()) {
+        console.log('游客用户，跳过加载情侣信息');
+        this.isBound = false;
+        this.partnerInfo = null;
+        this.bindTime = '';
+        return;
+      }
+      
       try {
         // 先检查本地
         const localCoupleInfo = getCoupleInfo();
@@ -408,6 +452,15 @@ export default {
     },
     // 加载相爱天数
     async loadLoveDays() {
+      // 游客用户不加载相爱天数
+      if (isGuestUser()) {
+        console.log('游客用户，跳过加载相爱天数');
+        this.loveDays = 0;
+        this.anniversaryDate = '';
+        this.relationshipName = '';
+        return;
+      }
+      
       // 只有在已绑定的情况下才调用接口
       if (!this.isBound) {
         // 未绑定时重置数据
@@ -503,12 +556,23 @@ export default {
     },
     // 跳转到邀请页面
     goToInvite() {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) return;
+      
       uni.navigateTo({
         url: '/pages/invite/index'
       });
     },
     // 跳转到个人中心
     goToProfile() {
+      // 检查是否为游客用户，如果是则跳转到登录页面
+      if (isGuestUser()) {
+        uni.navigateTo({
+          url: '/pages/login/index'
+        });
+        return;
+      }
+      
       uni.navigateTo({
         url: '/pages/we/index'
       });

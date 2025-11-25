@@ -190,6 +190,7 @@ import { getCoupleInfo, getPartnerInfo, isBound as checkIsBound, clearCoupleInfo
 import { getCoupleStatus, unbindCouple } from '../../api/couple.js';
 import { saveCoupleInfo } from '../../utils/couple.js';
 import { updateUserProfile } from '../../api/user.js';
+import { isGuestUser } from '../../utils/auth.js';
 import CustomTabbar from '@/components/custom-tabbar/index.vue';
 
 export default {
@@ -198,9 +199,8 @@ export default {
   },
   data() {
     return {
-      // 导航栏相关
       statusBarHeight: 0,
-      navBarHeight: 44,
+      navBarHeight: 54,
       screenWidth: 375,
       userInfo: {
         nickName: '',
@@ -250,16 +250,33 @@ export default {
   
   onLoad() {
     this.getSystemInfo();
+    // 检查是否为游客用户，如果是则跳转到登录页面
+    if (isGuestUser()) {
+      this.goToLogin();
+      return;
+    }
     this.loadUserInfo();
     this.loadCoupleInfo();
   },
   onShow() {
+    // 每次页面显示时检查是否为游客用户
+    if (isGuestUser()) {
+      this.goToLogin();
+      return;
+    }
     // 每次页面显示时重新加载用户信息和情侣信息
     this.loadUserInfo();
     this.loadCoupleInfo();
   },
   
   methods: {
+    // 跳转到登录页面
+    goToLogin() {
+      uni.redirectTo({
+        url: '/pages/login/index'
+      });
+    },
+    
     // 获取系统信息
     getSystemInfo() {
       // #ifdef MP-WEIXIN
@@ -320,6 +337,15 @@ export default {
     },
     // 加载情侣信息
     async loadCoupleInfo() {
+      // 游客用户不加载情侣信息
+      if (isGuestUser()) {
+        console.log('游客用户，跳过加载情侣信息');
+        this.isBound = false;
+        this.partnerInfo = null;
+        this.bindTime = '';
+        return;
+      }
+      
       try {
         // 先检查本地
         const localCoupleInfo = getCoupleInfo();
@@ -375,9 +401,15 @@ export default {
               bindTime: response.data.bindTime || '',
               role: response.data.role || ''
             });
+          } else {
+            // 服务器返回未绑定，确保本地也是未绑定状态
+            this.isBound = false;
+            this.partnerInfo = null;
+            this.bindTime = '';
+            clearCoupleInfo();
           }
         } catch (e) {
-          console.error('查询绑定状态失败', e);
+          console.error('查询情侣状态失败', e);
           // 查询失败时使用本地状态
           this.isBound = checkIsBound();
           if (this.isBound) {
@@ -394,180 +426,142 @@ export default {
         }
       }
     },
-    // 跳转到编辑页面（个人资料）
-    goToEdit() {
-      this.showProfileSettings = true;
-      // 滚动到账号与安全区域
-      setTimeout(() => {
-        uni.pageScrollTo({
-          selector: '.account-section',
-          duration: 300
-        });
-      }, 100);
-    },
     
-    // 使用微信头像
-    selectWechatAvatar() {
-      this.userInfo.displayAvatar = this.userInfo.avatarUrl;
-      uni.showToast({
-        title: '已切换为微信头像',
-        icon: 'success',
-        duration: 1500
-      });
+    // 选择微信头像
+    async selectWechatAvatar() {
+      if (this.isLoading) return;
+      
+      this.isLoading = true;
+      try {
+        // 调用微信选择图片API
+        const [err, res] = await uni.chooseImage({
+          count: 1,
+          sizeType: ['compressed'],
+          sourceType: ['album', 'camera']
+        });
+        
+        if (err) {
+          console.error('选择图片失败', err);
+          uni.showToast({
+            title: '选择图片失败',
+            icon: 'none'
+          });
+          return;
+        }
+        
+        const tempFilePath = res.tempFilePaths[0];
+        if (!tempFilePath) {
+          uni.showToast({
+            title: '未选择图片',
+            icon: 'none'
+          });
+          return;
+        }
+        
+        // 上传头像
+        await this.uploadAvatar(tempFilePath);
+      } catch (error) {
+        console.error('选择微信头像失败', error);
+        uni.showToast({
+          title: '操作失败，请重试',
+          icon: 'none'
+        });
+      } finally {
+        this.isLoading = false;
+      }
     },
     
     // 上传自定义头像
-    uploadCustomAvatar() {
-      uni.chooseImage({
-        count: 1,
-        sizeType: ['compressed'],
-        sourceType: ['album', 'camera'],
-        success: async (res) => {
-          // 保存原始路径，不进行任何修改
-          const originalFilePath = res.tempFilePaths[0];
-          
-          if (!originalFilePath) {
-            console.error('❌ [头像选择] 未获取到图片路径');
-            uni.showToast({
-              title: '选择图片失败',
-              icon: 'none'
-            });
-            return;
-          }
-          
-          console.log('📸 [头像选择] 原始路径:', originalFilePath);
-          
-          let loadingShown = false;
-          try {
-            uni.showLoading({
-              title: '处理头像中...',
-              mask: true
-            });
-            loadingShown = true;
-            
-            // 先尝试压缩图片，使用原始路径
-            let imagePath = originalFilePath;
-            try {
-              console.log('🔄 [头像选择] 开始压缩图片，路径:', originalFilePath);
-              const compressedPath = await this.compressImage(originalFilePath);
-              
-              // 如果压缩成功且返回了新路径，使用压缩后的路径
-              if (compressedPath && compressedPath.trim() !== '' && compressedPath !== originalFilePath) {
-                console.log('✅ [头像选择] 压缩成功，新路径:', compressedPath);
-                imagePath = compressedPath;
-              } else {
-                console.log('ℹ️ [头像选择] 压缩后路径相同或无效，使用原图');
-                imagePath = originalFilePath;
-              }
-            } catch (compressError) {
-              console.warn('⚠️ [头像选择] 图片压缩失败，使用原图', compressError);
-              imagePath = originalFilePath;
-            }
-            
-            // 尝试上传到服务器
-            let avatarUrl = originalFilePath; // 默认使用本地图片
-            try {
-              console.log('📤 [头像选择] 开始上传，路径:', imagePath);
-              
-              const uploadResult = await http.upload({
-                url: config.API.USER.AVATAR_UPLOAD,
-                filePath: imagePath,
-                name: 'avatar',
-                formData: { type: 'avatar' }
-              });
-              
-              avatarUrl = uploadResult.url || uploadResult.data?.url || originalFilePath;
-              console.log('✅ [头像选择] 上传成功，服务器URL:', avatarUrl);
-              
-              this.userInfo.displayAvatar = avatarUrl;
-              
-              // 上传成功后，立即调用更新接口保存到数据库
-              try {
-                const currentNickName = this.useWechatNickname 
-                  ? this.userInfo.nickName 
-                  : (this.customNickname || this.userInfo.displayName || this.userInfo.nickName);
-                await updateUserProfile(currentNickName, avatarUrl);
-                console.log('✅ [头像选择] 头像已更新到后端数据库');
-              } catch (updateError) {
-                console.error('❌ [头像选择] 更新头像到后端数据库失败:', updateError);
-                // 即使更新失败，也更新本地存储
-              }
-              
-              // 更新本地存储
-              const loginInfo = uni.getStorageSync('login_info') || {};
-              if (loginInfo.userInfo) {
-                loginInfo.userInfo.displayAvatar = avatarUrl;
-                loginInfo.userInfo.avatarUrl = avatarUrl;
-                uni.setStorageSync('login_info', loginInfo);
-              }
-              
-              uni.showToast({
-                title: '头像上传成功',
-                icon: 'success',
-                duration: 1500
-              });
-              
-            } catch (uploadError) {
-              // 上传失败，使用本地图片
-              console.warn('⚠️ [头像选择] 头像上传失败，使用本地图片', uploadError);
-              this.userInfo.displayAvatar = originalFilePath;
-              
-              // 更新本地存储（即使上传失败，也保存本地图片路径）
-              const loginInfo = uni.getStorageSync('login_info') || {};
-              if (loginInfo.userInfo) {
-                loginInfo.userInfo.displayAvatar = originalFilePath;
-                uni.setStorageSync('login_info', loginInfo);
-              }
-              
-              uni.showToast({
-                title: '头像已选择（未上传）',
-                icon: 'none',
-                duration: 1500
-              });
-            }
-            
-          } catch (error) {
-            console.error('❌ [头像选择] 处理头像失败', error);
-            uni.showToast({
-              title: '头像处理失败',
-              icon: 'none'
-            });
-          } finally {
-            if (loadingShown) {
-              uni.hideLoading();
-            }
-          }
-        },
-        fail: (err) => {
-          if (err && err.errMsg && !err.errMsg.includes('cancel')) {
-            console.error('选择图片失败', err);
-            uni.showToast({
-              title: '选择图片失败',
-              icon: 'none'
-            });
-          }
+    async uploadCustomAvatar() {
+      if (this.isLoading) return;
+      
+      this.isLoading = true;
+      try {
+        // 调用微信选择图片API
+        const [err, res] = await uni.chooseImage({
+          count: 1,
+          sizeType: ['compressed'],
+          sourceType: ['album']
+        });
+        
+        if (err) {
+          console.error('选择图片失败', err);
+          uni.showToast({
+            title: '选择图片失败',
+            icon: 'none'
+          });
+          return;
         }
-      });
+        
+        const tempFilePath = res.tempFilePaths[0];
+        if (!tempFilePath) {
+          uni.showToast({
+            title: '未选择图片',
+            icon: 'none'
+          });
+          return;
+        }
+        
+        // 上传头像
+        await this.uploadAvatar(tempFilePath);
+      } catch (error) {
+        console.error('上传自定义头像失败', error);
+        uni.showToast({
+          title: '操作失败，请重试',
+          icon: 'none'
+        });
+      } finally {
+        this.isLoading = false;
+      }
     },
     
-    // 压缩图片
-    compressImage(tempFilePath) {
-      return new Promise((resolve, reject) => {
-        uni.compressImage({
-          src: tempFilePath,
-          quality: 80,
-          success: (res) => {
-            resolve(res.tempFilePath);
-          },
-          fail: (error) => {
-            console.warn('图片压缩失败，使用原图', error);
-            resolve(tempFilePath);
+    // 上传头像到服务器
+    async uploadAvatar(filePath) {
+      try {
+        // 上传文件
+        const [uploadErr, uploadRes] = await uni.uploadFile({
+          url: config.API.USER.UPLOAD_AVATAR,
+          filePath: filePath,
+          name: 'file',
+          header: {
+            'Authorization': http.getAuthToken()
           }
         });
-      });
+        
+        if (uploadErr) {
+          console.error('上传头像失败', uploadErr);
+          uni.showToast({
+            title: '上传失败',
+            icon: 'none'
+          });
+          return;
+        }
+        
+        const data = JSON.parse(uploadRes.data);
+        if (data.code === 200 && data.data) {
+          // 更新用户信息
+          this.userInfo.displayAvatar = data.data.url;
+          uni.showToast({
+            title: '上传成功',
+            icon: 'success'
+          });
+        } else {
+          console.error('上传头像失败', data);
+          uni.showToast({
+            title: data.message || '上传失败',
+            icon: 'none'
+          });
+        }
+      } catch (error) {
+        console.error('上传头像异常', error);
+        uni.showToast({
+          title: '上传异常',
+          icon: 'none'
+        });
+      }
     },
     
-    // 切换是否使用微信昵称
+    // 切换使用微信昵称
     toggleUseWechatNickname() {
       this.useWechatNickname = !this.useWechatNickname;
       if (this.useWechatNickname) {
@@ -577,66 +571,69 @@ export default {
     
     // 保存个人资料
     async saveProfile() {
-      // 验证自定义昵称
+      if (this.isLoading) return;
+      
+      // 验证输入
       if (!this.useWechatNickname && !this.customNickname.trim()) {
         uni.showToast({
-          title: '请输入自定义昵称',
+          title: '请输入昵称',
           icon: 'none'
         });
         return;
       }
       
       this.isLoading = true;
-      
       try {
-        // 构建最终用户信息
-        const displayName = this.useWechatNickname 
-          ? this.userInfo.nickName 
-          : this.customNickname.trim();
-          
-        const displayAvatar = this.userInfo.displayAvatar || this.userInfo.avatarUrl;
-        
-        // 调用后端API更新用户资料
-        try {
-          await updateUserProfile(displayName, displayAvatar);
-          console.log('✅ 用户资料已更新到后端');
-        } catch (apiError) {
-          console.error('❌ 更新用户资料到后端失败:', apiError);
-          // 即使后端更新失败，也更新本地存储（降级处理）
-          uni.showToast({
-            title: '后端更新失败，已保存到本地',
-            icon: 'none',
-            duration: 2000
-          });
+        // 准备要更新的数据
+        const updateData = {};
+        if (this.useWechatNickname) {
+          // 使用微信昵称，清空自定义昵称
+          updateData.displayName = this.userInfo.nickName;
+        } else {
+          // 使用自定义昵称
+          updateData.displayName = this.customNickname.trim();
         }
         
-        // 更新本地存储
-        const loginInfo = uni.getStorageSync('login_info') || {};
-        loginInfo.userInfo = {
-          ...loginInfo.userInfo,
-          displayName,
-          displayAvatar,
-          nickName: displayName, // 同时更新nickName字段，确保后端和本地一致
-          avatarUrl: displayAvatar, // 同时更新avatarUrl字段
-          originalNickName: this.userInfo.nickName,
-          originalAvatarUrl: this.userInfo.avatarUrl
-        };
+        // 如果头像已更改，也更新头像
+        if (this.userInfo.displayAvatar && this.userInfo.displayAvatar !== this.userInfo.avatarUrl) {
+          updateData.displayAvatar = this.userInfo.displayAvatar;
+        }
         
-        uni.setStorageSync('login_info', loginInfo);
+        // 调用API更新用户资料
+        const response = await updateUserProfile(updateData);
         
-        // 更新当前用户信息
-        this.userInfo = { ...loginInfo.userInfo };
-        
-        uni.showToast({
-          title: '保存成功',
-          icon: 'success',
-          duration: 1500
-        });
-        
+        if (response && response.code === 200) {
+          // 更新本地存储的用户信息
+          const loginInfo = uni.getStorageSync('login_info');
+          if (loginInfo && loginInfo.userInfo) {
+            loginInfo.userInfo.displayName = updateData.displayName;
+            if (updateData.displayAvatar) {
+              loginInfo.userInfo.displayAvatar = updateData.displayAvatar;
+            }
+            uni.setStorageSync('login_info', loginInfo);
+          }
+          
+          // 更新页面数据
+          this.userInfo.displayName = updateData.displayName;
+          if (updateData.displayAvatar) {
+            this.userInfo.displayAvatar = updateData.displayAvatar;
+          }
+          
+          uni.showToast({
+            title: '保存成功',
+            icon: 'success'
+          });
+        } else {
+          console.error('保存个人资料失败', response);
+          uni.showToast({
+            title: response?.message || '保存失败',
+            icon: 'none'
+          });
+        }
       } catch (error) {
-        console.error('保存失败', error);
+        console.error('保存个人资料异常', error);
         uni.showToast({
-          title: '保存失败，请重试',
+          title: '保存异常，请重试',
           icon: 'none'
         });
       } finally {
@@ -645,53 +642,64 @@ export default {
     },
     
     // 处理设置项点击
-    handleSetting(key) {
-      const settingMap = {
-        notification: '通知设置',
-        privacy: '隐私设置',
-        sync: '云同步'
-      };
-      uni.showToast({
-        title: settingMap[key] + '（待开发）',
-        icon: 'none'
-      });
+    handleSetting(type) {
+      switch (type) {
+        case 'notification':
+          console.log('跳转到通知设置');
+          break;
+        case 'privacy':
+          console.log('跳转到隐私设置');
+          break;
+        case 'sync':
+          console.log('跳转到云同步');
+          break;
+        default:
+          console.warn('未知设置项:', type);
+      }
     },
     
-    // 解绑关系
+    // 解除关系
     async handleUnbind() {
       uni.showModal({
-        title: '确认解绑',
-        content: '解除关系后，双方将无法共享数据。确定要解除吗？',
+        title: '确认解除关系',
+        content: '解除关系后，你们将不再是情侣关系，相关数据也会被删除。是否确认解除？',
+        confirmColor: '#FF6B6B',
         success: async (res) => {
           if (res.confirm) {
             try {
-              uni.showLoading({ title: '解绑中...' });
-              await unbindCouple();
-              uni.hideLoading();
-              
-              // 清除本地信息
-              clearCoupleInfo();
-              
-              uni.showToast({
-                title: '已解除关系', 
-                icon: 'success' 
-              });
-              
-              // 更新页面状态
-              this.isBound = false;
-              this.partnerInfo = null;
-              this.bindTime = '';
-              
-              // 延迟刷新页面
-              setTimeout(() => {
-                this.loadCoupleInfo();
-              }, 1500);
+              const response = await unbindCouple();
+              if (response && response.code === 200) {
+                // 清除本地情侣信息
+                clearCoupleInfo();
+                
+                // 更新页面状态
+                this.isBound = false;
+                this.partnerInfo = null;
+                this.bindTime = '';
+                
+                uni.showToast({
+                  title: '解除成功',
+                  icon: 'success'
+                });
+                
+                // 延迟跳转到首页
+                setTimeout(() => {
+                  uni.switchTab({
+                    url: '/pages/index/index'
+                  });
+                }, 1500);
+              } else {
+                console.error('解除关系失败', response);
+                uni.showToast({
+                  title: response?.message || '解除失败',
+                  icon: 'none'
+                });
+              }
             } catch (error) {
-              uni.hideLoading();
-              console.error('解绑失败', error);
-              uni.showToast({ 
-                title: error.message || '解绑失败，请重试', 
-                icon: 'none' 
+              console.error('解除关系异常', error);
+              uni.showToast({
+                title: '操作异常，请重试',
+                icon: 'none'
               });
             }
           }
@@ -705,11 +713,13 @@ export default {
 <style lang="scss" scoped>
 .profile-page {
   min-height: 100vh;
-  background: #FFFAF4;
-  padding-bottom: 120rpx;
+  background-color: #FFFAF4;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
+  position: relative;
+  overflow-x: hidden;
 }
 
-/* 自定义导航栏样式 */
+/* 自定义导航栏 */
 .custom-navbar {
   position: fixed;
   top: 0;
@@ -749,130 +759,131 @@ export default {
 }
 
 .navbar-title {
-  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
+  gap: 12rpx;
 }
 
 .title-text {
-  font-size: 32rpx;
+  font-size: 36rpx;
   font-weight: 500;
   color: #4A4A4A;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .navbar-right {
-  width: 80rpx;
+  width: 60rpx;
+  height: 60rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+}
+
+.navbar-right:active {
+  opacity: 0.7;
 }
 
 /* 内容区域 */
 .content {
   padding: 30rpx;
+  padding-top: calc(10rpx + var(--status-bar-height, 0px) + 54px);
 }
 
 /* 用户信息卡片 */
 .user-info-card {
-  background: #ffffff;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
-  gap: 20rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 20rpx 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
 }
 
 .user-avatar-large {
-  width: 128rpx;
-  height: 128rpx;
-  border-radius: 64rpx;
-  border: 4rpx solid #e5e5e5;
-  flex-shrink: 0;
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
+  border: 6rpx solid #ffffff;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.1);
+  margin-right: 30rpx;
 }
 
 .user-info-text {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8rpx;
+  gap: 12rpx;
 }
 
 .user-name {
-  font-size: 32rpx; 
+  font-size: 36rpx;
   font-weight: 600;
-  color: #4A4A4A;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  color: #000000;
 }
 
 .user-days {
-  font-size: 24rpx;
-  color: #000000;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 26rpx;
+  color: #666666;
 }
 
 .edit-icon {
-  width: 48rpx;
-  height: 48rpx;
+  width: 60rpx;
+  height: 60rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32rpx;
-  color: #999;
+  background: #f8f8f8;
+  border-radius: 30rpx;
+  font-size: 28rpx;
   cursor: pointer;
 }
 
 .edit-icon:active {
-  opacity: 0.6;
+  background: #f0f0f0;
 }
 
 /* 情侣信息卡片 */
 .couple-info-card {
   background: #ffffff;
-  border-radius: 16rpx;
+  border-radius: 20rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
-}
-
-.couple-info-card .section-title {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #6B5B95;
-  margin-bottom: 24rpx;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
 }
 
 .couple-avatars-section {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 24rpx;
+  justify-content: space-around;
+  margin-top: 20rpx;
 }
 
 .couple-avatar-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12rpx;
+  gap: 16rpx;
 }
 
 .couple-avatar {
-  width: 120rpx;
-  height: 120rpx;
-  border-radius: 60rpx;
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50rpx;
   border: 4rpx solid #ffffff;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.1);
 }
 
 .couple-name {
   font-size: 24rpx;
   color: #000000;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  max-width: 120rpx;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .heart-connector {
@@ -882,19 +893,23 @@ export default {
 }
 
 .heart-icon {
-  font-size: 36rpx;
+  font-size: 48rpx;
+  color: #FF6B6B;
 }
 
-/* 成就展示 */
+/* 成就区域 */
 .achievements-section {
-  padding-bottom: 20rpx;
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
 }
 
 .achievements-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 24rpx;
-  margin-top: 20rpx;
+  gap: 20rpx;
 }
 
 .achievement-item {
@@ -905,55 +920,54 @@ export default {
 }
 
 .achievement-icon {
-  width: 96rpx;
-  height: 96rpx;
-  border-radius: 48rpx;
-  display: flex; 
-  align-items: center; 
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
   justify-content: center;
-}
-
-.achievement-emoji {
-  font-size: 48rpx;
+  font-size: 36rpx;
 }
 
 .achievement-name {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: #000000;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  text-align: center;
 }
 
-/* 设置列表 */
+/* 设置区域 */
 .settings-section {
-  padding-bottom: 0;
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
 }
 
 .settings-list {
-  margin-top: 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
 }
 
 .setting-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24rpx 0;
-  border-bottom: 1rpx solid #f0f0f0;
+  padding: 20rpx;
+  background: #f8f8f8;
+  border-radius: 16rpx;
   cursor: pointer;
 }
 
-.setting-item:last-child {
-  border-bottom: none; 
-}
-
 .setting-item:active {
-  background-color: rgba(0, 0, 0, 0.02);
+  background: #f0f0f0;
 }
 
 .setting-left {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  flex: 1;
+  gap: 20rpx;
 }
 
 .setting-icon {
@@ -963,14 +977,12 @@ export default {
 .setting-text {
   font-size: 28rpx;
   color: #000000;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-weight: 500;
 }
 
 .setting-arrow {
-  font-size: 36rpx; 
-  color: #999;
-  font-weight: 300;
-  flex-shrink: 0;
+  font-size: 28rpx;
+  color: #999999;
   transition: transform 0.3s ease;
 }
 
@@ -982,42 +994,48 @@ export default {
 .unbind-section {
   margin-top: 30rpx;
   padding-top: 30rpx;
-  border-top: 1rpx solid #f0f0f0;
+  border-top: 2rpx solid #f0f0f0;
 }
 
 .unbind-content {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12rpx;
-  padding: 24rpx 0;
+  gap: 16rpx;
+  padding: 20rpx;
+  background: #FFF0F0;
+  border-radius: 16rpx;
   cursor: pointer;
-  transition: opacity 0.2s ease;
 }
 
 .unbind-content:active {
-  opacity: 0.6;
+  background: #ffe0e0;
 }
 
 .unbind-icon {
-  font-size: 28rpx;
+  font-size: 32rpx;
+  color: #FF6B6B;
 }
 
 .unbind-text {
-  font-size: 26rpx;
-  color: #999;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 28rpx;
+  color: #FF6B6B;
+  font-weight: 500;
 }
 
+/* 账号与安全区域 */
 .account-section {
-  padding-bottom: 0;
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
 }
 
-/* 个人资料设置内容 */
 .profile-settings-content {
   margin-top: 20rpx;
   padding-top: 20rpx;
-  border-top: 1rpx solid #f0f0f0;
+  border-top: 2rpx solid #f0f0f0;
 }
 
 .profile-setting-block {
@@ -1222,5 +1240,4 @@ export default {
   color: #000000;
   margin-bottom: 20rpx;
 }
-
 </style>

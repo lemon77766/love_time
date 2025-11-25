@@ -651,17 +651,12 @@ function upload(options) {
   common_vendor.index.__f__("log", "at utils/http.js:850", "📁 [上传] 原始文件路径:", originalFilePath);
   let validFilePath = originalFilePath;
   if (validFilePath && typeof validFilePath === "string") {
-    if (validFilePath.startsWith("http://") || validFilePath.startsWith("https://")) {
-      if (validFilePath.includes("://tmp/") || validFilePath.includes("://tmp_")) {
-        const pathMatch = validFilePath.match(/:\/\/tmp[\/_](.+)$/);
-        if (pathMatch) {
-          pathMatch[1];
-          common_vendor.index.__f__("warn", "at utils/http.js:868", "⚠️ [上传] 检测到临时文件URL格式，尝试直接使用:", validFilePath);
-        }
-      } else {
-        common_vendor.index.__f__("warn", "at utils/http.js:873", "⚠️ [上传] 文件路径已经是URL格式，跳过上传:", validFilePath);
-        return Promise.reject(new Error("文件路径已经是URL格式，无需上传"));
-      }
+    if (validFilePath.startsWith("http://tmp/") || validFilePath.startsWith("https://tmp/")) {
+      common_vendor.index.__f__("log", "at utils/http.js:860", "ℹ️ [上传] 检测到微信小程序临时文件路径，uni.uploadFile 将直接处理");
+      validFilePath = originalFilePath;
+    } else if (validFilePath.startsWith("http://") || validFilePath.startsWith("https://")) {
+      common_vendor.index.__f__("warn", "at utils/http.js:866", "⚠️ [上传] 文件路径已经是URL格式，跳过上传:", validFilePath);
+      return Promise.reject(new Error("文件路径已经是URL格式，无需上传"));
     }
   }
   if (!options.url.startsWith("http")) {
@@ -676,42 +671,47 @@ function upload(options) {
     }
     options.header["Authorization"] = `Bearer ${cleanToken}`;
   } else {
-    common_vendor.index.__f__("warn", "at utils/http.js:897", "⚠️ 上传请求未携带Authorization头，可能导致401错误");
+    common_vendor.index.__f__("warn", "at utils/http.js:889", "⚠️ 上传请求未携带Authorization头，可能导致401错误");
   }
   const uploadOptions = {
     ...options,
     filePath: validFilePath
   };
   return new Promise((resolve, reject) => {
-    common_vendor.index.__f__("log", "at utils/http.js:907", "📤 [上传] 开始上传文件，路径:", validFilePath);
+    common_vendor.index.__f__("log", "at utils/http.js:899", "📤 [上传] 开始上传文件，路径:", validFilePath);
     common_vendor.index.uploadFile({
       ...uploadOptions,
       success: (uploadRes) => {
         try {
           const result = JSON.parse(uploadRes.data);
           if (result.success) {
-            common_vendor.index.__f__("log", "at utils/http.js:914", "✅ [上传] 文件上传成功");
+            common_vendor.index.__f__("log", "at utils/http.js:906", "✅ [上传] 文件上传成功");
             const normalizedData = result.data !== void 0 && result.data !== null ? result.data : result;
             resolve(normalizedData);
           } else {
             const errorMsg = result.message || "上传失败";
-            common_vendor.index.__f__("error", "at utils/http.js:921", "❌ [上传] 服务器返回失败:", errorMsg);
+            common_vendor.index.__f__("error", "at utils/http.js:913", "❌ [上传] 服务器返回失败:", errorMsg);
             reject(new Error(errorMsg));
           }
         } catch (e) {
-          common_vendor.index.__f__("error", "at utils/http.js:925", "❌ [上传] 解析响应失败:", e);
+          common_vendor.index.__f__("error", "at utils/http.js:917", "❌ [上传] 解析响应失败:", e);
           reject(new Error("解析上传响应失败"));
         }
       },
       fail: (error) => {
-        common_vendor.index.__f__("error", "at utils/http.js:930", "❌ [上传] 上传失败:", error);
-        common_vendor.index.__f__("error", "at utils/http.js:931", "❌ [上传] 原始路径:", originalFilePath);
-        common_vendor.index.__f__("error", "at utils/http.js:932", "❌ [上传] 使用路径:", validFilePath);
+        common_vendor.index.__f__("error", "at utils/http.js:922", "❌ [上传] 上传失败:", error);
+        common_vendor.index.__f__("error", "at utils/http.js:923", "❌ [上传] 原始路径:", originalFilePath);
+        common_vendor.index.__f__("error", "at utils/http.js:924", "❌ [上传] 使用路径:", validFilePath);
         if (error.errMsg && (error.errMsg.includes("未找到") || error.errMsg.includes("file not found") || error.errMsg.includes("no such file") || error.errMsg.includes("file doesn't exist"))) {
-          if (validFilePath !== originalFilePath && originalFilePath) {
-            common_vendor.index.__f__("warn", "at utils/http.js:938", "⚠️ [上传] 转换后的路径无效，尝试使用原始路径:", originalFilePath);
+          if (originalFilePath && (originalFilePath.startsWith("http://tmp/") || originalFilePath.startsWith("https://tmp/"))) {
+            common_vendor.index.__f__("error", "at utils/http.js:930", "❌ [上传] 微信小程序临时文件路径可能已过期，请重新选择图片");
+            reject(new Error("图片选择已过期，请重新选择图片"));
+            return;
           }
-          common_vendor.index.__f__("error", "at utils/http.js:941", "❌ [上传] 文件路径无效，无法找到文件");
+          if (validFilePath !== originalFilePath && originalFilePath) {
+            common_vendor.index.__f__("warn", "at utils/http.js:937", "⚠️ [上传] 转换后的路径无效，尝试使用原始路径:", originalFilePath);
+          }
+          common_vendor.index.__f__("error", "at utils/http.js:940", "❌ [上传] 文件路径无效，无法找到文件");
           reject(new Error(`未找到上传的文件: ${validFilePath} (原始路径: ${originalFilePath})`));
         } else {
           handleRequestError(error, options).then(resolve).catch(reject);

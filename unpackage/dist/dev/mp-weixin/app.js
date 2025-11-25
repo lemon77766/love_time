@@ -2,8 +2,8 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 const common_vendor = require("./common/vendor.js");
 if (!Math) {
-  "./pages/login/index.js";
   "./pages/index/index.js";
+  "./pages/login/index.js";
   "./pages/we/index.js";
   "./pages/we/profile.js";
   "./pages/trajectory/index.js";
@@ -60,39 +60,41 @@ if (!Math) {
 const _sfc_main = {
   onLaunch: function() {
     common_vendor.index.__f__("log", "at App.vue:81", "App Launch");
-    this.checkLoginStatus();
+    this.setGuestStatus();
+    common_vendor.index.reLaunch({
+      url: "/pages/index/index"
+    });
   },
   onShow: function() {
-    common_vendor.index.__f__("log", "at App.vue:87", "App Show");
+    common_vendor.index.__f__("log", "at App.vue:92", "App Show");
   },
   onHide: function() {
-    common_vendor.index.__f__("log", "at App.vue:90", "App Hide");
+    common_vendor.index.__f__("log", "at App.vue:95", "App Hide");
   },
   methods: {
-    // 检查登录状态
-    checkLoginStatus() {
-      var _a;
+    // 设置游客状态
+    setGuestStatus() {
       try {
         const loginInfo = common_vendor.index.getStorageSync("login_info");
-        const pages = getCurrentPages();
-        const currentPage = pages[pages.length - 1];
-        const currentRoute = currentPage ? currentPage.route : "";
-        const whiteList = ["pages/login/index"];
-        const hasToken = loginInfo && (loginInfo.token && loginInfo.token.trim() || ((_a = loginInfo.data) == null ? void 0 : _a.token) && loginInfo.data.token.trim() || loginInfo.accessToken && loginInfo.accessToken.trim());
-        if (loginInfo && loginInfo.isLoggedIn && !hasToken) {
-          common_vendor.index.__f__("warn", "at App.vue:113", "⚠️ 检测到无效的登录信息（缺少token），正在清除...");
-          common_vendor.index.removeStorageSync("login_info");
-          common_vendor.index.__f__("warn", "at App.vue:115", "✅ 已清除无效的登录信息");
-        }
-        if (!loginInfo || !loginInfo.isLoggedIn || !hasToken) {
-          if (!whiteList.includes(currentRoute)) {
-            common_vendor.index.reLaunch({
-              url: "/pages/login/index"
-            });
-          }
+        if (!loginInfo || !loginInfo.isLoggedIn) {
+          const guestUserInfo = {
+            nickName: "游客用户",
+            avatarUrl: "/static/zhuye/smile.png",
+            displayName: "游客用户",
+            displayAvatar: "/static/zhuye/smile.png",
+            isGuest: true
+          };
+          const guestLoginInfo = {
+            isLoggedIn: true,
+            userInfo: guestUserInfo,
+            isGuest: true,
+            loginTime: (/* @__PURE__ */ new Date()).toISOString()
+          };
+          common_vendor.index.setStorageSync("login_info", guestLoginInfo);
+          common_vendor.index.__f__("log", "at App.vue:122", "已设置游客状态");
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at App.vue:127", "检查登录状态失败", e);
+        common_vendor.index.__f__("error", "at App.vue:125", "设置游客状态失败", e);
       }
     }
   }

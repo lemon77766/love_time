@@ -103,8 +103,20 @@ const _sfc_main = {
   },
   onLoad() {
     this.checkLoginStatus();
+    this.loadUserInfo();
   },
   methods: {
+    // 加载用户信息
+    loadUserInfo() {
+      try {
+        const loginInfo = common_vendor.index.getStorageSync("login_info");
+        if (loginInfo && loginInfo.userInfo) {
+          this.userInfo = { ...loginInfo.userInfo };
+        }
+      } catch (e) {
+        common_vendor.index.__f__("error", "at pages/login/index.vue:236", "加载用户信息失败", e);
+      }
+    },
     // 切换隐私协议同意状态
     togglePrivacyAgreement() {
       this.agreedToPrivacy = !this.agreedToPrivacy;
@@ -125,15 +137,21 @@ const _sfc_main = {
     closePrivacyPolicyModal() {
       this.showPrivacyPolicyModal = false;
     },
+    // 浏览功能
+    browseFeatures() {
+      common_vendor.index.reLaunch({
+        url: "/pages/index/index"
+      });
+    },
     // 检查登录状态
     checkLoginStatus() {
       var _a;
       try {
         const loginInfo = common_vendor.index.getStorageSync("login_info");
         const hasToken = loginInfo && (loginInfo.token && loginInfo.token.trim() || ((_a = loginInfo.data) == null ? void 0 : _a.token) && loginInfo.data.token.trim() || loginInfo.accessToken && loginInfo.accessToken.trim());
-        if (loginInfo && loginInfo.isLoggedIn && hasToken) {
-          common_vendor.index.__f__("log", "at pages/login/index.vue:253", "检测到本地登录信息，自动跳转到首页");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:254", "⚠️ 提示：如果token已过期，将在后续请求时自动处理");
+        if (loginInfo && loginInfo.isLoggedIn && hasToken && !loginInfo.isGuest) {
+          common_vendor.index.__f__("log", "at pages/login/index.vue:287", "检测到本地登录信息，自动跳转到首页");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:288", "⚠️ 提示：如果token已过期，将在后续请求时自动处理");
           this.isLoggedIn = true;
           this.userInfo = loginInfo.userInfo || {};
           setTimeout(() => {
@@ -142,14 +160,14 @@ const _sfc_main = {
             });
           }, 300);
         } else if (loginInfo && loginInfo.isLoggedIn && !hasToken) {
-          common_vendor.index.__f__("warn", "at pages/login/index.vue:266", "⚠️ 检测到无效的登录信息（缺少token），正在清除...");
+          common_vendor.index.__f__("warn", "at pages/login/index.vue:300", "⚠️ 检测到无效的登录信息（缺少token），正在清除...");
           common_vendor.index.removeStorageSync("login_info");
           this.isLoggedIn = false;
           this.userInfo = {};
-          common_vendor.index.__f__("warn", "at pages/login/index.vue:270", "✅ 已清除无效的登录信息，请重新登录");
+          common_vendor.index.__f__("warn", "at pages/login/index.vue:304", "✅ 已清除无效的登录信息，请重新登录");
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:273", "检查登录状态失败", e);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:307", "检查登录状态失败", e);
       }
     },
     /**
@@ -190,7 +208,7 @@ const _sfc_main = {
           this.enterApp();
         }, 1500);
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:325", "游客登录失败", error);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:359", "游客登录失败", error);
         common_vendor.index.showToast({
           title: "登录失败，请重试",
           icon: "none"
@@ -207,7 +225,6 @@ const _sfc_main = {
      * 5. 直接跳转到首页
      */
     async handleWxLogin() {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s;
       if (!this.agreedToPrivacy) {
         common_vendor.index.showToast({
           title: "请先阅读并同意用户协议和隐私政策",
@@ -226,178 +243,65 @@ const _sfc_main = {
         try {
           loginResult = await utils_http.http.post(utils_config.config.API.LOGIN.WECHAT, {
             code,
-            nickName: userProfile.userInfo.nickName,
-            avatarUrl: userProfile.userInfo.avatarUrl
+            userInfo: userProfile.userInfo
           });
         } catch (apiError) {
-          common_vendor.index.__f__("warn", "at pages/login/index.vue:372", "后端API调用失败，使用模拟登录", apiError);
-          loginResult = {
-            token: "mock_token_" + Date.now(),
-            openid: "mock_openid_" + Date.now(),
-            session_key: "mock_session_" + Date.now(),
-            success: true
+          common_vendor.index.__f__("error", "at pages/login/index.vue:405", "调用登录API失败", apiError);
+          loginResult = this.createMockLoginResult(code, userProfile.userInfo);
+        }
+        if (loginResult && (loginResult.code === 200 || loginResult.success)) {
+          const userData = loginResult.data || loginResult.result || {};
+          const userInfo = {
+            nickName: userProfile.userInfo.nickName,
+            avatarUrl: userProfile.userInfo.avatarUrl,
+            displayName: userData.displayName || userProfile.userInfo.nickName,
+            displayAvatar: userData.displayAvatar || userProfile.userInfo.avatarUrl,
+            ...userData
           };
+          const loginInfo = {
+            isLoggedIn: true,
+            userInfo,
+            token: userData.token || userData.accessToken || "",
+            loginTime: (/* @__PURE__ */ new Date()).toISOString(),
+            isGuest: false
+          };
+          common_vendor.index.setStorageSync("login_info", loginInfo);
           common_vendor.index.showToast({
-            title: "后端服务未就绪，使用模拟登录",
+            title: "登录成功",
+            icon: "success",
+            duration: 1500
+          });
+          setTimeout(() => {
+            this.enterApp();
+          }, 1500);
+        } else {
+          common_vendor.index.__f__("error", "at pages/login/index.vue:448", "登录失败", loginResult);
+          common_vendor.index.showToast({
+            title: (loginResult == null ? void 0 : loginResult.message) || "登录失败，请重试",
             icon: "none",
             duration: 2e3
           });
         }
-        let responseData = loginResult;
-        if (loginResult.data && typeof loginResult.data === "object") {
-          responseData = loginResult.data;
-        }
-        const normalizeTokenCandidate = (candidate) => {
-          if (typeof candidate !== "string") {
-            return "";
-          }
-          const trimmed = candidate.trim();
-          if (!trimmed) {
-            return "";
-          }
-          if (/^\d+$/.test(trimmed) && trimmed.length <= 6) {
-            return "";
-          }
-          return trimmed;
-        };
-        const tokenCandidates = [];
-        const pushTokenCandidate = (candidate) => {
-          const normalized = normalizeTokenCandidate(candidate);
-          if (normalized) {
-            tokenCandidates.push(normalized);
-          }
-        };
-        if (responseData && typeof responseData === "object") {
-          pushTokenCandidate(responseData.token);
-          pushTokenCandidate((_a = responseData.data) == null ? void 0 : _a.token);
-        }
-        pushTokenCandidate(loginResult.token);
-        pushTokenCandidate((_b = loginResult.data) == null ? void 0 : _b.token);
-        if (typeof loginResult.data === "string") {
-          pushTokenCandidate(loginResult.data);
-        }
-        if (responseData && typeof responseData === "string") {
-          pushTokenCandidate(responseData);
-        }
-        pushTokenCandidate(loginResult.code);
-        if (responseData && typeof responseData === "object") {
-          pushTokenCandidate(responseData.code);
-        }
-        const token = tokenCandidates.length > 0 ? tokenCandidates[0] : "";
-        const openid = responseData.openid || ((_c = responseData.user) == null ? void 0 : _c.openid) || loginResult.openid || ((_d = loginResult.data) == null ? void 0 : _d.openid) || ((_f = (_e = loginResult.data) == null ? void 0 : _e.user) == null ? void 0 : _f.openid) || responseData.data && responseData.data.openid || "";
-        const sessionKey = responseData.session_key || responseData.sessionKey || ((_g = responseData.user) == null ? void 0 : _g.session_key) || ((_h = responseData.user) == null ? void 0 : _h.sessionKey) || loginResult.session_key || loginResult.sessionKey || ((_i = loginResult.data) == null ? void 0 : _i.session_key) || ((_j = loginResult.data) == null ? void 0 : _j.sessionKey) || ((_l = (_k = loginResult.data) == null ? void 0 : _k.user) == null ? void 0 : _l.session_key) || ((_n = (_m = loginResult.data) == null ? void 0 : _m.user) == null ? void 0 : _n.sessionKey) || responseData.data && responseData.data.session_key || responseData.data && responseData.data.sessionKey || void 0;
-        const isSuccess = loginResult.success !== false;
-        const loginInfo = {
-          isLoggedIn: true,
-          token,
-          openid,
-          sessionKey,
-          userInfo: {
-            nickName: userProfile.userInfo.nickName,
-            avatarUrl: userProfile.userInfo.avatarUrl,
-            displayName: userProfile.userInfo.nickName,
-            displayAvatar: userProfile.userInfo.avatarUrl
-          },
-          loginTime: (/* @__PURE__ */ new Date()).toISOString(),
-          isMock: !isSuccess
-          // 标记是否为模拟登录
-        };
-        if (true) {
-          common_vendor.index.__f__("log", "at pages/login/index.vue:490", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:491", "🔍 [登录响应分析]");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:492", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:493", "📦 原始响应数据:", loginResult);
-          common_vendor.index.__f__("log", "at pages/login/index.vue:494", "📦 响应数据类型:", typeof loginResult);
-          common_vendor.index.__f__("log", "at pages/login/index.vue:495", "📦 responseData:", responseData);
-          common_vendor.index.__f__("log", "at pages/login/index.vue:496", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:497", "🔑 Token提取结果:");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:498", "   - responseData.token:", responseData.token || "未找到");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:499", "   - loginResult.token:", loginResult.token || "未找到");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:500", "   - loginResult.data?.token:", ((_o = loginResult.data) == null ? void 0 : _o.token) || "未找到");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:501", "   - 最终提取的Token:", token ? `✅ 已找到，长度: ${token.length}` : "❌ 未找到");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:502", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:503", "👤 OpenID提取结果:");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:504", "   - responseData.openid:", responseData.openid || "未找到");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:505", "   - responseData.user?.openid:", ((_p = responseData.user) == null ? void 0 : _p.openid) || "未找到");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:506", "   - loginResult.openid:", loginResult.openid || "未找到");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:507", "   - loginResult.data?.openid:", ((_q = loginResult.data) == null ? void 0 : _q.openid) || "未找到");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:508", "   - loginResult.data?.user?.openid:", ((_s = (_r = loginResult.data) == null ? void 0 : _r.user) == null ? void 0 : _s.openid) || "未找到");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:509", "   - 最终提取的OpenID:", openid ? `✅ 已找到: ${openid}` : "❌ 未找到");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:510", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:511", "🔐 SessionKey提取结果:");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:512", "   - 最终提取的SessionKey:", sessionKey ? `✅ 已找到，长度: ${sessionKey.length}` : "ℹ️ 未提供（这是正常的）");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:513", "   - 💡 说明: session_key 主要用于后端解密敏感数据，前端通常不需要");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:514", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          if (!token) {
-            common_vendor.index.__f__("error", "at pages/login/index.vue:516", "❌ Token提取失败！");
-            common_vendor.index.__f__("error", "at pages/login/index.vue:517", "📋 完整响应结构:", JSON.stringify(loginResult, null, 2));
-            common_vendor.index.__f__("error", "at pages/login/index.vue:518", "💡 提示: 请检查后端返回的数据结构是否符合预期");
-          }
-          if (!openid) {
-            common_vendor.index.__f__("error", "at pages/login/index.vue:521", "❌ OpenID提取失败！");
-            common_vendor.index.__f__("error", "at pages/login/index.vue:522", "💡 提示: OpenID 是必需的，请检查后端是否返回了 openid");
-          }
-        }
-        common_vendor.index.setStorageSync("login_info", loginInfo);
-        this.userInfo = loginInfo.userInfo;
-        this.isLoggedIn = true;
-        const savedLoginInfo = common_vendor.index.getStorageSync("login_info");
-        if (true) {
-          common_vendor.index.__f__("log", "at pages/login/index.vue:533", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:534", "💾 [存储验证]");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:535", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:536", "📦 保存后的登录信息:", savedLoginInfo);
-          common_vendor.index.__f__("log", "at pages/login/index.vue:537", "🔑 保存后的Token:", (savedLoginInfo == null ? void 0 : savedLoginInfo.token) ? `✅ 已保存，长度: ${savedLoginInfo.token.length}` : "❌ 未保存");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:538", "👤 保存后的OpenID:", (savedLoginInfo == null ? void 0 : savedLoginInfo.openid) ? `✅ 已保存: ${savedLoginInfo.openid}` : "❌ 未保存");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:539", "🔐 保存后的SessionKey:", (savedLoginInfo == null ? void 0 : savedLoginInfo.sessionKey) ? `✅ 已保存，长度: ${savedLoginInfo.sessionKey.length}` : "ℹ️ 未保存（这是正常的，前端通常不需要）");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:540", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        }
-        if (!token || !token.trim()) {
-          common_vendor.index.__f__("error", "at pages/login/index.vue:545", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("error", "at pages/login/index.vue:546", "⚠️ [警告] Token为空！");
-          common_vendor.index.__f__("error", "at pages/login/index.vue:547", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.__f__("error", "at pages/login/index.vue:548", "🔍 可能的原因:");
-          common_vendor.index.__f__("error", "at pages/login/index.vue:549", "   1. 后端返回的数据结构中不包含token字段");
-          common_vendor.index.__f__("error", "at pages/login/index.vue:550", "   2. 后端返回的token字段名为空字符串");
-          common_vendor.index.__f__("error", "at pages/login/index.vue:551", "   3. 后端返回的数据结构不符合预期");
-          common_vendor.index.__f__("error", "at pages/login/index.vue:552", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-          common_vendor.index.showModal({
-            title: "登录警告",
-            content: "未获取到有效的登录凭证，部分功能可能无法使用。请检查后端服务是否正常。",
-            showCancel: false
-          });
-        }
+      } catch (error) {
+        common_vendor.index.__f__("error", "at pages/login/index.vue:456", "微信登录失败", error);
         common_vendor.index.showToast({
-          title: "登录成功",
-          icon: "success",
-          duration: 1500
-        });
-        setTimeout(() => {
-          this.enterApp();
-        }, 1500);
-      } catch (e) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:573", "微信登录失败", e);
-        common_vendor.index.showToast({
-          title: e.errMsg || "登录失败，请重试",
-          icon: "none"
+          title: "登录异常，请重试",
+          icon: "none",
+          duration: 2e3
         });
       } finally {
         this.isLoading = false;
       }
     },
-    /**
-     * 调用微信 wx.login 接口获取临时登录凭证 code
-     * @returns {Promise<string>} 返回 code字符串
-     */
+    // 获取微信登录code
     getWxLoginCode() {
       return new Promise((resolve, reject) => {
-        common_vendor.index.login({
-          provider: "weixin",
+        common_vendor.wx$1.login({
           success: (res) => {
             if (res.code) {
               resolve(res.code);
             } else {
-              reject(new Error("获取code失败"));
+              reject(new Error("获取微信登录code失败"));
             }
           },
           fail: (err) => {
@@ -406,38 +310,23 @@ const _sfc_main = {
         });
       });
     },
-    /**
-     * 获取用户信息（微信小程序）
-     * @returns {Promise<Object>} 返回用户信息对象
-     */
-    getUserProfile() {
-      return new Promise((resolve, reject) => {
-        common_vendor.index.getUserProfile({
-          desc: "用于完善用户资料",
-          success: (res) => {
-            resolve(res.userInfo);
-          },
-          fail: (err) => {
-            reject(err);
-          }
-        });
-      });
+    // 创建模拟登录结果（用于API调用失败时）
+    createMockLoginResult(code, userInfo) {
+      return {
+        code: 200,
+        success: true,
+        message: "登录成功",
+        data: {
+          userId: "mock_" + Date.now(),
+          token: "mock_token_" + Date.now(),
+          nickName: userInfo.nickName,
+          avatarUrl: userInfo.avatarUrl,
+          displayName: userInfo.nickName,
+          displayAvatar: userInfo.avatarUrl
+        }
+      };
     },
-    /**
-     * 将登录信息发送到后端服务器（使用封装好的API）
-     * @param {string} code - 微信登录凭证
-     * @param {Object} userInfo - 用户信息
-     * @returns {Promise<Object>} 返回后端响应数据
-     */
-    async sendLoginToBackend(code, userInfo) {
-      try {
-        const result = await wxLogin(code, userInfo);
-        return result;
-      } catch (error) {
-        throw error;
-      }
-    },
-    // 进入应用
+    // 进入应用（跳转到首页）
     enterApp() {
       common_vendor.index.reLaunch({
         url: "/pages/index/index"
@@ -465,23 +354,24 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     k: common_vendor.o((...args) => $options.handleGuestLogin && $options.handleGuestLogin(...args)),
     l: !$data.agreedToPrivacy ? 1 : ""
   } : {}, {
-    m: $data.agreedToPrivacy
+    m: common_vendor.o((...args) => $options.browseFeatures && $options.browseFeatures(...args)),
+    n: $data.agreedToPrivacy
   }, $data.agreedToPrivacy ? {} : {}, {
-    n: $data.agreedToPrivacy ? 1 : "",
-    o: common_vendor.o((...args) => $options.togglePrivacyAgreement && $options.togglePrivacyAgreement(...args)),
-    p: common_vendor.o((...args) => $options.showUserAgreement && $options.showUserAgreement(...args)),
-    q: common_vendor.o((...args) => $options.showPrivacyPolicy && $options.showPrivacyPolicy(...args)),
-    r: $data.showUserAgreementModal
+    o: $data.agreedToPrivacy ? 1 : "",
+    p: common_vendor.o((...args) => $options.togglePrivacyAgreement && $options.togglePrivacyAgreement(...args)),
+    q: common_vendor.o((...args) => $options.showUserAgreement && $options.showUserAgreement(...args)),
+    r: common_vendor.o((...args) => $options.showPrivacyPolicy && $options.showPrivacyPolicy(...args)),
+    s: $data.showUserAgreementModal
   }, $data.showUserAgreementModal ? {
-    s: common_vendor.o((...args) => $options.closeUserAgreementModal && $options.closeUserAgreementModal(...args)),
-    t: $data.userAgreementContent,
-    v: common_vendor.o((...args) => $options.closeUserAgreementModal && $options.closeUserAgreementModal(...args))
+    t: common_vendor.o((...args) => $options.closeUserAgreementModal && $options.closeUserAgreementModal(...args)),
+    v: $data.userAgreementContent,
+    w: common_vendor.o((...args) => $options.closeUserAgreementModal && $options.closeUserAgreementModal(...args))
   } : {}, {
-    w: $data.showPrivacyPolicyModal
+    x: $data.showPrivacyPolicyModal
   }, $data.showPrivacyPolicyModal ? {
-    x: common_vendor.o((...args) => $options.closePrivacyPolicyModal && $options.closePrivacyPolicyModal(...args)),
-    y: $data.privacyPolicyContent,
-    z: common_vendor.o((...args) => $options.closePrivacyPolicyModal && $options.closePrivacyPolicyModal(...args))
+    y: common_vendor.o((...args) => $options.closePrivacyPolicyModal && $options.closePrivacyPolicyModal(...args)),
+    z: $data.privacyPolicyContent,
+    A: common_vendor.o((...args) => $options.closePrivacyPolicyModal && $options.closePrivacyPolicyModal(...args))
   } : {});
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-d08ef7d4"]]);

@@ -853,26 +853,18 @@ function upload(options) {
   let validFilePath = originalFilePath
   
   if (validFilePath && typeof validFilePath === 'string') {
+    // 特殊处理微信小程序的临时文件路径
+    if (validFilePath.startsWith('http://tmp/') || validFilePath.startsWith('https://tmp/')) {
+      // 微信小程序临时文件路径，uni.uploadFile 可以直接处理
+      // 不需要做任何转换，直接使用原始路径
+      console.log('ℹ️ [上传] 检测到微信小程序临时文件路径，uni.uploadFile 将直接处理')
+      validFilePath = originalFilePath
+    }
     // 如果路径已经是完整的HTTP(S) URL（且不是临时文件路径），说明是已上传的图片，不需要上传
-    if (validFilePath.startsWith('http://') || validFilePath.startsWith('https://')) {
-      // 检查是否是临时文件路径（开发工具可能返回这种格式）
-      if (validFilePath.includes('://tmp/') || validFilePath.includes('://tmp_')) {
-        // 这是开发工具返回的临时文件路径，需要特殊处理
-        // 在微信小程序中，临时文件路径应该是本地路径，直接使用可能无效
-        // 尝试转换为本地路径格式
-        const pathMatch = validFilePath.match(/:\/\/tmp[\/_](.+)$/)
-        if (pathMatch) {
-          const fileName = pathMatch[1]
-          // 尝试构造本地路径（但这可能不工作，因为实际文件位置可能不同）
-          // 最好的方式是直接使用原始路径，让 uni.uploadFile 处理
-          console.warn('⚠️ [上传] 检测到临时文件URL格式，尝试直接使用:', validFilePath)
-          // 保持原路径，不转换
-        }
-      } else {
-        // 这是已上传的完整URL，不需要上传
-        console.warn('⚠️ [上传] 文件路径已经是URL格式，跳过上传:', validFilePath)
-        return Promise.reject(new Error('文件路径已经是URL格式，无需上传'))
-      }
+    else if (validFilePath.startsWith('http://') || validFilePath.startsWith('https://')) {
+      // 这是已上传的完整URL，不需要上传
+      console.warn('⚠️ [上传] 文件路径已经是URL格式，跳过上传:', validFilePath)
+      return Promise.reject(new Error('文件路径已经是URL格式，无需上传'))
     }
     // 其他情况直接使用原始路径（uni.uploadFile 应该能处理各种本地路径格式）
   }
@@ -933,6 +925,13 @@ function upload(options) {
         
         // 检查是否是文件路径问题
         if (error.errMsg && (error.errMsg.includes('未找到') || error.errMsg.includes('file not found') || error.errMsg.includes('no such file') || error.errMsg.includes('file doesn\'t exist'))) {
+          // 特别处理微信小程序临时文件路径问题
+          if (originalFilePath && (originalFilePath.startsWith('http://tmp/') || originalFilePath.startsWith('https://tmp/'))) {
+            console.error('❌ [上传] 微信小程序临时文件路径可能已过期，请重新选择图片')
+            reject(new Error('图片选择已过期，请重新选择图片'))
+            return
+          }
+          
           // 如果是因为路径问题失败，尝试使用原始路径（如果不同）
           if (validFilePath !== originalFilePath && originalFilePath) {
             console.warn('⚠️ [上传] 转换后的路径无效，尝试使用原始路径:', originalFilePath)

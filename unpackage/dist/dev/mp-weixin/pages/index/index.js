@@ -76,6 +76,26 @@ const _sfc_main = {
     this.loadRecentActivities();
   },
   methods: {
+    // 检查是否需要登录
+    checkLoginRequired() {
+      if (utils_auth.isGuestUser()) {
+        common_vendor.index.showModal({
+          title: "需要登录",
+          content: "该功能需要登录后才能使用，是否前往登录？",
+          confirmText: "去登录",
+          cancelText: "继续浏览",
+          success: (res) => {
+            if (res.confirm) {
+              common_vendor.index.navigateTo({
+                url: "/pages/we/index"
+              });
+            }
+          }
+        });
+        return false;
+      }
+      return true;
+    },
     getSystemInfo() {
       try {
         const windowInfo = common_vendor.wx$1.getWindowInfo && common_vendor.wx$1.getWindowInfo();
@@ -96,21 +116,29 @@ const _sfc_main = {
       this.navBarHeight = 54;
     },
     goToSweetQA() {
+      if (!this.checkLoginRequired())
+        return;
       common_vendor.index.navigateTo({
         url: "/subPackages/interaction/pages/qna/index"
       });
     },
     goToHundredThings() {
+      if (!this.checkLoginRequired())
+        return;
       common_vendor.index.navigateTo({
         url: "/subPackages/interaction/pages/hundred/index"
       });
     },
     goToHeartWall() {
+      if (!this.checkLoginRequired())
+        return;
       common_vendor.index.navigateTo({
         url: "/subPackages/record/pages/heartwall/index"
       });
     },
     goToFutureLetter() {
+      if (!this.checkLoginRequired())
+        return;
       common_vendor.index.navigateTo({
         url: "/subPackages/record/pages/xinxiang/index"
       });
@@ -134,12 +162,19 @@ const _sfc_main = {
           }
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:318", "加载用户信息失败", error);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:353", "加载用户信息失败", error);
       }
     },
     // 加载情侣信息
     async loadCoupleInfo() {
       var _a, _b;
+      if (utils_auth.isGuestUser()) {
+        common_vendor.index.__f__("log", "at pages/index/index.vue:360", "游客用户，跳过加载情侣信息");
+        this.isBound = false;
+        this.partnerInfo = null;
+        this.bindTime = "";
+        return;
+      }
       try {
         const localCoupleInfo = utils_couple.getCoupleInfo();
         if (localCoupleInfo && localCoupleInfo.isBound) {
@@ -161,7 +196,7 @@ const _sfc_main = {
                 this.partnerInfo = response.data.partnerInfo || {};
                 this.bindTime = response.data.bindTime || "";
               } else {
-                common_vendor.index.__f__("log", "at pages/index/index.vue:349", "⚠️ 服务器返回未绑定，清除本地状态");
+                common_vendor.index.__f__("log", "at pages/index/index.vue:393", "⚠️ 服务器返回未绑定，清除本地状态");
                 utils_couple.clearCoupleInfo();
                 this.isBound = false;
                 this.partnerInfo = null;
@@ -169,7 +204,7 @@ const _sfc_main = {
               }
             }
           } catch (e) {
-            common_vendor.index.__f__("error", "at pages/index/index.vue:357", "同步绑定状态失败", e);
+            common_vendor.index.__f__("error", "at pages/index/index.vue:401", "同步绑定状态失败", e);
           }
           return;
         }
@@ -198,7 +233,7 @@ const _sfc_main = {
             }
           }
         } catch (e) {
-          common_vendor.index.__f__("error", "at pages/index/index.vue:392", "查询绑定状态失败", e);
+          common_vendor.index.__f__("error", "at pages/index/index.vue:436", "查询绑定状态失败", e);
           this.isBound = utils_couple.isBound();
           if (this.isBound) {
             this.partnerInfo = utils_couple.getPartnerInfo();
@@ -207,7 +242,7 @@ const _sfc_main = {
           }
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:402", "加载情侣信息失败", e);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:446", "加载情侣信息失败", e);
         this.isBound = utils_couple.isBound();
         if (this.isBound) {
           this.partnerInfo = utils_couple.getPartnerInfo();
@@ -216,6 +251,13 @@ const _sfc_main = {
     },
     // 加载相爱天数
     async loadLoveDays() {
+      if (utils_auth.isGuestUser()) {
+        common_vendor.index.__f__("log", "at pages/index/index.vue:457", "游客用户，跳过加载相爱天数");
+        this.loveDays = 0;
+        this.anniversaryDate = "";
+        this.relationshipName = "";
+        return;
+      }
       if (!this.isBound) {
         this.loveDays = 0;
         this.anniversaryDate = "";
@@ -229,16 +271,16 @@ const _sfc_main = {
           this.loveDays = this.toNumberOrZero(loveDaysPayload.loveDays);
           this.anniversaryDate = loveDaysPayload.anniversaryDate || "";
           this.relationshipName = loveDaysPayload.relationshipName || "";
-          common_vendor.index.__f__("log", "at pages/index/index.vue:427", "✅ 成功加载相爱天数:", {
+          common_vendor.index.__f__("log", "at pages/index/index.vue:480", "✅ 成功加载相爱天数:", {
             loveDays: this.loveDays,
             anniversaryDate: this.anniversaryDate,
             relationshipName: this.relationshipName
           });
         } else {
-          common_vendor.index.__f__("warn", "at pages/index/index.vue:433", "⚠️ 获取相爱天数失败，无法识别有效数据结构:", response);
+          common_vendor.index.__f__("warn", "at pages/index/index.vue:486", "⚠️ 获取相爱天数失败，无法识别有效数据结构:", response);
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:436", "❌ 获取相爱天数失败:", error);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:489", "❌ 获取相爱天数失败:", error);
       }
     },
     normalizeLoveDaysResponse(response) {
@@ -292,12 +334,20 @@ const _sfc_main = {
     },
     // 跳转到邀请页面
     goToInvite() {
+      if (!this.checkLoginRequired())
+        return;
       common_vendor.index.navigateTo({
         url: "/pages/invite/index"
       });
     },
     // 跳转到个人中心
     goToProfile() {
+      if (utils_auth.isGuestUser()) {
+        common_vendor.index.navigateTo({
+          url: "/pages/login/index"
+        });
+        return;
+      }
       common_vendor.index.navigateTo({
         url: "/pages/we/index"
       });
@@ -392,7 +442,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   }, $data.recentActivities.length > 0 ? {
     C: common_vendor.f($data.recentActivities, (activity, index, i0) => {
       return {
-        a: "c1b7deaa-11-" + i0,
+        a: "3efb53af-11-" + i0,
         b: common_vendor.p({
           icon: activity.icon,
           size: 32,
