@@ -105,9 +105,7 @@
 					if (!loginInfo || !loginInfo.isLoggedIn) {
 						const guestUserInfo = {
 							nickName: '游客用户',
-							avatarUrl: '/static/zhuye/smile.png',
 							displayName: '游客用户',
-							displayAvatar: '/static/zhuye/smile.png',
 							isGuest: true
 						};
 						

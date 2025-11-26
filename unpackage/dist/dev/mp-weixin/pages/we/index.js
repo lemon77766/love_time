@@ -205,10 +205,12 @@ const _sfc_main = {
           common_vendor.index.__f__("log", "at pages/we/index.vue:395", "跳转到隐私设置");
           break;
         case "sync":
-          common_vendor.index.__f__("log", "at pages/we/index.vue:398", "跳转到云同步");
+          common_vendor.index.navigateTo({
+            url: "/subPackages/record/pages/anniversary/index"
+          });
           break;
         default:
-          common_vendor.index.__f__("warn", "at pages/we/index.vue:401", "未知设置项:", type);
+          common_vendor.index.__f__("warn", "at pages/we/index.vue:403", "未知设置项:", type);
       }
     },
     // 解除关系
@@ -236,14 +238,14 @@ const _sfc_main = {
                   });
                 }, 1500);
               } else {
-                common_vendor.index.__f__("error", "at pages/we/index.vue:436", "解除关系失败", response);
+                common_vendor.index.__f__("error", "at pages/we/index.vue:438", "解除关系失败", response);
                 common_vendor.index.showToast({
                   title: (response == null ? void 0 : response.message) || "解除失败",
                   icon: "none"
                 });
               }
             } catch (error) {
-              common_vendor.index.__f__("error", "at pages/we/index.vue:443", "解除关系异常", error);
+              common_vendor.index.__f__("error", "at pages/we/index.vue:445", "解除关系异常", error);
               common_vendor.index.showToast({
                 title: "操作异常，请重试",
                 icon: "none"
@@ -263,7 +265,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return common_vendor.e({
     a: $data.statusBarHeight + "px",
     b: $data.navBarHeight + "px",
-    c: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/login/love.jpg",
+    c: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl,
     d: common_vendor.t($data.userInfo.displayName || $data.userInfo.nickName || "用户"),
     e: $data.isBound && $data.bindTime
   }, $data.isBound && $data.bindTime ? {
@@ -273,7 +275,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     h: common_vendor.o((...args) => _ctx.goToEdit && _ctx.goToEdit(...args)),
     i: $data.isBound && $data.partnerInfo
   }, $data.isBound && $data.partnerInfo ? {
-    j: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/login/love.jpg",
+    j: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl,
     k: common_vendor.t($data.userInfo.displayName || $data.userInfo.nickName || "我"),
     l: $data.partnerInfo.displayAvatar || $data.partnerInfo.avatarUrl || "/static/login/love.jpg",
     m: common_vendor.t($data.partnerInfo.displayName || $data.partnerInfo.nickName || "另一半")

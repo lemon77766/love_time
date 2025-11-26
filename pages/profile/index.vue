@@ -1,5 +1,5 @@
 <template>
-  <view class="profile-settings-page">
+  <view class="profile-settings-page" :style="{ paddingTop: containerPaddingTop }">
     <!-- 自定义导航栏 -->
     <view class="custom-navbar">
       <!-- 渐变背景 -->
@@ -64,10 +64,37 @@
         </view>
       </view>
 
+      <!-- 账号安全设置 -->
+      <view class="profile-setting-block">
+        <text class="profile-setting-title">账号安全</text>
+        <view class="security-section">
+          <view class="security-item">
+            <view class="security-left">
+              <text class="security-icon">🔑</text>
+              <text class="security-text">修改密码</text>
+            </view>
+            <text class="security-arrow">›</text>
+          </view>
+          <view class="security-item">
+            <view class="security-left">
+              <text class="security-icon">📱</text>
+              <text class="security-text">绑定手机</text>
+            </view>
+            <text class="security-status">未绑定</text>
+          </view>
+          <view class="security-item">
+            <view class="security-left">
+              <text class="security-icon">📧</text>
+              <text class="security-text">绑定邮箱</text>
+            </view>
+            <text class="security-status">未绑定</text>
+          </view>
+        </view>
+      </view>
+
       <!-- 保存按钮 -->
       <view class="save-section">
         <button class="save-btn" @click="saveProfile" :disabled="isLoading">
-          <text class="save-icon">💾</text>
           <text class="save-text">保存设置</text>
         </button>
       </view>
@@ -95,7 +122,7 @@ export default {
       },
       useWechatNickname: true,
       customNickname: '',
-      isLoading: false,
+      isLoading: false
     };
   },
   computed: {
@@ -445,24 +472,26 @@ export default {
 
 .container {
   padding: 30rpx;
-  padding-top: calc(var(--status-bar-height) + 44px + 30rpx); /* 导航栏高度 + padding */
+  padding-top: calc(30rpx + 44px); /* 导航栏高度 + padding */
 }
 
 .profile-setting-block {
-  background-color: #ffffff;
-  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx;
   padding: 30rpx;
   margin-bottom: 30rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
 }
 
 .profile-setting-title {
   font-size: 32rpx;
   font-weight: 600;
   color: #333333;
-  margin-bottom: 20rpx;
-  border-bottom: 1rpx solid #eeeeee;
+  margin-bottom: 30rpx;
   padding-bottom: 15rpx;
+  border-bottom: 1rpx solid #eee;
 }
 
 .avatar-section {
@@ -554,8 +583,8 @@ export default {
 }
 
 .checkbox.checked {
-  background: #2bad81;
-  border-color: #2bad81;
+  background: #FFCC66;
+  border-color: #FFCC66;
 }
 
 .checkbox.checked::after {
@@ -608,6 +637,49 @@ export default {
   text-align: right;
 }
 
+.security-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.security-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #eee;
+}
+
+.security-item:last-child {
+  border-bottom: none;
+}
+
+.security-left {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.security-icon {
+  font-size: 36rpx;
+}
+
+.security-text {
+  font-size: 30rpx;
+  color: #333;
+}
+
+.security-arrow {
+  font-size: 36rpx;
+  color: #ccc;
+}
+
+.security-status {
+  font-size: 28rpx;
+  color: #999;
+}
+
 .save-section {
   margin-top: 50rpx;
   padding: 0 30rpx;
@@ -620,30 +692,26 @@ export default {
   justify-content: center;
   gap: 15rpx;
   padding: 30rpx;
-  background: linear-gradient(to right, #4CAF50, #8BC34A);
+  background: linear-gradient(135deg, #FFCC66, #FF9EBC);
   border-radius: 50rpx;
   border: none;
-  color: #ffffff;
+  color: #8B6914;
   font-size: 32rpx;
   font-weight: 600;
-  box-shadow: 0 8rpx 20rpx rgba(76, 175, 80, 0.25);
+  box-shadow: 0 8rpx 20rpx rgba(255, 204, 102, 0.3);
   transition: all 0.3s ease;
 }
 
 .save-btn:active {
   opacity: 0.8;
   transform: translateY(2rpx);
-  box-shadow: 0 4rpx 10rpx rgba(76, 175, 80, 0.3);
+  box-shadow: 0 4rpx 10rpx rgba(255, 204, 102, 0.2);
 }
 
 .save-btn[disabled] {
   background: #cccccc;
   box-shadow: none;
   opacity: 0.7;
-}
-
-.save-icon {
-  font-size: 36rpx;
 }
 
 .save-text {

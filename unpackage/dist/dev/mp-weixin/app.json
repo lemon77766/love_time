@@ -18,7 +18,8 @@
         "pages/xinxiang/create",
         "pages/xinxiang/history",
         "pages/xinxiang/received",
-        "pages/trajectory/history"
+        "pages/trajectory/history",
+        "pages/anniversary/index"
       ],
       "name": "record"
     },

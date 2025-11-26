@@ -53,7 +53,7 @@
 }
 .status-bar.data-v-5f4b3cd0 {
   width: 100%;
-  background: transparent;
+  background: #f0f0f0;
   position: relative;
   z-index: 1;
 }
@@ -189,7 +189,7 @@
 }
 .heart-icon.data-v-5f4b3cd0 {
   font-size: 48rpx;
-  color: #FF6B6B;
+  color: #666666;
 }
 
 /* 成就区域 */
@@ -248,8 +248,8 @@
   /* 保持白色背景 */
   border-radius: 16rpx;
   /* 统一圆角 */
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
-  /* 添加轻微阴影 */
+  box-shadow: none;
+  /* 移除阴影 */
   cursor: pointer;
 }
 .setting-item.data-v-5f4b3cd0:active {
@@ -281,29 +281,27 @@
 .unbind-section.data-v-5f4b3cd0 {
   margin-top: 30rpx;
   padding-top: 30rpx;
-  border-top: 2rpx solid #f0f0f0;
 }
 .unbind-content.data-v-5f4b3cd0 {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 16rpx;
-  padding: 20rpx;
-  background: #FFF5F5;
-  /* 调整为更柔和的粉色 */
-  border-radius: 16rpx;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
   cursor: pointer;
 }
 .unbind-content.data-v-5f4b3cd0:active {
-  background: #ffe0e0;
+  background: #f0f0f0;
 }
 .unbind-icon.data-v-5f4b3cd0 {
   font-size: 32rpx;
-  color: #FF6B6B;
+  color: #666666;
 }
 .unbind-text.data-v-5f4b3cd0 {
   font-size: 28rpx;
-  color: #FF6B6B;
+  color: #666666;
   font-weight: 500;
 }
 
@@ -318,7 +316,6 @@
 .profile-settings-content.data-v-5f4b3cd0 {
   margin-top: 20rpx;
   padding-top: 20rpx;
-  border-top: 2rpx solid #f0f0f0;
 }
 .profile-setting-block.data-v-5f4b3cd0 {
   margin-bottom: 30rpx;

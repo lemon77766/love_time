@@ -27,9 +27,10 @@
       "path": "pages/profile/index",
       "style": {
         "navigationBarTitleText": "账号与安全",
-\n        "navigationStyle": "custom",\r\n        "navigationBarTextStyle": "black"
-\n      }
-\n    },
+        "navigationStyle": "custom",
+        "navigationBarTextStyle": "black"
+      }
+    },
     {
       "path": "pages/trajectory/index",
       "style": {
@@ -145,6 +146,13 @@
             "navigationBarTitleText": "历史轨迹",
             "navigationStyle": "custom",
             "navigationBarTextStyle": "black"
+          }
+        },
+        {
+          "path": "pages/anniversary/index",
+          "style": {
+            "navigationBarTitleText": "纪念日",
+            "navigationStyle": "custom"
           }
         }
       ]

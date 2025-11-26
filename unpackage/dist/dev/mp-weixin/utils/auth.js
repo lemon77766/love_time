@@ -35,7 +35,6 @@ function logout(silent = false) {
         nickName: "游客用户",
         avatarUrl: "/static/zhuye/smile.png",
         displayName: "游客用户",
-        displayAvatar: "/static/zhuye/smile.png",
         isGuest: true
       };
       const guestLoginInfo = {
@@ -59,7 +58,7 @@ function logout(silent = false) {
       }, silent ? 500 : 1500);
       resolve(true);
     } catch (e) {
-      common_vendor.index.__f__("error", "at utils/auth.js:115", "退出登录失败", e);
+      common_vendor.index.__f__("error", "at utils/auth.js:114", "退出登录失败", e);
       common_vendor.index.showToast({
         title: "退出失败，请重试",
         icon: "none",

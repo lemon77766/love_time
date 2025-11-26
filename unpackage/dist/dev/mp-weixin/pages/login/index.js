@@ -187,7 +187,6 @@ const _sfc_main = {
         nickName: "游客用户",
         avatarUrl: "/static/zhuye/smile.png",
         displayName: "游客用户",
-        displayAvatar: "/static/zhuye/smile.png",
         isGuest: true
       };
       const loginInfo = {
@@ -208,7 +207,7 @@ const _sfc_main = {
           this.enterApp();
         }, 1500);
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:359", "游客登录失败", error);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:358", "游客登录失败", error);
         common_vendor.index.showToast({
           title: "登录失败，请重试",
           icon: "none"
@@ -246,7 +245,7 @@ const _sfc_main = {
             userInfo: userProfile.userInfo
           });
         } catch (apiError) {
-          common_vendor.index.__f__("error", "at pages/login/index.vue:405", "调用登录API失败", apiError);
+          common_vendor.index.__f__("error", "at pages/login/index.vue:404", "调用登录API失败", apiError);
           loginResult = this.createMockLoginResult(code, userProfile.userInfo);
         }
         if (loginResult && (loginResult.code === 200 || loginResult.success)) {
@@ -275,7 +274,7 @@ const _sfc_main = {
             this.enterApp();
           }, 1500);
         } else {
-          common_vendor.index.__f__("error", "at pages/login/index.vue:448", "登录失败", loginResult);
+          common_vendor.index.__f__("error", "at pages/login/index.vue:447", "登录失败", loginResult);
           common_vendor.index.showToast({
             title: (loginResult == null ? void 0 : loginResult.message) || "登录失败，请重试",
             icon: "none",
@@ -283,7 +282,7 @@ const _sfc_main = {
           });
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:456", "微信登录失败", error);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:455", "微信登录失败", error);
         common_vendor.index.showToast({
           title: "登录异常，请重试",
           icon: "none",

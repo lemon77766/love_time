@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "纪念日",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "iconify-icon": "../../../../components/iconify-icon/iconify-icon"
+  }
+}

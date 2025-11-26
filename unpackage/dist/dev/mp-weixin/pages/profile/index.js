@@ -64,7 +64,7 @@ const _sfc_main = {
           this.customNickname = this.useWechatNickname ? "" : this.userInfo.displayName;
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/profile/index.vue:161", "加载用户信息失败", error);
+        common_vendor.index.__f__("error", "at pages/profile/index.vue:188", "加载用户信息失败", error);
       }
     },
     async selectWechatAvatar() {
@@ -78,7 +78,7 @@ const _sfc_main = {
           sourceType: ["album", "camera"]
         });
         if (err) {
-          common_vendor.index.__f__("error", "at pages/profile/index.vue:176", "选择图片失败", err);
+          common_vendor.index.__f__("error", "at pages/profile/index.vue:203", "选择图片失败", err);
           common_vendor.index.showToast({
             title: "选择图片失败",
             icon: "none"
@@ -95,7 +95,7 @@ const _sfc_main = {
         }
         await this.uploadAvatar(tempFilePath);
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/profile/index.vue:195", "选择微信头像失败", error);
+        common_vendor.index.__f__("error", "at pages/profile/index.vue:222", "选择微信头像失败", error);
         common_vendor.index.showToast({
           title: "操作失败，请重试",
           icon: "none"
@@ -115,7 +115,7 @@ const _sfc_main = {
           sourceType: ["album"]
         });
         if (err) {
-          common_vendor.index.__f__("error", "at pages/profile/index.vue:216", "选择图片失败", err);
+          common_vendor.index.__f__("error", "at pages/profile/index.vue:243", "选择图片失败", err);
           common_vendor.index.showToast({
             title: "选择图片失败",
             icon: "none"
@@ -132,7 +132,7 @@ const _sfc_main = {
         }
         await this.uploadAvatar(tempFilePath);
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/profile/index.vue:235", "上传自定义头像失败", error);
+        common_vendor.index.__f__("error", "at pages/profile/index.vue:262", "上传自定义头像失败", error);
         common_vendor.index.showToast({
           title: "操作失败，请重试",
           icon: "none"
@@ -152,7 +152,7 @@ const _sfc_main = {
           }
         });
         if (uploadErr) {
-          common_vendor.index.__f__("error", "at pages/profile/index.vue:256", "上传头像失败", uploadErr);
+          common_vendor.index.__f__("error", "at pages/profile/index.vue:283", "上传头像失败", uploadErr);
           common_vendor.index.showToast({
             title: "上传失败",
             icon: "none"
@@ -167,14 +167,14 @@ const _sfc_main = {
             icon: "success"
           });
         } else {
-          common_vendor.index.__f__("error", "at pages/profile/index.vue:272", "上传头像失败", data);
+          common_vendor.index.__f__("error", "at pages/profile/index.vue:299", "上传头像失败", data);
           common_vendor.index.showToast({
             title: data.message || "上传失败",
             icon: "none"
           });
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/profile/index.vue:279", "上传头像异常", error);
+        common_vendor.index.__f__("error", "at pages/profile/index.vue:306", "上传头像异常", error);
         common_vendor.index.showToast({
           title: "上传异常",
           icon: "none"
@@ -227,14 +227,14 @@ const _sfc_main = {
             icon: "success"
           });
         } else {
-          common_vendor.index.__f__("error", "at pages/profile/index.vue:338", "保存个人资料失败", response);
+          common_vendor.index.__f__("error", "at pages/profile/index.vue:365", "保存个人资料失败", response);
           common_vendor.index.showToast({
             title: (response == null ? void 0 : response.message) || "保存失败",
             icon: "none"
           });
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/profile/index.vue:345", "保存个人资料异常", error);
+        common_vendor.index.__f__("error", "at pages/profile/index.vue:372", "保存个人资料异常", error);
         common_vendor.index.showToast({
           title: "保存异常，请重试",
           icon: "none"
@@ -263,7 +263,8 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     m: common_vendor.t($data.customNickname.length)
   } : {}, {
     n: common_vendor.o((...args) => $options.saveProfile && $options.saveProfile(...args)),
-    o: $data.isLoading
+    o: $data.isLoading,
+    p: $options.containerPaddingTop
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-201c0da5"]]);

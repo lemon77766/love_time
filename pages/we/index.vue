@@ -24,7 +24,7 @@
       <view class="user-info-card">
         <image 
           class="user-avatar-large" 
-          :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/login/love.jpg'" 
+          :src="userInfo.displayAvatar || userInfo.avatarUrl" 
           mode="aspectFill"
         />
         <view class="user-info-text">
@@ -45,7 +45,7 @@
           <view class="couple-avatar-item">
             <image 
               class="couple-avatar" 
-              :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/login/love.jpg'" 
+              :src="userInfo.displayAvatar || userInfo.avatarUrl" 
               mode="aspectFill"
             />
             <text class="couple-name">{{ userInfo.displayName || userInfo.nickName || '我' }}</text>
@@ -98,7 +98,7 @@
           <view class="setting-item" @click="handleSetting('sync')">
             <view class="setting-left">
               <text class="setting-icon">☁️</text>
-              <text class="setting-text">云同步</text>
+              <text class="setting-text">纪念日</text>
             </view>
             <text class="setting-arrow">›</text>
           </view>
@@ -395,7 +395,9 @@ export default {
           console.log('跳转到隐私设置');
           break;
         case 'sync':
-          console.log('跳转到云同步');
+          uni.navigateTo({
+            url: '/subPackages/record/pages/anniversary/index'
+          });
           break;
         default:
           console.warn('未知设置项:', type);
@@ -487,7 +489,7 @@ export default {
 
 .status-bar {
   width: 100%;
-  background: transparent;
+  background: #f0f0f0;
   position: relative;
   z-index: 1;
 }
@@ -639,7 +641,7 @@ export default {
 
 .heart-icon {
   font-size: 48rpx;
-  color: #FF6B6B;
+  color: #666666;
 }
 
 /* 成就区域 */
@@ -702,7 +704,7 @@ export default {
   padding: 20rpx;
   background: #ffffff; /* 保持白色背景 */
   border-radius: 16rpx; /* 统一圆角 */
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05); /* 添加轻微阴影 */
+  box-shadow: none; /* 移除阴影 */
   cursor: pointer;
 }
 
@@ -740,7 +742,7 @@ export default {
 .unbind-section {
   margin-top: 30rpx;
   padding-top: 30rpx;
-  border-top: 2rpx solid #f0f0f0;
+
 }
 
 .unbind-content {
@@ -748,24 +750,24 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 16rpx;
-  padding: 20rpx;
-  background: #FFF5F5; /* 调整为更柔和的粉色 */
-  border-radius: 16rpx;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
   cursor: pointer;
 }
 
 .unbind-content:active {
-  background: #ffe0e0;
+  background: #f0f0f0;
 }
 
 .unbind-icon {
   font-size: 32rpx;
-  color: #FF6B6B;
+  color: #666666;
 }
 
 .unbind-text {
   font-size: 28rpx;
-  color: #FF6B6B;
+  color: #666666;
   font-weight: 500;
 }
 
@@ -781,7 +783,7 @@ export default {
 .profile-settings-content {
   margin-top: 20rpx;
   padding-top: 20rpx;
-  border-top: 2rpx solid #f0f0f0;
+
 }
 
 .profile-setting-block {

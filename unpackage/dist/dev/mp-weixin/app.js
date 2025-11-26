@@ -16,6 +16,7 @@ if (!Math) {
   "./subPackages/record/pages/xinxiang/history.js";
   "./subPackages/record/pages/xinxiang/received.js";
   "./subPackages/record/pages/trajectory/history.js";
+  "./subPackages/record/pages/anniversary/index.js";
   "./subPackages/interaction/pages/qna/index.js";
   "./subPackages/interaction/pages/qna/history.js";
   "./subPackages/interaction/pages/hundred/index.js";
@@ -79,9 +80,7 @@ const _sfc_main = {
         if (!loginInfo || !loginInfo.isLoggedIn) {
           const guestUserInfo = {
             nickName: "游客用户",
-            avatarUrl: "/static/zhuye/smile.png",
             displayName: "游客用户",
-            displayAvatar: "/static/zhuye/smile.png",
             isGuest: true
           };
           const guestLoginInfo = {
@@ -91,10 +90,10 @@ const _sfc_main = {
             loginTime: (/* @__PURE__ */ new Date()).toISOString()
           };
           common_vendor.index.setStorageSync("login_info", guestLoginInfo);
-          common_vendor.index.__f__("log", "at App.vue:122", "已设置游客状态");
+          common_vendor.index.__f__("log", "at App.vue:120", "已设置游客状态");
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at App.vue:125", "设置游客状态失败", e);
+        common_vendor.index.__f__("error", "at App.vue:123", "设置游客状态失败", e);
       }
     }
   }

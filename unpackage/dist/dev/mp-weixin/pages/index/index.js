@@ -153,7 +153,7 @@ const _sfc_main = {
             this.userInfo.displayName = this.userInfo.nickName || "用户";
           }
           if (!this.userInfo.displayAvatar) {
-            this.userInfo.displayAvatar = this.userInfo.avatarUrl || "/static/login/love.jpg";
+            this.userInfo.displayAvatar = this.userInfo.avatarUrl;
           }
         } else {
           const loginInfo = common_vendor.index.getStorageSync("login_info");
@@ -386,7 +386,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: 48,
       color: "#ff6b6b"
     }),
-    i: $data.partnerInfo.displayAvatar || $data.partnerInfo.avatarUrl || "/static/login/love.jpg",
+    i: $data.partnerInfo.displayAvatar || $data.partnerInfo.avatarUrl,
     j: common_vendor.t($options.daysTogether),
     k: common_vendor.p({
       icon: "mdi:robot",

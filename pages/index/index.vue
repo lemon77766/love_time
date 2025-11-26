@@ -33,7 +33,7 @@
           </view>
           <image 
             class="couple-avatar" 
-            :src="partnerInfo.displayAvatar || partnerInfo.avatarUrl || '/static/login/love.jpg'" 
+            :src="partnerInfo.displayAvatar || partnerInfo.avatarUrl" 
             mode="aspectFill"
           />
         </view>
@@ -340,7 +340,7 @@ export default {
           
           // 如果没有设置显示头像，使用微信头像
           if (!this.userInfo.displayAvatar) {
-            this.userInfo.displayAvatar = this.userInfo.avatarUrl || '/static/login/love.jpg';
+            this.userInfo.displayAvatar = this.userInfo.avatarUrl;
           }
       } else {
           // 从登录信息中获取
