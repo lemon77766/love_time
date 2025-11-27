@@ -1,6 +1,6 @@
 "use strict";
 const devConfig = {
-  baseURL: "http://192.168.94.229:8886",
+  baseURL: "https://smallpeppers.cn",
   timeout: 1e4,
   // 普通请求超时时间
   uploadTimeout: 12e4,
@@ -75,7 +75,7 @@ const devConfig = {
       PROJECT_DETAIL: "/api/heart-wall/projects",
       // 获取/更新/删除项目详情 (需要拼接projectId)
       // 照片相关接口
-      PHOTOS: "/api/heart-wall/photos",
+      PHOTOS: "/api/heart-wall/photos/upload",
       // 上传照片、更新/删除照片 (需要拼接photoId)
       NEXT_POSITION: "/api/heart-wall/next-position"
       // 获取下一个可用位置

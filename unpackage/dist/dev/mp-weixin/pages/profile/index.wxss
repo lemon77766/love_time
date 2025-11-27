@@ -72,7 +72,8 @@
   text-align: center;
 }
 .title-text.data-v-201c0da5 {
-  font-size: 36rpx;
+  font-size: 40rpx;
+  /* 增大字体 */
   font-weight: 500;
   color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
@@ -100,217 +101,100 @@
   align-items: center;
   justify-content: center;
 }
-.container.data-v-201c0da5 {
-  padding: 30rpx;
-  padding-top: calc(30rpx + 44px);
-  /* 导航栏高度 + padding */
+
+/* 内容区域 */
+.content.data-v-201c0da5 {
+  padding: 15rpx;
+  /* 减少顶部留白 */
+  padding-top: calc(15rpx + 44px);
+  /* 减少导航栏下方留白 */
 }
-.profile-setting-block.data-v-201c0da5 {
+
+/* 区块样式 */
+.section.data-v-201c0da5 {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
+  padding: 20rpx;
+  /* 减少内边距 */
+  margin-bottom: 10rpx;
+  /* 减少区块间距 */
   box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255, 255, 255, 0.5);
 }
-.profile-setting-title.data-v-201c0da5 {
-  font-size: 32rpx;
+.section-title.data-v-201c0da5 {
+  display: block;
+  font-size: 34rpx;
+  /* 增大标题字体 */
   font-weight: 600;
-  color: #333333;
-  margin-bottom: 30rpx;
-  padding-bottom: 15rpx;
+  color: #333;
+  margin-bottom: 12rpx;
+  /* 减少标题下方留白 */
+  padding-bottom: 10rpx;
+  /* 减少标题下方内边距 */
   border-bottom: 1rpx solid #eee;
 }
-.avatar-section.data-v-201c0da5 {
+.settings-list.data-v-201c0da5 {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 30rpx;
 }
-.current-avatar.data-v-201c0da5 {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16rpx;
-}
-.avatar.data-v-201c0da5 {
-  width: 160rpx;
-  height: 160rpx;
-  border-radius: 80rpx;
-  border: 4rpx solid #e5e5e5;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
-}
-.avatar-label.data-v-201c0da5 {
-  font-size: 28rpx;
-  color: #666666;
-}
-.avatar-options.data-v-201c0da5 {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-  width: 100%;
-}
-.avatar-btn.data-v-201c0da5 {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12rpx;
-  padding: 25rpx;
-  background: #f0f0f0;
-  border-radius: 16rpx;
-  border: none;
-  font-size: 30rpx;
-  color: #333;
-  width: 100%;
-  box-sizing: border-box;
-}
-.avatar-btn.data-v-201c0da5:active {
-  background: #e0e0e0;
-}
-.btn-icon.data-v-201c0da5 {
-  font-size: 36rpx;
-}
-.btn-text.data-v-201c0da5 {
-  font-size: 30rpx;
-  font-weight: 500;
-}
-.nickname-section.data-v-201c0da5 {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-}
-.nickname-option.data-v-201c0da5 {
-  display: flex;
-  align-items: center;
-  padding: 20rpx;
-  background: #f8f8f8;
-  border-radius: 16rpx;
-  cursor: pointer;
-}
-.checkbox.data-v-201c0da5 {
-  width: 32rpx;
-  height: 32rpx;
-  border: 2rpx solid #cccccc;
-  border-radius: 8rpx;
-  margin-right: 15rpx;
-  position: relative;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-}
-.checkbox.checked.data-v-201c0da5 {
-  background: #FFCC66;
-  border-color: #FFCC66;
-}
-.checkbox.checked.data-v-201c0da5::after {
-  content: "";
-  position: absolute;
-  width: 14rpx;
-  height: 22rpx;
-  border: solid #fff;
-  border-width: 0 3rpx 3rpx 0;
-  transform: rotate(45deg);
-  top: 50%;
-  left: 50%;
-  margin-top: -12rpx;
-  margin-left: -7rpx;
-}
-.option-text.data-v-201c0da5 {
-  flex: 1;
-  font-size: 30rpx;
-  color: #333333;
-  font-weight: 500;
-}
-.current-nickname.data-v-201c0da5 {
-  font-size: 28rpx;
-  color: #999999;
-}
-.custom-nickname.data-v-201c0da5 {
-  background: #f8f8f8;
-  border-radius: 16rpx;
-  padding: 20rpx;
-}
-.nickname-input.data-v-201c0da5 {
-  width: 100%;
-  padding: 18rpx;
-  border: 1rpx solid #e0e0e0;
-  border-radius: 10rpx;
-  font-size: 30rpx;
-  background: #ffffff;
-  margin-bottom: 15rpx;
-  box-sizing: border-box;
-}
-.char-count.data-v-201c0da5 {
-  display: block;
-  font-size: 24rpx;
-  color: #999999;
-  text-align: right;
-}
-.security-section.data-v-201c0da5 {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-}
-.security-item.data-v-201c0da5 {
+.setting-item.data-v-201c0da5 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20rpx 0;
+  padding: 12rpx 0;
+  /* 减少设置项内边距 */
   border-bottom: 1rpx solid #eee;
+  cursor: pointer;
 }
-.security-item.data-v-201c0da5:last-child {
+.setting-item.data-v-201c0da5:last-child {
   border-bottom: none;
 }
-.security-left.data-v-201c0da5 {
+.setting-left.data-v-201c0da5 {
   display: flex;
   align-items: center;
-  gap: 20rpx;
+  gap: 12rpx;
+  /* 减少图标和文字间距 */
 }
-.security-icon.data-v-201c0da5 {
+.setting-icon.data-v-201c0da5 {
   font-size: 36rpx;
+  /* 增大图标 */
 }
-.security-text.data-v-201c0da5 {
-  font-size: 30rpx;
+.setting-text.data-v-201c0da5 {
+  font-size: 28rpx;
+  /* 增大文字 */
   color: #333;
+  font-weight: 500;
 }
-.security-arrow.data-v-201c0da5 {
+.setting-arrow.data-v-201c0da5 {
   font-size: 36rpx;
+  /* 增大箭头 */
   color: #ccc;
 }
-.security-status.data-v-201c0da5 {
-  font-size: 28rpx;
+.setting-status.data-v-201c0da5 {
+  font-size: 24rpx;
+  /* 增大状态文字 */
   color: #999;
 }
-.save-section.data-v-201c0da5 {
-  margin-top: 50rpx;
-  padding: 0 30rpx;
+
+/* 退出登录区域特殊样式 */
+.logout-section.data-v-201c0da5 {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx;
+  padding: 0;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255, 255, 255, 0.5);
 }
-.save-btn.data-v-201c0da5 {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15rpx;
-  padding: 30rpx;
-  background: linear-gradient(135deg, #FFCC66, #FF9EBC);
-  border-radius: 50rpx;
-  border: none;
-  color: #8B6914;
-  font-size: 32rpx;
+.logout-section .setting-item.data-v-201c0da5 {
+  padding: 20rpx;
+  /* 减少退出登录项内边距 */
+  border-bottom: none;
+}
+.logout-section .setting-text.data-v-201c0da5 {
+  color: #FF6B6B;
   font-weight: 600;
-  box-shadow: 0 8rpx 20rpx rgba(255, 204, 102, 0.3);
-  transition: all 0.3s ease;
-}
-.save-btn.data-v-201c0da5:active {
-  opacity: 0.8;
-  transform: translateY(2rpx);
-  box-shadow: 0 4rpx 10rpx rgba(255, 204, 102, 0.2);
-}
-.save-btn[disabled].data-v-201c0da5 {
-  background: #cccccc;
-  box-shadow: none;
-  opacity: 0.7;
-}
-.save-text.data-v-201c0da5 {
-  font-size: 32rpx;
+  font-size: 30rpx;
+  /* 增大退出登录文字 */
 }

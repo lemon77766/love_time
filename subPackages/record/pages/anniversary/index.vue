@@ -23,7 +23,12 @@
 
     <view class="content">
       <view class="anniversary-list">
-        <view class="anniversary-item" v-for="(item, index) in anniversaryList" :key="item.id">
+        <view 
+          class="anniversary-item" 
+          v-for="(item, index) in anniversaryList" 
+          :key="item.id"
+          :class="{ 'item-deleting': isDeleting === index }"
+        >
           <view class="item-left" @click="editAnniversary(index)">
             <iconify-icon :icon="item.icon" :size="24" :color="item.color" class="item-icon" />
             <view class="item-info">
@@ -41,13 +46,14 @@
                 class="remind-icon" 
                 @click.stop="toggleRemind(index)" 
               />
-              <iconify-icon 
-                icon="mdi:delete-outline" 
-                :size="24" 
-                color="#FF6B6B" 
-                class="delete-icon" 
-                @click.stop="deleteAnniversary(index)" 
-              />
+              <view class="delete-wrapper" @click="testDelete(index)">
+                <iconify-icon 
+                  icon="mdi:delete-outline" 
+                  :size="24" 
+                  color="#FF6B6B" 
+                  class="delete-icon" 
+                />
+              </view>
             </view>
           </view>
         </view>
@@ -170,6 +176,7 @@ export default {
       screenWidth: 375,
       showAddModal: false,
       showEditModal: false,
+      isDeleting: -1, // 用于删除动画
       anniversaryList: [
         {
           id: 1,
@@ -273,6 +280,9 @@ export default {
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     this.newAnniversary.date = `${year}-${month}-${day}`;
+    
+    // 加载本地存储的纪念日数据
+    this.loadAnniversaryData();
   },
   methods: {
     goBack() {
@@ -311,6 +321,25 @@ export default {
       this.screenWidth = sysInfoOther.windowWidth || 375;
       this.navBarHeight = 44;
       // #endif
+    },
+    // 保存纪念日数据到本地存储
+    saveAnniversaryData() {
+      try {
+        uni.setStorageSync('anniversaryList', this.anniversaryList);
+      } catch (error) {
+        console.error('保存纪念日数据失败', error);
+      }
+    },
+    // 加载纪念日数据
+    loadAnniversaryData() {
+      try {
+        const data = uni.getStorageSync('anniversaryList');
+        if (data) {
+          this.anniversaryList = data;
+        }
+      } catch (error) {
+        console.error('加载纪念日数据失败', error);
+      }
     },
     // 格式化日期显示
     formatDate(dateStr) {
@@ -398,6 +427,9 @@ export default {
       
       this.anniversaryList.push(newItem);
       
+      // 保存到本地存储
+      this.saveAnniversaryData();
+      
       // 重置表单
       this.newAnniversary.title = '';
       const today = new Date();
@@ -417,27 +449,72 @@ export default {
         icon: 'success'
       });
     },
-    // 删除纪念日
-    deleteAnniversary(index) {
+    // 测试删除方法
+    testDelete(index) {
+      console.log('测试删除方法被调用，索引：', index);
+      
+      // 显示确认对话框
       uni.showModal({
         title: '确认删除',
         content: '确定要删除这个纪念日吗？',
         success: (res) => {
           if (res.confirm) {
-            const item = this.anniversaryList[index];
-            this.anniversaryList.splice(index, 1);
-            uni.showToast({
-              title: '删除成功',
-              icon: 'success'
-            });
-            
-            // 如果删除的是设置了提醒的纪念日，检查是否还有提醒
-            if (item.remind && !this.hasReminders) {
-              // 可以在这里添加其他逻辑，比如更新全局提醒状态
-            }
+            // 用户点击确定，执行删除操作
+            this.deleteAnniversary(index);
           }
+        },
+        fail: (err) => {
+          console.error('显示确认框失败:', err);
+          // 如果确认框显示失败，直接删除
+          this.deleteAnniversary(index);
         }
       });
+    },
+    // 删除纪念日
+    deleteAnniversary(index) {
+      // 确保index有效
+      if (index < 0 || index >= this.anniversaryList.length) {
+        console.error('无效的索引:', index);
+        uni.showToast({
+          title: '删除失败',
+          icon: 'none'
+        });
+        return;
+      }
+      
+      try {
+        // 设置删除动画状态
+        this.isDeleting = index;
+        
+        // 延迟执行删除操作，以便显示动画
+        setTimeout(() => {
+          const item = this.anniversaryList[index];
+          this.anniversaryList.splice(index, 1);
+          
+          // 保存到本地存储
+          this.saveAnniversaryData();
+          
+          // 重置删除状态
+          this.isDeleting = -1;
+          
+          uni.showToast({
+            title: '删除成功',
+            icon: 'success'
+          });
+          
+          // 如果删除的是设置了提醒的纪念日，检查是否还有提醒
+          if (item.remind && !this.hasReminders) {
+            // 可以在这里添加其他逻辑，比如更新全局提醒状态
+          }
+        }, 300); // 300ms 动画时间
+      } catch (error) {
+        console.error('删除纪念日失败:', error);
+        this.isDeleting = -1; // 重置删除状态
+        uni.showToast({
+          title: '删除失败',
+          icon: 'none'
+        });
+      }
     },
     // 编辑纪念日
     editAnniversary(index) {
@@ -481,6 +558,9 @@ export default {
           color: this.editingAnniversary.color,
           remind: this.editingAnniversary.remind
         };
+        
+        // 保存到本地存储
+        this.saveAnniversaryData();
         
         // 关闭弹窗
         this.showEditModal = false;
@@ -612,17 +692,22 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 25rpx 30rpx;
-  border-bottom: 1rpx solid #F0F0F0;
-  cursor: pointer;
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  transform: translateX(0);
+}
 
-  &:active {
-    background: #fdf2f8;
-  }
-
-  &:last-child {
-    border-bottom: none;
-  }
+.anniversary-item.item-deleting {
+  transform: translateX(-100%);
+  opacity: 0;
+  height: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
 }
 
 .item-left {
@@ -677,6 +762,20 @@ export default {
 
 .remind-icon {
   cursor: pointer;
+}
+
+.delete-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 10rpx;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.delete-wrapper:active {
+  background-color: rgba(255, 107, 107, 0.1);
 }
 
 .delete-icon {

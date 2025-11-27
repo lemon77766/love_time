@@ -154,6 +154,27 @@
             "navigationBarTitleText": "纪念日",
             "navigationStyle": "custom"
           }
+        },
+        {
+          "path": "pages/profile/edit",
+          "style": {
+            "navigationBarTitleText": "编辑资料",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "pages/privacy/index",
+          "style": {
+            "navigationBarTitleText": "隐私设置",
+            "navigationStyle": "custom"
+          }
+        },
+        {
+          "path": "pages/notification/index",
+          "style": {
+            "navigationBarTitleText": "消息通知",
+            "navigationStyle": "custom"
+          }
         }
       ]
     },

@@ -27,6 +27,20 @@ function getUserInfo() {
     return null;
   }
 }
+function saveLoginInfo(userInfo) {
+  try {
+    const loginInfo = {
+      isLoggedIn: true,
+      userInfo,
+      loginTime: (/* @__PURE__ */ new Date()).toISOString()
+    };
+    common_vendor.index.setStorageSync("login_info", loginInfo);
+    return true;
+  } catch (e) {
+    common_vendor.index.__f__("error", "at utils/auth.js:63", "保存登录信息失败", e);
+    return false;
+  }
+}
 function logout(silent = false) {
   return new Promise((resolve) => {
     try {
@@ -72,4 +86,5 @@ exports.getUserInfo = getUserInfo;
 exports.isGuestUser = isGuestUser;
 exports.isLoggedIn = isLoggedIn;
 exports.logout = logout;
+exports.saveLoginInfo = saveLoginInfo;
 //# sourceMappingURL=../../.sourcemap/mp-weixin/utils/auth.js.map

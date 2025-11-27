@@ -19,7 +19,10 @@
         "pages/xinxiang/history",
         "pages/xinxiang/received",
         "pages/trajectory/history",
-        "pages/anniversary/index"
+        "pages/anniversary/index",
+        "pages/profile/edit",
+        "pages/privacy/index",
+        "pages/notification/index"
       ],
       "name": "record"
     },

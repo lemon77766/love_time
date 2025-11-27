@@ -17,6 +17,9 @@ if (!Math) {
   "./subPackages/record/pages/xinxiang/received.js";
   "./subPackages/record/pages/trajectory/history.js";
   "./subPackages/record/pages/anniversary/index.js";
+  "./subPackages/record/pages/profile/edit.js";
+  "./subPackages/record/pages/privacy/index.js";
+  "./subPackages/record/pages/notification/index.js";
   "./subPackages/interaction/pages/qna/index.js";
   "./subPackages/interaction/pages/qna/history.js";
   "./subPackages/interaction/pages/hundred/index.js";

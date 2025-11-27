@@ -49,9 +49,9 @@
             <iconify-icon icon="mdi:emoticon-angry" :size="32" color="#FF6B6B" />
             <text class="stat-text">吵架</text>
         </view>
-          <view class="stat-item">
+          <view class="stat-item" @click="goToFirstAnniversary">
             <iconify-icon icon="mdi:calendar-heart" :size="32" color="#FF91A4" />
-            <text class="stat-text">{{ nextAnniversaryDays }}天后周年</text>
+            <text class="stat-text">{{ nextAnniversaryText }}</text>
         </view>
       </view>
     </view>
@@ -177,6 +177,8 @@ export default {
       loveDays: 0,
       anniversaryDate: '',
       relationshipName: '',
+      // 纪念日相关
+      anniversaryList: [],
       // 近期动态
       recentActivities: []
     };
@@ -200,9 +202,14 @@ export default {
         return 0;
       }
     },
-    // 计算下一个周年纪念日
-    nextAnniversaryDays() {
-      return 93;
+    // 计算下一个纪念日
+    nextAnniversaryText() {
+      // 如果有纪念日列表，显示"纪念"
+      if (this.anniversaryList && this.anniversaryList.length > 0) {
+        return "纪念";
+      }
+      // 默认显示
+      return "纪念";
     },
     containerPaddingTop() {
       // 将px转换为rpx: rpx = px * 750 / screenWidth
@@ -219,6 +226,7 @@ export default {
     // 不再强制要求登录，允许未登录用户浏览
     await this.loadCoupleInfo();
     this.loadLoveDays();
+    this.loadAnniversaryData(); // 加载纪念日数据
     this.loadRecentActivities();
   },
   async onShow() {
@@ -226,6 +234,7 @@ export default {
     this.loadUserInfo();
     await this.loadCoupleInfo();
     this.loadLoveDays();
+    this.loadAnniversaryData(); // 重新加载纪念日数据
     this.loadRecentActivities();
   },
   methods: {
@@ -249,6 +258,17 @@ export default {
         return false;
       }
       return true;
+    },
+    
+    // 跳转到第一个纪念日
+    goToFirstAnniversary() {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) return;
+      
+      // 跳转到纪念日页面
+      uni.navigateTo({
+        url: '/subPackages/record/pages/anniversary/index'
+      });
     },
     
     getSystemInfo() {
@@ -554,6 +574,23 @@ export default {
         }
       ];
     },
+    // 加载纪念日数据
+    loadAnniversaryData() {
+      try {
+        // 从本地存储获取纪念日数据
+        const anniversaryData = uni.getStorageSync('anniversaryList');
+        if (anniversaryData) {
+          this.anniversaryList = anniversaryData;
+        } else {
+          // 如果没有本地数据，初始化为空数组
+          this.anniversaryList = [];
+        }
+      } catch (error) {
+        console.error('加载纪念日数据失败', error);
+        this.anniversaryList = [];
+      }
+    },
+    
     // 跳转到邀请页面
     goToInvite() {
       // 检查是否需要登录
@@ -905,6 +942,4 @@ export default {
   color: #666;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
-
-
 </style>

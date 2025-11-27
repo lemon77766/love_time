@@ -84,6 +84,12 @@ const _sfc_main = {
         url: "/pages/profile/index"
       });
     },
+    // 跳转到编辑资料页面
+    goToEdit() {
+      common_vendor.index.navigateTo({
+        url: "/subPackages/record/pages/profile/edit"
+      });
+    },
     // 获取系统信息
     getSystemInfo() {
       try {
@@ -114,14 +120,14 @@ const _sfc_main = {
           this.customNickname = this.useWechatNickname ? "" : this.userInfo.displayName;
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/we/index.vue:281", "加载用户信息失败", error);
+        common_vendor.index.__f__("error", "at pages/we/index.vue:288", "加载用户信息失败", error);
       }
     },
     // 加载情侣信息
     async loadCoupleInfo() {
       var _a, _b;
       if (utils_auth.isGuestUser()) {
-        common_vendor.index.__f__("log", "at pages/we/index.vue:290", "游客用户，跳过加载情侣信息");
+        common_vendor.index.__f__("log", "at pages/we/index.vue:297", "游客用户，跳过加载情侣信息");
         this.isBound = false;
         this.partnerInfo = null;
         this.bindTime = "";
@@ -152,7 +158,7 @@ const _sfc_main = {
               this.bindTime = "";
             }
           } catch (e) {
-            common_vendor.index.__f__("error", "at pages/we/index.vue:327", "同步绑定状态失败", e);
+            common_vendor.index.__f__("error", "at pages/we/index.vue:334", "同步绑定状态失败", e);
           }
           return;
         }
@@ -179,7 +185,7 @@ const _sfc_main = {
             utils_couple.clearCoupleInfo();
           }
         } catch (e) {
-          common_vendor.index.__f__("error", "at pages/we/index.vue:360", "查询情侣状态失败", e);
+          common_vendor.index.__f__("error", "at pages/we/index.vue:367", "查询情侣状态失败", e);
           this.isBound = utils_couple.isBound();
           if (this.isBound) {
             this.partnerInfo = utils_couple.getPartnerInfo();
@@ -188,7 +194,7 @@ const _sfc_main = {
           }
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/we/index.vue:370", "加载情侣信息失败", e);
+        common_vendor.index.__f__("error", "at pages/we/index.vue:377", "加载情侣信息失败", e);
         this.isBound = utils_couple.isBound();
         if (this.isBound) {
           this.partnerInfo = utils_couple.getPartnerInfo();
@@ -199,10 +205,14 @@ const _sfc_main = {
     handleSetting(type) {
       switch (type) {
         case "notification":
-          common_vendor.index.__f__("log", "at pages/we/index.vue:392", "跳转到通知设置");
+          common_vendor.index.navigateTo({
+            url: "/subPackages/record/pages/notification/index"
+          });
           break;
         case "privacy":
-          common_vendor.index.__f__("log", "at pages/we/index.vue:395", "跳转到隐私设置");
+          common_vendor.index.navigateTo({
+            url: "/subPackages/record/pages/privacy/index"
+          });
           break;
         case "sync":
           common_vendor.index.navigateTo({
@@ -210,7 +220,7 @@ const _sfc_main = {
           });
           break;
         default:
-          common_vendor.index.__f__("warn", "at pages/we/index.vue:403", "未知设置项:", type);
+          common_vendor.index.__f__("warn", "at pages/we/index.vue:412", "未知设置项:", type);
       }
     },
     // 解除关系
@@ -238,14 +248,14 @@ const _sfc_main = {
                   });
                 }, 1500);
               } else {
-                common_vendor.index.__f__("error", "at pages/we/index.vue:438", "解除关系失败", response);
+                common_vendor.index.__f__("error", "at pages/we/index.vue:447", "解除关系失败", response);
                 common_vendor.index.showToast({
                   title: (response == null ? void 0 : response.message) || "解除失败",
                   icon: "none"
                 });
               }
             } catch (error) {
-              common_vendor.index.__f__("error", "at pages/we/index.vue:445", "解除关系异常", error);
+              common_vendor.index.__f__("error", "at pages/we/index.vue:454", "解除关系异常", error);
               common_vendor.index.showToast({
                 title: "操作异常，请重试",
                 icon: "none"
@@ -272,7 +282,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     f: common_vendor.t($options.daysTogether)
   } : $data.isBound ? {} : {}, {
     g: $data.isBound,
-    h: common_vendor.o((...args) => _ctx.goToEdit && _ctx.goToEdit(...args)),
+    h: common_vendor.o((...args) => $options.goToEdit && $options.goToEdit(...args)),
     i: $data.isBound && $data.partnerInfo
   }, $data.isBound && $data.partnerInfo ? {
     j: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl,

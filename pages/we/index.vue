@@ -228,6 +228,13 @@ export default {
       });
     },
     
+    // 跳转到编辑资料页面
+    goToEdit() {
+      uni.navigateTo({
+        url: '/subPackages/record/pages/profile/edit'
+      });
+    },
+    
     // 获取系统信息
     getSystemInfo() {
       // #ifdef MP-WEIXIN
@@ -383,16 +390,18 @@ export default {
     
 
     
-
-    
     // 处理设置项点击
     handleSetting(type) {
       switch (type) {
         case 'notification':
-          console.log('跳转到通知设置');
+          uni.navigateTo({
+            url: '/subPackages/record/pages/notification/index'
+          });
           break;
         case 'privacy':
-          console.log('跳转到隐私设置');
+          uni.navigateTo({
+            url: '/subPackages/record/pages/privacy/index'
+          });
           break;
         case 'sync':
           uni.navigateTo({

@@ -442,60 +442,6 @@ export default {
       });
     },
     
-    // 上传单张图片到服务器获取URL
-    async uploadImageToServer(filePath) {
-      try {
-        console.log('📤 [爱心墙创建页] 开始上传图片到服务器，原始路径:', filePath);
-        
-        // 验证文件路径：如果已经是URL，不应该上传
-        if (filePath && (filePath.startsWith('http://') || filePath.startsWith('https://'))) {
-          console.warn('⚠️ [爱心墙创建页] 文件路径已经是URL格式，跳过上传:', filePath);
-          return filePath;
-        }
-        
-        // 处理异常路径格式：http://tmp/... 转换为 /tmp/...
-        let validFilePath = filePath;
-        if (filePath && filePath.startsWith('http://tmp/')) {
-          validFilePath = filePath.replace('http://tmp/', '/tmp/');
-          console.log('🔧 [爱心墙创建页] 修复路径格式:', filePath, '->', validFilePath);
-        }
-        
-        // 先压缩图片（压缩会返回新的临时文件路径，可能有助于解决路径问题）
-        console.log('🔄 [爱心墙创建页] 压缩图片中...');
-        const compressedPath = await this.compressImage(validFilePath);
-        console.log('✅ [爱心墙创建页] 图片压缩完成，使用路径:', compressedPath);
-        
-        // 尝试使用用户头像上传接口作为通用图片上传接口
-        // 如果后端有专门的爱心墙图片上传接口，可以在这里替换
-        const uploadUrl = config.API.USER.AVATAR_UPLOAD;
-        
-        console.log('📤 [爱心墙创建页] 开始上传文件，路径:', compressedPath);
-        const result = await http.upload({
-          url: uploadUrl,
-          filePath: compressedPath,
-          name: 'avatar',  // 头像上传接口期望的字段名
-          formData: { type: 'heart-wall-photo' }
-        });
-        
-        console.log('✅ [爱心墙创建页] 图片上传成功，返回URL:', result);
-        
-        // 返回图片URL，根据后端返回格式调整
-        const imageUrl = result.url || result.photoUrl || result.photo_url || result.data?.url || filePath;
-        console.log('🖼️ [爱心墙创建页] 获取到图片URL:', imageUrl);
-        return imageUrl;
-      } catch (error) {
-        console.error('❌ [爱心墙创建页] 图片上传失败:', error);
-        console.error('🔴 错误详情:', {
-          message: error.message,
-          filePath: filePath,
-          stack: error.stack
-        });
-        // 上传失败时，如果后端支持直接传文件路径，可以尝试直接使用
-        // 否则抛出错误让上层处理
-        throw error;
-      }
-    },
-    
     // 保存项目到列表页
     onSaveProject() {
       if (this.filledCount === 0) {
@@ -591,207 +537,94 @@ export default {
         
         console.log(`📋 [爱心墙创建页] 准备上传 ${photoTasks.length} 张照片`);
         
-        // 第二步：上传照片
-        // 方式1：使用直接上传方式（multipart/form-data，一步完成，推荐）
-        // 方式2：使用JSON格式（先上传文件获取URL，再发送JSON数据）
-        // 这里使用方式1（直接上传），如果需要使用方式2，可以取消注释下面的代码
+        // 使用直接上传方式（multipart/form-data，一步完成，推荐）
+        console.log('📤 [爱心墙创建页] 使用直接上传方式（multipart/form-data）');
         
-        const USE_DIRECT_UPLOAD = true; // 设置为true使用直接上传，false使用JSON格式
-        
-        let savePromises;
-        let validPhotos;
-        
-        if (USE_DIRECT_UPLOAD) {
-          // 方式1：直接上传文件（multipart/form-data）
-          console.log('📤 [爱心墙创建页] 使用直接上传方式（multipart/form-data）');
+        const savePromises = photoTasks.map(async (task) => {
+          const { positionIndex, imagePath } = task;
           
-          savePromises = photoTasks.map(async (task) => {
-            const { positionIndex, imagePath } = task;
-            
-            // 判断是否是本地临时路径（需要上传）
-            const isTmpPath = imagePath && (imagePath.startsWith('http://tmp/') || imagePath.startsWith('https://tmp/'));
-            // 判断是否是真正的HTTP/HTTPS URL（排除临时路径）
-            const isRealUrl = imagePath && 
-                             (imagePath.startsWith('http://') || imagePath.startsWith('https://')) &&
-                             !isTmpPath;
-            // 判断是否是本地路径（需要上传）
-            const isLocalPath = !isRealUrl && !imagePath.startsWith('data:');
-            
-            // 检查该位置是否已有photoId（已存在的照片）
-            const existingPhotoId = this.photoMap[positionIndex];
-            
-            if (isLocalPath || isTmpPath) {
-              // 本地文件，使用直接上传方式
-              try {
-                if (existingPhotoId) {
-                  // 已有照片，先更新URL，然后使用updatePhoto更新其他信息
-                  // 注意：如果后端支持在multipart/form-data中更新，可以直接使用
-                  // 这里先上传文件获取URL，然后更新
-                  console.log(`🔄 [爱心墙创建页] 位置 ${positionIndex} 已有照片(photoId: ${existingPhotoId})，先上传文件...`);
-                  const photoUrl = await this.uploadImageToServer(imagePath);
-                  const photoData = {
-                    photoUrl: photoUrl,
-                    thumbnailUrl: photoUrl,
-                    positionIndex: positionIndex
-                  };
-                  return updatePhoto(existingPhotoId, photoData).catch(error => {
-                    console.error(`❌ [爱心墙创建页] 照片 ${positionIndex} 更新失败:`, error);
-                    return null;
-                  });
-                } else {
-                  // 新照片，直接上传文件+元数据
-                  console.log(`📤 [爱心墙创建页] 直接上传照片 ${positionIndex}（文件+元数据）...`);
-                  const result = await uploadPhotoWithFile({
-                    filePath: imagePath,
-                    projectId: projectId,
-                    positionIndex: positionIndex
-                  });
-                  console.log(`✅ [爱心墙创建页] 照片 ${positionIndex} 上传成功`);
-                  return result;
-                }
-              } catch (uploadError) {
-                console.error(`❌ [爱心墙创建页] 照片 ${positionIndex} 上传失败:`, uploadError);
-                return null;
-              }
-            } else {
-              // 已经是URL，使用JSON格式更新或新增
-              const photoData = {
-                photoUrl: imagePath,
-                thumbnailUrl: imagePath,
-                positionIndex: positionIndex
-              };
-              
+          // 判断是否是本地临时路径（需要上传）
+          const isTmpPath = imagePath && (imagePath.startsWith('http://tmp/') || imagePath.startsWith('https://tmp/'));
+          // 判断是否是真正的HTTP/HTTPS URL（排除临时路径）
+          const isRealUrl = imagePath && 
+                           (imagePath.startsWith('http://') || imagePath.startsWith('https://')) &&
+                           !isTmpPath;
+          // 判断是否是本地路径（需要上传）
+          const isLocalPath = !isRealUrl && !imagePath.startsWith('data:');
+          
+          // 检查该位置是否已有photoId（已存在的照片）
+          const existingPhotoId = this.photoMap[positionIndex];
+          
+          if (isLocalPath || isTmpPath) {
+            // 本地文件，使用直接上传方式
+            try {
               if (existingPhotoId) {
+                // 已有照片，使用updatePhoto更新其他信息
                 console.log(`🔄 [爱心墙创建页] 位置 ${positionIndex} 已有照片(photoId: ${existingPhotoId})，使用更新接口`);
+                // 对于已存在的照片，我们不支持直接更新文件，只能更新其他信息
+                // 如果需要更新文件，用户应该先删除再重新上传
+                const photoData = {
+                  positionIndex: positionIndex
+                };
                 return updatePhoto(existingPhotoId, photoData).catch(error => {
                   console.error(`❌ [爱心墙创建页] 照片 ${positionIndex} 更新失败:`, error);
                   return null;
                 });
               } else {
-                console.log(`➕ [爱心墙创建页] 位置 ${positionIndex} 为新照片，使用新增接口`);
-                const createData = {
-                  ...photoData,
-                  projectId: projectId
-                };
-                return uploadPhoto(createData).catch(error => {
-                  console.error(`❌ [爱心墙创建页] 照片 ${positionIndex} 保存失败:`, error);
-                  return null;
+                // 新照片，直接上传文件+元数据
+                console.log(`📤 [爱心墙创建页] 直接上传照片 ${positionIndex}（文件+元数据）...`);
+                const result = await uploadPhotoWithFile({
+                  filePath: imagePath,
+                  projectId: projectId,
+                  positionIndex: positionIndex
                 });
+                console.log(`✅ [爱心墙创建页] 照片 ${positionIndex} 上传成功`);
+                return result;
               }
+            } catch (uploadError) {
+              console.error(`❌ [爱心墙创建页] 照片 ${positionIndex} 上传失败:`, uploadError);
+              return null;
             }
-          });
-          
-          validPhotos = photoTasks; // 直接上传方式，所有任务都是有效照片
-        } else {
-          // 方式2：先上传文件获取URL，再发送JSON数据（原有方式）
-          console.log('📤 [爱心墙创建页] 使用JSON格式上传方式（两步完成）');
-          
-          const photoUploadPromises = photoTasks.map(async (task) => {
-            const { positionIndex, imagePath } = task;
-            
-            // 判断是否是本地临时路径（需要上传）
-            const isTmpPath = imagePath && (imagePath.startsWith('http://tmp/') || imagePath.startsWith('https://tmp/'));
-            // 判断是否是真正的HTTP/HTTPS URL（排除临时路径）
-            const isRealUrl = imagePath && 
-                             (imagePath.startsWith('http://') || imagePath.startsWith('https://')) &&
-                             !isTmpPath;
-            // 判断是否是本地路径（需要上传）
-            const isLocalPath = !isRealUrl && !imagePath.startsWith('data:');
-            
-            if (isLocalPath || isTmpPath) {
-              try {
-                console.log(`📤 [爱心墙创建页] 上传图片 ${positionIndex} 到服务器...`);
-                const photoUrl = await this.uploadImageToServer(imagePath);
-                console.log(`✅ [爱心墙创建页] 图片 ${positionIndex} 上传成功`);
-                return {
-                  positionIndex,
-                  photoUrl,
-                  thumbnailUrl: photoUrl
-                };
-              } catch (uploadError) {
-                console.error(`❌ [爱心墙创建页] 图片 ${positionIndex} 上传失败:`, uploadError);
-                return null;
-              }
-            } else {
-              // 已经是URL，直接使用
-              return {
-                positionIndex,
-                photoUrl: imagePath,
-                thumbnailUrl: imagePath
-              };
-            }
-          });
-          
-          // 等待所有图片上传完成
-          const photoUrls = await Promise.all(photoUploadPromises);
-          
-          // 过滤掉上传失败的图片
-          validPhotos = photoUrls.filter(photo => photo !== null);
-          const failedCount = photoUrls.length - validPhotos.length;
-          
-          if (failedCount > 0) {
-            console.warn(`⚠️ [爱心墙创建页] ${failedCount} 张图片上传失败`);
-            uni.showToast({ 
-              title: `${failedCount} 张照片上传失败，其余照片将继续保存`, 
-              icon: 'none',
-              duration: 3000
-            });
-          }
-          
-          // 第三步：将所有成功的照片信息保存到后端
-          savePromises = validPhotos.map(photo => {
+          } else {
+            // 已经是URL，不支持上传，只能更新位置信息
+            console.log(`🔄 [爱心墙创建页] 位置 ${positionIndex} 已经是URL，不支持上传，只能更新位置信息`);
+            // 对于已存在的照片，我们不支持直接更新文件，只能更新其他信息
+            // 如果需要更新文件，用户应该先删除再重新上传
             const photoData = {
-              photoUrl: photo.photoUrl,
-              thumbnailUrl: photo.thumbnailUrl,
-              positionIndex: photo.positionIndex
+              positionIndex: positionIndex
             };
             
-            // 检查该位置是否已有photoId（已存在的照片）
-            const existingPhotoId = this.photoMap[photo.positionIndex];
-            
             if (existingPhotoId) {
-              // 该位置已有照片，使用更新接口
-              console.log(`🔄 [爱心墙创建页] 位置 ${photo.positionIndex} 已有照片(photoId: ${existingPhotoId})，使用更新接口`);
+              console.log(`🔄 [爱心墙创建页] 位置 ${positionIndex} 已有照片(photoId: ${existingPhotoId})，使用更新接口`);
               return updatePhoto(existingPhotoId, photoData).catch(error => {
-                console.error(`❌ [爱心墙创建页] 照片 ${photo.positionIndex} 更新失败:`, error);
+                console.error(`❌ [爱心墙创建页] 照片 ${positionIndex} 更新失败:`, error);
                 return null;
               });
             } else {
-              // 该位置没有照片，使用新增接口
-              console.log(`➕ [爱心墙创建页] 位置 ${photo.positionIndex} 为新照片，使用新增接口`);
-              const createData = {
-                ...photoData,
-                projectId: projectId
-              };
-              return uploadPhoto(createData).catch(error => {
-                console.error(`❌ [爱心墙创建页] 照片 ${photo.positionIndex} 保存失败:`, error);
-                return null;
+              // 对于新照片，如果已经是URL则不支持上传
+              console.warn(`⚠️ [爱心墙创建页] 位置 ${positionIndex} 是新照片但已经是URL，不支持上传`);
+              uni.showToast({ 
+                title: '不支持上传已存在的图片URL', 
+                icon: 'none',
+                duration: 2000
               });
+              return null;
             }
-          });
-        }
+          }
+        });
         
         // 等待所有照片保存完成
         console.log(`💾 [爱心墙创建页] 开始保存 ${savePromises.length} 张照片信息`);
         const saveResults = await Promise.all(savePromises);
         const savedCount = saveResults.filter(r => r !== null).length;
         
-        const totalPhotos = USE_DIRECT_UPLOAD ? photoTasks.length : validPhotos.length;
-        console.log(`✅ [爱心墙创建页] 成功保存 ${savedCount}/${totalPhotos} 张照片`);
+        console.log(`✅ [爱心墙创建页] 成功保存 ${savedCount}/${photoTasks.length} 张照片`);
         
         // 更新photoMap，保存新上传照片的photoId映射
         saveResults.forEach((result, index) => {
           if (result && result.data) {
             const photoId = result.data.photoId || result.data.photo_id || result.data.id;
-            let photo;
-            
-            if (USE_DIRECT_UPLOAD) {
-              // 直接上传方式：从photoTasks获取
-              photo = photoTasks[index];
-            } else {
-              // JSON格式方式：从validPhotos获取
-              photo = validPhotos[index];
-            }
+            const photo = photoTasks[index];
             
             if (photoId && photo) {
               const positionIndex = photo.positionIndex || photo.index;

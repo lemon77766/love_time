@@ -1,23 +1,11 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
-const utils_http = require("../../utils/http.js");
-const utils_config = require("../../utils/config.js");
-const api_user = require("../../api/user.js");
 const _sfc_main = {
   data() {
     return {
       statusBarHeight: 0,
       navBarHeight: 44,
-      screenWidth: 375,
-      userInfo: {
-        nickName: "",
-        avatarUrl: "",
-        displayName: "",
-        displayAvatar: ""
-      },
-      useWechatNickname: true,
-      customNickname: "",
-      isLoading: false
+      screenWidth: 375
     };
   },
   computed: {
@@ -30,7 +18,6 @@ const _sfc_main = {
   },
   onLoad() {
     this.getSystemInfo();
-    this.loadUserInfo();
   },
   methods: {
     goBack() {
@@ -55,217 +42,111 @@ const _sfc_main = {
       }
       this.navBarHeight = 44;
     },
-    loadUserInfo() {
-      try {
-        const loginInfo = common_vendor.index.getStorageSync("login_info");
-        if (loginInfo && loginInfo.userInfo) {
-          this.userInfo = { ...loginInfo.userInfo };
-          this.useWechatNickname = !this.userInfo.displayName || this.userInfo.displayName === this.userInfo.nickName;
-          this.customNickname = this.useWechatNickname ? "" : this.userInfo.displayName;
-        }
-      } catch (error) {
-        common_vendor.index.__f__("error", "at pages/profile/index.vue:188", "加载用户信息失败", error);
-      }
+    // 修改密码
+    changePassword() {
+      common_vendor.index.showToast({
+        title: "修改密码功能暂未开放",
+        icon: "none"
+      });
     },
-    async selectWechatAvatar() {
-      if (this.isLoading)
-        return;
-      this.isLoading = true;
-      try {
-        const [err, res] = await common_vendor.index.chooseImage({
-          count: 1,
-          sizeType: ["compressed"],
-          sourceType: ["album", "camera"]
-        });
-        if (err) {
-          common_vendor.index.__f__("error", "at pages/profile/index.vue:203", "选择图片失败", err);
-          common_vendor.index.showToast({
-            title: "选择图片失败",
-            icon: "none"
-          });
-          return;
-        }
-        const tempFilePath = res.tempFilePaths[0];
-        if (!tempFilePath) {
-          common_vendor.index.showToast({
-            title: "未选择图片",
-            icon: "none"
-          });
-          return;
-        }
-        await this.uploadAvatar(tempFilePath);
-      } catch (error) {
-        common_vendor.index.__f__("error", "at pages/profile/index.vue:222", "选择微信头像失败", error);
-        common_vendor.index.showToast({
-          title: "操作失败，请重试",
-          icon: "none"
-        });
-      } finally {
-        this.isLoading = false;
-      }
+    // 绑定手机
+    bindPhone() {
+      common_vendor.index.showToast({
+        title: "绑定手机功能暂未开放",
+        icon: "none"
+      });
     },
-    async uploadCustomAvatar() {
-      if (this.isLoading)
-        return;
-      this.isLoading = true;
-      try {
-        const [err, res] = await common_vendor.index.chooseImage({
-          count: 1,
-          sizeType: ["compressed"],
-          sourceType: ["album"]
-        });
-        if (err) {
-          common_vendor.index.__f__("error", "at pages/profile/index.vue:243", "选择图片失败", err);
-          common_vendor.index.showToast({
-            title: "选择图片失败",
-            icon: "none"
-          });
-          return;
-        }
-        const tempFilePath = res.tempFilePaths[0];
-        if (!tempFilePath) {
-          common_vendor.index.showToast({
-            title: "未选择图片",
-            icon: "none"
-          });
-          return;
-        }
-        await this.uploadAvatar(tempFilePath);
-      } catch (error) {
-        common_vendor.index.__f__("error", "at pages/profile/index.vue:262", "上传自定义头像失败", error);
-        common_vendor.index.showToast({
-          title: "操作失败，请重试",
-          icon: "none"
-        });
-      } finally {
-        this.isLoading = false;
-      }
+    // 绑定邮箱
+    bindEmail() {
+      common_vendor.index.showToast({
+        title: "绑定邮箱功能暂未开放",
+        icon: "none"
+      });
     },
-    async uploadAvatar(filePath) {
-      try {
-        const [uploadErr, uploadRes] = await common_vendor.index.uploadFile({
-          url: utils_config.config.API.USER.UPLOAD_AVATAR,
-          filePath,
-          name: "file",
-          header: {
-            "Authorization": utils_http.http.getAuthToken()
-          }
-        });
-        if (uploadErr) {
-          common_vendor.index.__f__("error", "at pages/profile/index.vue:283", "上传头像失败", uploadErr);
-          common_vendor.index.showToast({
-            title: "上传失败",
-            icon: "none"
-          });
-          return;
-        }
-        const data = JSON.parse(uploadRes.data);
-        if (data.code === 200 && data.data) {
-          this.userInfo.displayAvatar = data.data.url;
-          common_vendor.index.showToast({
-            title: "上传成功",
-            icon: "success"
-          });
-        } else {
-          common_vendor.index.__f__("error", "at pages/profile/index.vue:299", "上传头像失败", data);
-          common_vendor.index.showToast({
-            title: data.message || "上传失败",
-            icon: "none"
-          });
-        }
-      } catch (error) {
-        common_vendor.index.__f__("error", "at pages/profile/index.vue:306", "上传头像异常", error);
-        common_vendor.index.showToast({
-          title: "上传异常",
-          icon: "none"
-        });
-      }
-    },
-    toggleUseWechatNickname() {
-      this.useWechatNickname = !this.useWechatNickname;
-      if (this.useWechatNickname) {
-        this.customNickname = "";
-      }
-    },
-    async saveProfile() {
-      if (this.isLoading)
-        return;
-      if (!this.useWechatNickname && !this.customNickname.trim()) {
-        common_vendor.index.showToast({
-          title: "请输入昵称",
-          icon: "none"
-        });
-        return;
-      }
-      this.isLoading = true;
-      try {
-        const updateData = {};
-        if (this.useWechatNickname) {
-          updateData.displayName = this.userInfo.nickName;
-        } else {
-          updateData.displayName = this.customNickname.trim();
-        }
-        if (this.userInfo.displayAvatar && this.userInfo.displayAvatar !== this.userInfo.avatarUrl) {
-          updateData.displayAvatar = this.userInfo.displayAvatar;
-        }
-        const response = await api_user.updateUserProfile(updateData);
-        if (response && response.code === 200) {
-          const loginInfo = common_vendor.index.getStorageSync("login_info");
-          if (loginInfo && loginInfo.userInfo) {
-            loginInfo.userInfo.displayName = updateData.displayName;
-            if (updateData.displayAvatar) {
-              loginInfo.userInfo.displayAvatar = updateData.displayAvatar;
+    // 退出登录
+    logout() {
+      common_vendor.index.showModal({
+        title: "确认退出",
+        content: "确认要退出登录吗？",
+        success: (res) => {
+          if (res.confirm) {
+            try {
+              common_vendor.index.removeStorageSync("login_info");
+              common_vendor.index.removeStorageSync("token");
+            } catch (error) {
+              common_vendor.index.__f__("error", "at pages/profile/index.vue:189", "清除登录信息出错", error);
             }
-            common_vendor.index.setStorageSync("login_info", loginInfo);
+            common_vendor.index.redirectTo({
+              url: "/pages/login/index"
+            });
           }
-          this.userInfo.displayName = updateData.displayName;
-          if (updateData.displayAvatar) {
-            this.userInfo.displayAvatar = updateData.displayAvatar;
-          }
+        }
+      });
+    },
+    goToPrivacySettings() {
+      common_vendor.index.__f__("log", "at pages/profile/index.vue:201", "Attempting to navigate to privacy settings page");
+      common_vendor.index.navigateTo({
+        url: "/subPackages/record/pages/privacy/index",
+        success: () => {
+          common_vendor.index.__f__("log", "at pages/profile/index.vue:205", "Successfully navigated to privacy settings page");
+        },
+        fail: (err) => {
+          common_vendor.index.__f__("error", "at pages/profile/index.vue:208", "Failed to navigate to privacy settings page", err);
           common_vendor.index.showToast({
-            title: "保存成功",
-            icon: "success"
-          });
-        } else {
-          common_vendor.index.__f__("error", "at pages/profile/index.vue:365", "保存个人资料失败", response);
-          common_vendor.index.showToast({
-            title: (response == null ? void 0 : response.message) || "保存失败",
+            title: "跳转失败，请检查网络",
             icon: "none"
           });
         }
-      } catch (error) {
-        common_vendor.index.__f__("error", "at pages/profile/index.vue:372", "保存个人资料异常", error);
-        common_vendor.index.showToast({
-          title: "保存异常，请重试",
-          icon: "none"
-        });
-      } finally {
-        this.isLoading = false;
-      }
+      });
+    },
+    goToNotificationSettings() {
+      common_vendor.index.__f__("log", "at pages/profile/index.vue:217", "Attempting to navigate to notification settings page");
+      common_vendor.index.navigateTo({
+        url: "/subPackages/record/pages/notification/index",
+        success: () => {
+          common_vendor.index.__f__("log", "at pages/profile/index.vue:221", "Successfully navigated to notification settings page");
+        },
+        fail: (err) => {
+          common_vendor.index.__f__("error", "at pages/profile/index.vue:224", "Failed to navigate to notification settings page", err);
+          common_vendor.index.showToast({
+            title: "跳转失败，请检查网络",
+            icon: "none"
+          });
+        }
+      });
+    },
+    goToHeartwall() {
+      common_vendor.index.__f__("log", "at pages/profile/index.vue:233", "Attempting to navigate to heartwall page");
+      common_vendor.index.navigateTo({
+        url: "/subPackages/record/pages/heartwall/index",
+        success: () => {
+          common_vendor.index.__f__("log", "at pages/profile/index.vue:237", "Successfully navigated to heartwall page");
+        },
+        fail: (err) => {
+          common_vendor.index.__f__("error", "at pages/profile/index.vue:240", "Failed to navigate to heartwall page", err);
+          common_vendor.index.showToast({
+            title: "跳转失败，请检查网络",
+            icon: "none"
+          });
+        }
+      });
     }
   }
 };
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
-  return common_vendor.e({
+  return {
     a: $data.statusBarHeight + "px",
     b: common_vendor.o((...args) => $options.goBack && $options.goBack(...args)),
     c: $data.navBarHeight + "px",
-    d: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/login/love.jpg",
-    e: common_vendor.o((...args) => $options.selectWechatAvatar && $options.selectWechatAvatar(...args)),
-    f: common_vendor.o((...args) => $options.uploadCustomAvatar && $options.uploadCustomAvatar(...args)),
-    g: $data.useWechatNickname ? 1 : "",
-    h: common_vendor.t($data.userInfo.nickName),
-    i: common_vendor.o((...args) => $options.toggleUseWechatNickname && $options.toggleUseWechatNickname(...args)),
-    j: !$data.useWechatNickname
-  }, !$data.useWechatNickname ? {
-    k: $data.customNickname,
-    l: common_vendor.o(($event) => $data.customNickname = $event.detail.value),
-    m: common_vendor.t($data.customNickname.length)
-  } : {}, {
-    n: common_vendor.o((...args) => $options.saveProfile && $options.saveProfile(...args)),
-    o: $data.isLoading,
-    p: $options.containerPaddingTop
-  });
+    d: common_vendor.o((...args) => $options.changePassword && $options.changePassword(...args)),
+    e: common_vendor.o((...args) => $options.bindPhone && $options.bindPhone(...args)),
+    f: common_vendor.o((...args) => $options.bindEmail && $options.bindEmail(...args)),
+    g: common_vendor.o((...args) => $options.goToPrivacySettings && $options.goToPrivacySettings(...args)),
+    h: common_vendor.o((...args) => $options.goToNotificationSettings && $options.goToNotificationSettings(...args)),
+    i: common_vendor.o((...args) => $options.goToHeartwall && $options.goToHeartwall(...args)),
+    j: common_vendor.o((...args) => $options.logout && $options.logout(...args)),
+    k: $options.containerPaddingTop
+  };
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-201c0da5"]]);
 wx.createPage(MiniProgramPage);

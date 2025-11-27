@@ -9,6 +9,8 @@ const _sfc_main = {
       screenWidth: 375,
       showAddModal: false,
       showEditModal: false,
+      isDeleting: -1,
+      // 用于删除动画
       anniversaryList: [
         {
           id: 1,
@@ -111,6 +113,7 @@ const _sfc_main = {
     const month = String(today.getMonth() + 1).padStart(2, "0");
     const day = String(today.getDate()).padStart(2, "0");
     this.newAnniversary.date = `${year}-${month}-${day}`;
+    this.loadAnniversaryData();
   },
   methods: {
     goBack() {
@@ -134,6 +137,25 @@ const _sfc_main = {
         this.screenWidth = sysInfo.windowWidth || 375;
       }
       this.navBarHeight = 44;
+    },
+    // 保存纪念日数据到本地存储
+    saveAnniversaryData() {
+      try {
+        common_vendor.index.setStorageSync("anniversaryList", this.anniversaryList);
+      } catch (error) {
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:330", "保存纪念日数据失败", error);
+      }
+    },
+    // 加载纪念日数据
+    loadAnniversaryData() {
+      try {
+        const data = common_vendor.index.getStorageSync("anniversaryList");
+        if (data) {
+          this.anniversaryList = data;
+        }
+      } catch (error) {
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:341", "加载纪念日数据失败", error);
+      }
     },
     // 格式化日期显示
     formatDate(dateStr) {
@@ -218,6 +240,7 @@ const _sfc_main = {
         remind: this.newAnniversary.remind
       };
       this.anniversaryList.push(newItem);
+      this.saveAnniversaryData();
       this.newAnniversary.title = "";
       const today = /* @__PURE__ */ new Date();
       const year = today.getFullYear();
@@ -233,24 +256,55 @@ const _sfc_main = {
         icon: "success"
       });
     },
-    // 删除纪念日
-    deleteAnniversary(index) {
+    // 测试删除方法
+    testDelete(index) {
+      common_vendor.index.__f__("log", "at subPackages/record/pages/anniversary/index.vue:454", "测试删除方法被调用，索引：", index);
       common_vendor.index.showModal({
         title: "确认删除",
         content: "确定要删除这个纪念日吗？",
         success: (res) => {
           if (res.confirm) {
-            const item = this.anniversaryList[index];
-            this.anniversaryList.splice(index, 1);
-            common_vendor.index.showToast({
-              title: "删除成功",
-              icon: "success"
-            });
-            if (item.remind && !this.hasReminders)
-              ;
+            this.deleteAnniversary(index);
           }
+        },
+        fail: (err) => {
+          common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:467", "显示确认框失败:", err);
+          this.deleteAnniversary(index);
         }
       });
+    },
+    // 删除纪念日
+    deleteAnniversary(index) {
+      if (index < 0 || index >= this.anniversaryList.length) {
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:477", "无效的索引:", index);
+        common_vendor.index.showToast({
+          title: "删除失败",
+          icon: "none"
+        });
+        return;
+      }
+      try {
+        this.isDeleting = index;
+        setTimeout(() => {
+          const item = this.anniversaryList[index];
+          this.anniversaryList.splice(index, 1);
+          this.saveAnniversaryData();
+          this.isDeleting = -1;
+          common_vendor.index.showToast({
+            title: "删除成功",
+            icon: "success"
+          });
+          if (item.remind && !this.hasReminders) {
+          }
+        }, 300);
+      } catch (error) {
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:511", "删除纪念日失败:", error);
+        this.isDeleting = -1;
+        common_vendor.index.showToast({
+          title: "删除失败",
+          icon: "none"
+        });
+      }
     },
     // 编辑纪念日
     editAnniversary(index) {
@@ -291,6 +345,7 @@ const _sfc_main = {
           color: this.editingAnniversary.color,
           remind: this.editingAnniversary.remind
         };
+        this.saveAnniversaryData();
         this.showEditModal = false;
         common_vendor.index.showToast({
           title: "保存成功",
@@ -339,9 +394,10 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
           size: 24,
           color: item.remind ? "#FFCC66" : "#CCCCCC"
         }),
-        l: common_vendor.o(($event) => $options.deleteAnniversary(index), item.id),
-        m: "693c5a64-2-" + i0,
-        n: item.id
+        l: "693c5a64-2-" + i0,
+        m: common_vendor.o(($event) => $options.testDelete(index), item.id),
+        n: item.id,
+        o: $data.isDeleting === index ? 1 : ""
       });
     }),
     f: common_vendor.p({

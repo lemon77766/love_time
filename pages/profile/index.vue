@@ -1,10 +1,10 @@
-<template>
+﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿<template>
   <view class="profile-settings-page" :style="{ paddingTop: containerPaddingTop }">
     <!-- 自定义导航栏 -->
     <view class="custom-navbar">
-      <!-- 渐变背景 -->
+      <!-- 背景渐变 -->
       <view class="navbar-gradient-bg"></view>
-      <!-- 状态栏占位 -->
+      <!-- 状态栏 -->
       <view class="status-bar" :style="{ height: statusBarHeight + 'px' }"></view>
       <!-- 导航栏内容 -->
       <view class="navbar-content" :style="{ height: navBarHeight + 'px' }">
@@ -18,85 +18,71 @@
       </view>
     </view>
 
-    <view class="container">
-      <!-- 个人资料设置内容 -->
-      <view class="profile-setting-block">
-        <text class="profile-setting-title">头像设置</text>
-        <view class="avatar-section">
-          <view class="current-avatar">
-            <image class="avatar" :src="userInfo.displayAvatar || userInfo.avatarUrl || '/static/login/love.jpg'" mode="aspectFill" />
-            <text class="avatar-label">当前头像</text>
-          </view>
-          
-          <view class="avatar-options">
-            <button class="avatar-btn" @click="selectWechatAvatar">
-              <text class="btn-icon">📱</text>
-              <text class="btn-text">使用微信头像</text>
-            </button>
-            
-            <button class="avatar-btn" @click="uploadCustomAvatar">
-              <text class="btn-icon">🖼️</text>
-              <text class="btn-text">上传自定义头像</text>
-            </button>
-          </view>
-        </view>
-      </view>
-
-      <!-- 昵称设置 -->
-      <view class="profile-setting-block">
-        <text class="profile-setting-title">昵称设置</text>
-        <view class="nickname-section">
-          <view class="nickname-option" @click="toggleUseWechatNickname">
-            <view class="checkbox" :class="{ checked: useWechatNickname }"></view>
-            <text class="option-text">使用微信昵称</text>
-            <text class="current-nickname">{{ userInfo.nickName }}</text>
-          </view>
-          
-          <view v-if="!useWechatNickname" class="custom-nickname">
-            <input 
-              v-model="customNickname" 
-              class="nickname-input" 
-              placeholder="请输入自定义昵称"
-              maxlength="20"
-            />
-            <text class="char-count">{{ customNickname.length }}/20</text>
-          </view>
-        </view>
-      </view>
-
+    <view class="content">
       <!-- 账号安全设置 -->
-      <view class="profile-setting-block">
-        <text class="profile-setting-title">账号安全</text>
-        <view class="security-section">
-          <view class="security-item">
-            <view class="security-left">
-              <text class="security-icon">🔑</text>
-              <text class="security-text">修改密码</text>
+      <view class="section account-security-section">
+        <text class="section-title">账号安全</text>
+        <view class="settings-list">
+          <view class="setting-item" @click="changePassword">
+            <view class="setting-left">
+              <text class="setting-icon">🔑</text>
+              <text class="setting-text">修改密码</text>
             </view>
-            <text class="security-arrow">›</text>
+            <text class="setting-arrow">›</text>
           </view>
-          <view class="security-item">
-            <view class="security-left">
-              <text class="security-icon">📱</text>
-              <text class="security-text">绑定手机</text>
+          <view class="setting-item" @click="bindPhone">
+            <view class="setting-left">
+              <text class="setting-icon">📱</text>
+              <text class="setting-text">绑定手机</text>
             </view>
-            <text class="security-status">未绑定</text>
+            <text class="setting-status">未绑定</text>
           </view>
-          <view class="security-item">
-            <view class="security-left">
-              <text class="security-icon">📧</text>
-              <text class="security-text">绑定邮箱</text>
+          <view class="setting-item" @click="bindEmail">
+            <view class="setting-left">
+              <text class="setting-icon">📧</text>
+              <text class="setting-text">绑定邮箱</text>
             </view>
-            <text class="security-status">未绑定</text>
+            <text class="setting-status">未绑定</text>
           </view>
         </view>
       </view>
 
-      <!-- 保存按钮 -->
-      <view class="save-section">
-        <button class="save-btn" @click="saveProfile" :disabled="isLoading">
-          <text class="save-text">保存设置</text>
-        </button>
+      <!-- 隐私与通知设置 -->
+      <view class="section privacy-notification-section">
+        <text class="section-title">隐私与通知</text>
+        <view class="settings-list">
+          <view class="setting-item" @click="goToPrivacySettings">
+            <view class="setting-left">
+              <text class="setting-icon">🔒</text>
+              <text class="setting-text">隐私设置</text>
+            </view>
+            <text class="setting-arrow">›</text>
+          </view>
+          <view class="setting-item" @click="goToNotificationSettings">
+            <view class="setting-left">
+              <text class="setting-icon">🔔</text>
+              <text class="setting-text">通知设置</text>
+            </view>
+            <text class="setting-arrow">›</text>
+          </view>
+          <!-- 用于测试的临时跳转 -->
+          <view class="setting-item" @click="goToHeartwall">
+            <view class="setting-left">
+              <text class="setting-text">测试跳转到心墙</text>
+            </view>
+            <text class="setting-arrow">›</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 退出登录 -->
+      <view class="section logout-section">
+        <view class="setting-item" @click="logout">
+          <view class="setting-left">
+            <text class="setting-icon">🚪</text>
+            <text class="setting-text">退出登录</text>
+          </view>
+        </view>
       </view>
     </view>
   </view>
@@ -105,7 +91,6 @@
 <script>
 import http from '@/utils/http.js';
 import config from '@/utils/config.js';
-import { updateUserProfile } from '@/api/user.js';
 import { isGuestUser } from '@/utils/auth.js';
 
 export default {
@@ -113,16 +98,7 @@ export default {
     return {
       statusBarHeight: 0,
       navBarHeight: 44,
-      screenWidth: 375,
-      userInfo: {
-        nickName: '',
-        avatarUrl: '',
-        displayName: '',
-        displayAvatar: ''
-      },
-      useWechatNickname: true,
-      customNickname: '',
-      isLoading: false
+      screenWidth: 375
     };
   },
   computed: {
@@ -135,7 +111,6 @@ export default {
   },
   onLoad() {
     this.getSystemInfo();
-    this.loadUserInfo();
   },
   methods: {
     goBack() {
@@ -175,209 +150,101 @@ export default {
       this.navBarHeight = 44;
       // #endif
     },
-    loadUserInfo() {
-      try {
-        const loginInfo = uni.getStorageSync('login_info');
-        if (loginInfo && loginInfo.userInfo) {
-          this.userInfo = { ...loginInfo.userInfo };
-          this.useWechatNickname = !this.userInfo.displayName || 
-            this.userInfo.displayName === this.userInfo.nickName;
-          this.customNickname = this.useWechatNickname ? '' : this.userInfo.displayName;
-        }
-      } catch (error) {
-        console.error('加载用户信息失败', error);
-      }
+    // 修改密码
+    changePassword() {
+      uni.showToast({
+        title: '修改密码功能暂未开放',
+        icon: 'none'
+      });
     },
-    async selectWechatAvatar() {
-      if (this.isLoading) return;
-      
-      this.isLoading = true;
-      try {
-        const [err, res] = await uni.chooseImage({
-          count: 1,
-          sizeType: ['compressed'],
-          sourceType: ['album', 'camera']
-        });
-        
-        if (err) {
-          console.error('选择图片失败', err);
-          uni.showToast({
-            title: '选择图片失败',
-            icon: 'none'
-          });
-          return;
-        }
-        
-        const tempFilePath = res.tempFilePaths[0];
-        if (!tempFilePath) {
-          uni.showToast({
-            title: '未选择图片',
-            icon: 'none'
-          });
-          return;
-        }
-        
-        await this.uploadAvatar(tempFilePath);
-      } catch (error) {
-        console.error('选择微信头像失败', error);
-        uni.showToast({
-          title: '操作失败，请重试',
-          icon: 'none'
-        });
-      } finally {
-        this.isLoading = false;
-      }
+    
+    // 绑定手机
+    bindPhone() {
+      uni.showToast({
+        title: '绑定手机功能暂未开放',
+        icon: 'none'
+      });
     },
-    async uploadCustomAvatar() {
-      if (this.isLoading) return;
-      
-      this.isLoading = true;
-      try {
-        const [err, res] = await uni.chooseImage({
-          count: 1,
-          sizeType: ['compressed'],
-          sourceType: ['album']
-        });
-        
-        if (err) {
-          console.error('选择图片失败', err);
-          uni.showToast({
-            title: '选择图片失败',
-            icon: 'none'
-          });
-          return;
-        }
-        
-        const tempFilePath = res.tempFilePaths[0];
-        if (!tempFilePath) {
-          uni.showToast({
-            title: '未选择图片',
-            icon: 'none'
-          });
-          return;
-        }
-        
-        await this.uploadAvatar(tempFilePath);
-      } catch (error) {
-        console.error('上传自定义头像失败', error);
-        uni.showToast({
-          title: '操作失败，请重试',
-          icon: 'none'
-        });
-      } finally {
-        this.isLoading = false;
-      }
+    
+    // 绑定邮箱
+    bindEmail() {
+      uni.showToast({
+        title: '绑定邮箱功能暂未开放',
+        icon: 'none'
+      });
     },
-    async uploadAvatar(filePath) {
-      try {
-        const [uploadErr, uploadRes] = await uni.uploadFile({
-          url: config.API.USER.UPLOAD_AVATAR,
-          filePath: filePath,
-          name: 'file',
-          header: {
-            'Authorization': http.getAuthToken()
-          }
-        });
-        
-        if (uploadErr) {
-          console.error('上传头像失败', uploadErr);
-          uni.showToast({
-            title: '上传失败',
-            icon: 'none'
-          });
-          return;
-        }
-        
-        const data = JSON.parse(uploadRes.data);
-        if (data.code === 200 && data.data) {
-          this.userInfo.displayAvatar = data.data.url;
-          uni.showToast({
-            title: '上传成功',
-            icon: 'success'
-          });
-        } else {
-          console.error('上传头像失败', data);
-          uni.showToast({
-            title: data.message || '上传失败',
-            icon: 'none'
-          });
-        }
-      } catch (error) {
-        console.error('上传头像异常', error);
-        uni.showToast({
-          title: '上传异常',
-          icon: 'none'
-        });
-      }
-    },
-    toggleUseWechatNickname() {
-      this.useWechatNickname = !this.useWechatNickname;
-      if (this.useWechatNickname) {
-        this.customNickname = '';
-      }
-    },
-    async saveProfile() {
-      if (this.isLoading) return;
-      
-      if (!this.useWechatNickname && !this.customNickname.trim()) {
-        uni.showToast({
-          title: '请输入昵称',
-          icon: 'none'
-        });
-        return;
-      }
-      
-      this.isLoading = true;
-      try {
-        const updateData = {};
-        if (this.useWechatNickname) {
-          updateData.displayName = this.userInfo.nickName;
-        } else {
-          updateData.displayName = this.customNickname.trim();
-        }
-        
-        if (this.userInfo.displayAvatar && this.userInfo.displayAvatar !== this.userInfo.avatarUrl) {
-          updateData.displayAvatar = this.userInfo.displayAvatar;
-        }
-        
-        const response = await updateUserProfile(updateData);
-        
-        if (response && response.code === 200) {
-          const loginInfo = uni.getStorageSync('login_info');
-          if (loginInfo && loginInfo.userInfo) {
-            loginInfo.userInfo.displayName = updateData.displayName;
-            if (updateData.displayAvatar) {
-              loginInfo.userInfo.displayAvatar = updateData.displayAvatar;
+    
+    // 退出登录
+    logout() {
+      uni.showModal({
+        title: '确认退出',
+        content: '确认要退出登录吗？',
+        success: (res) => {
+          if (res.confirm) {
+            // 清除登录信息
+            try {
+              uni.removeStorageSync('login_info');
+              uni.removeStorageSync('token');
+            } catch (error) {
+              console.error('清除登录信息出错', error);
             }
-            uni.setStorageSync('login_info', loginInfo);
+            
+            // 跳转到登录页面
+            uni.redirectTo({
+              url: '/pages/login/index'
+            });
           }
-          
-          this.userInfo.displayName = updateData.displayName;
-          if (updateData.displayAvatar) {
-            this.userInfo.displayAvatar = updateData.displayAvatar;
-          }
-          
+        }
+      });
+    },
+    goToPrivacySettings() {
+      console.log('Attempting to navigate to privacy settings page');
+      uni.navigateTo({
+        url: '/subPackages/record/pages/privacy/index',
+        success: () => {
+          console.log('Successfully navigated to privacy settings page');
+        },
+        fail: (err) => {
+          console.error('Failed to navigate to privacy settings page', err);
           uni.showToast({
-            title: '保存成功',
-            icon: 'success'
-          });
-        } else {
-          console.error('保存个人资料失败', response);
-          uni.showToast({
-            title: response?.message || '保存失败',
+            title: '跳转失败，请检查网络',
             icon: 'none'
           });
         }
-      } catch (error) {
-        console.error('保存个人资料异常', error);
-        uni.showToast({
-          title: '保存异常，请重试',
-          icon: 'none'
-        });
-      } finally {
-        this.isLoading = false;
-      }
+      });
     },
+    goToNotificationSettings() {
+      console.log('Attempting to navigate to notification settings page');
+      uni.navigateTo({
+        url: '/subPackages/record/pages/notification/index',
+        success: () => {
+          console.log('Successfully navigated to notification settings page');
+        },
+        fail: (err) => {
+          console.error('Failed to navigate to notification settings page', err);
+          uni.showToast({
+            title: '跳转失败，请检查网络',
+            icon: 'none'
+          });
+        }
+      });
+    },
+    goToHeartwall() {
+      console.log('Attempting to navigate to heartwall page');
+      uni.navigateTo({
+        url: '/subPackages/record/pages/heartwall/index',
+        success: () => {
+          console.log('Successfully navigated to heartwall page');
+        },
+        fail: (err) => {
+          console.error('Failed to navigate to heartwall page', err);
+          uni.showToast({
+            title: '跳转失败，请检查网络',
+            icon: 'none'
+          });
+        }
+      });
+    }
   }
 };
 </script>
@@ -437,7 +304,7 @@ export default {
 }
 
 .title-text {
-  font-size: 36rpx;
+  font-size: 40rpx; /* 增大字体 */
   font-weight: 500;
   color: #4A4A4A;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -470,251 +337,96 @@ export default {
   justify-content: center;
 }
 
-.container {
-  padding: 30rpx;
-  padding-top: calc(30rpx + 44px); /* 导航栏高度 + padding */
+/* 内容区域 */
+.content {
+  padding: 15rpx; /* 减少顶部留白 */
+  padding-top: calc(15rpx + 44px); /* 减少导航栏下方留白 */
 }
 
-.profile-setting-block {
+/* 区块样式 */
+.section {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
+  padding: 20rpx; /* 减少内边距 */
+  margin-bottom: 10rpx; /* 减少区块间距 */
   box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
 }
 
-.profile-setting-title {
-  font-size: 32rpx;
+.section-title {
+  display: block;
+  font-size: 34rpx; /* 增大标题字体 */
   font-weight: 600;
-  color: #333333;
-  margin-bottom: 30rpx;
-  padding-bottom: 15rpx;
+  color: #333;
+  margin-bottom: 12rpx; /* 减少标题下方留白 */
+  padding-bottom: 10rpx; /* 减少标题下方内边距 */
   border-bottom: 1rpx solid #eee;
 }
 
-.avatar-section {
+.settings-list {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 30rpx;
 }
 
-.current-avatar {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16rpx;
-}
-
-.avatar {
-  width: 160rpx;
-  height: 160rpx;
-  border-radius: 80rpx;
-  border: 4rpx solid #e5e5e5;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
-}
-
-.avatar-label {
-  font-size: 28rpx;
-  color: #666666;
-}
-
-.avatar-options {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-  width: 100%;
-}
-
-.avatar-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12rpx;
-  padding: 25rpx;
-  background: #f0f0f0;
-  border-radius: 16rpx;
-  border: none;
-  font-size: 30rpx;
-  color: #333;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.avatar-btn:active {
-  background: #e0e0e0;
-}
-
-.btn-icon {
-  font-size: 36rpx;
-}
-
-.btn-text {
-  font-size: 30rpx;
-  font-weight: 500;
-}
-
-.nickname-section {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-}
-
-.nickname-option {
-  display: flex;
-  align-items: center;
-  padding: 20rpx;
-  background: #f8f8f8;
-  border-radius: 16rpx;
-  cursor: pointer;
-}
-
-.checkbox {
-  width: 32rpx;
-  height: 32rpx;
-  border: 2rpx solid #cccccc;
-  border-radius: 8rpx;
-  margin-right: 15rpx;
-  position: relative;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-}
-
-.checkbox.checked {
-  background: #FFCC66;
-  border-color: #FFCC66;
-}
-
-.checkbox.checked::after {
-  content: '';
-  position: absolute;
-  width: 14rpx;
-  height: 22rpx;
-  border: solid #fff;
-  border-width: 0 3rpx 3rpx 0;
-  transform: rotate(45deg);
-  top: 50%;
-  left: 50%;
-  margin-top: -12rpx;
-  margin-left: -7rpx;
-}
-
-.option-text {
-  flex: 1;
-  font-size: 30rpx;
-  color: #333333;
-  font-weight: 500;
-}
-
-.current-nickname {
-  font-size: 28rpx;
-  color: #999999;
-}
-
-.custom-nickname {
-  background: #f8f8f8;
-  border-radius: 16rpx;
-  padding: 20rpx;
-}
-
-.nickname-input {
-  width: 100%;
-  padding: 18rpx;
-  border: 1rpx solid #e0e0e0;
-  border-radius: 10rpx;
-  font-size: 30rpx;
-  background: #ffffff;
-  margin-bottom: 15rpx;
-  box-sizing: border-box;
-}
-
-.char-count {
-  display: block;
-  font-size: 24rpx;
-  color: #999999;
-  text-align: right;
-}
-
-.security-section {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-}
-
-.security-item {
+.setting-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20rpx 0;
+  padding: 12rpx 0; /* 减少设置项内边距 */
   border-bottom: 1rpx solid #eee;
+  cursor: pointer;
 }
 
-.security-item:last-child {
+.setting-item:last-child {
   border-bottom: none;
 }
 
-.security-left {
+.setting-left {
   display: flex;
   align-items: center;
-  gap: 20rpx;
+  gap: 12rpx; /* 减少图标和文字间距 */
 }
 
-.security-icon {
-  font-size: 36rpx;
+.setting-icon {
+  font-size: 36rpx; /* 增大图标 */
 }
 
-.security-text {
-  font-size: 30rpx;
+.setting-text {
+  font-size: 28rpx; /* 增大文字 */
   color: #333;
+  font-weight: 500;
 }
 
-.security-arrow {
-  font-size: 36rpx;
+.setting-arrow {
+  font-size: 36rpx; /* 增大箭头 */
   color: #ccc;
 }
 
-.security-status {
-  font-size: 28rpx;
+.setting-status {
+  font-size: 24rpx; /* 增大状态文字 */
   color: #999;
 }
 
-.save-section {
-  margin-top: 50rpx;
-  padding: 0 30rpx;
+/* 退出登录区域特殊样式 */
+.logout-section {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx;
+  padding: 0;
+  margin-bottom: 20rpx;
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
 }
 
-.save-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15rpx;
-  padding: 30rpx;
-  background: linear-gradient(135deg, #FFCC66, #FF9EBC);
-  border-radius: 50rpx;
-  border: none;
-  color: #8B6914;
-  font-size: 32rpx;
+.logout-section .setting-item {
+  padding: 20rpx; /* 减少退出登录项内边距 */
+  border-bottom: none;
+}
+
+.logout-section .setting-text {
+  color: #FF6B6B;
   font-weight: 600;
-  box-shadow: 0 8rpx 20rpx rgba(255, 204, 102, 0.3);
-  transition: all 0.3s ease;
-}
-
-.save-btn:active {
-  opacity: 0.8;
-  transform: translateY(2rpx);
-  box-shadow: 0 4rpx 10rpx rgba(255, 204, 102, 0.2);
-}
-
-.save-btn[disabled] {
-  background: #cccccc;
-  box-shadow: none;
-  opacity: 0.7;
-}
-
-.save-text {
-  font-size: 32rpx;
+  font-size: 30rpx; /* 增大退出登录文字 */
 }
 </style>

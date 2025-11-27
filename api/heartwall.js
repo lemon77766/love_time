@@ -232,8 +232,9 @@ export function deleteProject(projectId) {
  * 
  * 后端接口要求：
  * - 请求方法：POST
- * - 请求地址：/api/heart-wall/photos
+ * - 请求地址：/api/heart-wall/photos/upload
  * - 请求头：需携带 Authorization token
+ * - 请求格式：application/json
  * - 请求参数（JSON格式）：
  *   {
  *     "projectId": 1,
@@ -245,7 +246,7 @@ export function deleteProject(projectId) {
  *   }
  */
 export function uploadPhoto(photoData) {
-  const url = config.API.HEART_WALL.PHOTOS;
+  const url = `/api/heart-wall/photos/upload`;
   const fullUrl = config.baseURL + url;
   
   console.log('🔗 [心形墙API] 开始上传照片（JSON格式）');
@@ -301,7 +302,7 @@ export function uploadPhoto(photoData) {
  * 
  * 后端接口要求：
  * - 请求方法：POST
- * - 请求地址：/api/heart-wall/photos
+ * - 请求地址：/api/heart-wall/photos/upload
  * - 请求头：需携带 Authorization token
  * - 请求格式：multipart/form-data
  * - 请求参数：
@@ -322,7 +323,7 @@ export function uploadPhotoWithFile(options) {
     return Promise.reject(new Error('项目ID不能为空'));
   }
   
-  const url = config.API.HEART_WALL.PHOTOS;
+  const url = `/api/heart-wall/photos/upload`;
   const fullUrl = config.baseURL + url;
   
   console.log('🔗 [心形墙API] 开始直接上传照片文件');
@@ -518,7 +519,7 @@ export function getNextPosition(projectId) {
  *   }
  */
 export function updatePhoto(photoId, photoData) {
-  const url = `${config.API.HEART_WALL.PHOTOS}/${photoId}`;
+  const url = `/api/heart-wall/photos/${photoId}`;
   const fullUrl = config.baseURL + url;
   
   console.log('🔗 [心形墙API] 开始更新照片');
@@ -550,7 +551,7 @@ export function updatePhoto(photoId, photoData) {
  * - 请求头：需携带 Authorization token
  */
 export function deletePhoto(photoId) {
-  const url = `${config.API.HEART_WALL.PHOTOS}/${photoId}`;
+  const url = `/api/heart-wall/photos/${photoId}`;
   const fullUrl = config.baseURL + url;
   
   console.log('🔗 [心形墙API] 开始删除照片');

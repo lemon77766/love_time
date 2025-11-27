@@ -129,15 +129,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 25rpx 30rpx;
-  border-bottom: 1rpx solid #F0F0F0;
-  cursor: pointer;
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  transform: translateX(0);
 }
-.anniversary-item.data-v-693c5a64:active {
-  background: #fdf2f8;
-}
-.anniversary-item.data-v-693c5a64:last-child {
-  border-bottom: none;
+.anniversary-item.item-deleting.data-v-693c5a64 {
+  transform: translateX(-100%);
+  opacity: 0;
+  height: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
 }
 .item-left.data-v-693c5a64 {
   display: flex;
@@ -182,6 +188,18 @@
 }
 .remind-icon.data-v-693c5a64 {
   cursor: pointer;
+}
+.delete-wrapper.data-v-693c5a64 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 10rpx;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+.delete-wrapper.data-v-693c5a64:active {
+  background-color: rgba(255, 107, 107, 0.1);
 }
 .delete-icon.data-v-693c5a64 {
   cursor: pointer;
