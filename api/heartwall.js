@@ -593,19 +593,18 @@ export function clearProjectPhotos(projectId) {
     return Promise.reject(error);
   }
   
-  // 将projectId作为URL参数传递
-  const url = `/api/heart-wall/clear-photos?projectId=${projectIdValue}`;
+  // 将projectId作为路径参数传递
+  const url = `/api/heart-wall/clear-photos/${projectIdValue}`;
   const fullUrl = config.baseURL + url;
   
   console.log('🔗 [心形墙API] 开始清空项目照片');
   console.log('📍 请求地址:', fullUrl);
-  console.log('📋 请求方法: PUT');
+  console.log('📋 请求方法: DELETE');
   console.log('📝 项目ID:', projectId, '→', projectIdValue, '(类型: number)');
-  console.log('📤 URL参数: projectId=' + projectIdValue);
   console.log('⏰ 请求时间:', new Date().toLocaleString());
   
-  // PUT请求，不传递body数据（参数已在URL中）
-  return http.put(url, {}).then(response => {
+  // DELETE请求，不传递body数据
+  return http.delete(url).then(response => {
     console.log('✅ [心形墙API] 清空项目照片成功');
     console.log('📦 响应数据:', response);
     return response;

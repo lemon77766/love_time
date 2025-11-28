@@ -152,6 +152,9 @@ import { saveCoupleInfo } from '../../utils/couple.js';
 import { getUserInfo, isLoggedIn, isGuestUser } from '../../utils/auth.js';
 import CustomTabbar from '@/components/custom-tabbar/index.vue';
 
+// 引入纪念日API
+import { getAnniversaryList } from '@/api/anniversary.js';
+
 export default {
   components: {
     CustomTabbar
@@ -574,19 +577,25 @@ export default {
         }
       ];
     },
-    // 加载纪念日数据
-    loadAnniversaryData() {
+    // 加载纪念日数据（从后端获取）
+    async loadAnniversaryData() {
       try {
-        // 从本地存储获取纪念日数据
-        const anniversaryData = uni.getStorageSync('anniversaryList');
-        if (anniversaryData) {
-          this.anniversaryList = anniversaryData;
+        // 只有在已绑定的情况下才加载纪念日数据
+        if (!this.isBound) {
+          this.anniversaryList = [];
+          return;
+        }
+        
+        const response = await getAnniversaryList();
+        if (response && response.data && response.data.anniversaryList) {
+          this.anniversaryList = response.data.anniversaryList;
         } else {
-          // 如果没有本地数据，初始化为空数组
+          console.warn('获取纪念日列表数据格式异常:', response);
           this.anniversaryList = [];
         }
       } catch (error) {
-        console.error('加载纪念日数据失败', error);
+        console.error('加载纪念日数据失败:', error);
+        // 出错时初始化为空数组
         this.anniversaryList = [];
       }
     },

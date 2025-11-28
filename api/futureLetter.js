@@ -421,3 +421,44 @@ export function deleteFutureLetter(letterId) {
     throw error;
   });
 }
+
+/**
+ * 获取未读情书
+ * @returns {Promise<Object>} 返回未读情书列表
+ * 
+ * 后端接口要求：
+ * - 请求方法：GET
+ * - 请求地址：/api/future-letter/unread
+ * - 请求头：需携带 Authorization token
+ */
+export function getUnreadLetters() {
+  const url = '/api/future-letter/unread';
+  const fullUrl = config.baseURL + url;
+  
+  console.log('🔗 [未来情书API] 开始获取未读情书列表');
+  console.log('📍 请求地址:', fullUrl);
+  console.log('📋 请求方法: GET');
+  console.log('⏰ 请求时间:', new Date().toLocaleString());
+  
+  return http.get(url).then(response => {
+    console.log('✅ [未来情书API] 获取未读情书列表成功');
+    console.log('📦 响应数据:', response);
+    
+    if (response && response.data) {
+      const letters = Array.isArray(response.data) ? response.data : (response.data.letters || []);
+      console.log(`📊 未读情书数量: ${letters.length}`);
+      return response;
+    } else if (Array.isArray(response)) {
+      // 兼容直接返回数组的情况
+      console.log(`📊 未读情书数量: ${response.length}`);
+      return { success: true, data: response };
+    } else {
+      console.warn('⚠️ 响应数据格式异常:', response);
+      return { success: true, data: [] };
+    }
+  }).catch(error => {
+    console.error('❌ [未来情书API] 获取未读情书列表失败');
+    console.error('🔴 错误信息:', error);
+    throw error;
+  });
+}

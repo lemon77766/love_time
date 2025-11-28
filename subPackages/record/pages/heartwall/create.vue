@@ -33,8 +33,11 @@
         批量上传照片 ({{ remainingSlots > 0 ? `还可添加${Math.min(9, remainingSlots)}张` : '已满' }})
       </button>
       <button class="btn green" @click="onSaveProject">保存项目</button>
-      
+      <button class="btn pink" @click="exportAsImage" v-if="filledCount > 0">导出为图片</button>
     </view>
+    
+    <!-- 隐藏的 Canvas 用于导出图片 -->
+    <canvas canvas-id="exportCanvas" id="exportCanvas" style="width: 750px; height: 1000px; position: fixed; top: -10000px; left: -10000px; background: #FFFAF4;"></canvas>
   </view>
 </template>
 
@@ -97,7 +100,9 @@ export default {
       images: [],
       editingProjectId: null,  // 正在编辑的项目ID，null 表示创建新项目
       saving: false,  // 保存中状态
-      photoMap: {}  // 存储positionIndex到photoId的映射 { positionIndex: photoId }
+      photoMap: {},  // 存储positionIndex到photoId的映射 { positionIndex: photoId }
+      canvasWidth: 0,
+      canvasHeight: 0
     };
   },
   computed: {
@@ -149,6 +154,300 @@ export default {
     goBack() {
       uni.navigateBack();
     },
+    
+    // 导出为图片功能
+    async exportAsImage() {
+      // 检查是否有照片
+      if (this.filledCount === 0) {
+        uni.showToast({
+          title: '请先添加照片再导出',
+          icon: 'none'
+        });
+        return;
+      }
+      
+      uni.showLoading({ title: '正在生成图片...', mask: true });
+      
+      try {
+        // 使用固定的画布尺寸
+        const canvasWidth = 750; // 与Canvas元素宽度一致
+        const canvasHeight = 1000; // 与Canvas元素高度一致
+        const cellSize = (canvasWidth - 40) / 9; // 9x9网格，左右各留20px边距
+        
+        // 创建画布上下文
+        const ctx = uni.createCanvasContext('exportCanvas', this);
+        
+        // 清空画布
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        
+        // 设置画布背景
+        ctx.setFillStyle('#FFFAF4');
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        
+        // 绘制装饰性心形图标
+        ctx.setFontSize(20);
+        ctx.setFillStyle('#FFB5C2');
+        ctx.setTextAlign('center');
+        ctx.fillText('♥', canvasWidth / 2, 30);
+        
+        // 绘制标题
+        ctx.setFontSize(24);
+        ctx.setFillStyle('#4A4A4A');
+        ctx.setTextAlign('center');
+        ctx.fillText('爱心照片墙', canvasWidth / 2, 60);
+        
+        // 绘制统计信息
+        ctx.setFontSize(16);
+        ctx.setFillStyle('#666666');
+        ctx.setTextAlign('center');
+        ctx.fillText(`共 ${this.filledCount} 张照片`, canvasWidth / 2, 90);
+        
+        // 绘制心形图案
+        const startX = 20; // 左边距
+        const startY = 110; // 标题和统计信息下方开始绘制
+        
+        // 绘制每个格子
+        for (let row = 0; row < 9; row++) {
+          for (let col = 0; col < 9; col++) {
+            const idx = row * 9 + col;
+            
+            // 如果是心形区域
+            if (this.heartMask[idx]) {
+              const x = startX + col * cellSize;
+              const y = startY + row * cellSize;
+              
+              // 绘制圆角矩形背景
+              this.drawRoundedRect(ctx, x, y, cellSize, cellSize, 6);
+              ctx.setStrokeStyle('#FFB5C2');
+              ctx.stroke();
+              
+              // 如果有图片，则绘制图片
+              if (this.images[idx]) {
+                // 等待图片加载完成后再绘制
+                await this.drawImageOnCanvas(ctx, this.images[idx], x, y, cellSize, cellSize);
+              }
+            }
+          }
+        }
+        
+        // 绘制底部信息
+        ctx.setFontSize(14);
+        ctx.setFillStyle('#999999');
+        ctx.setTextAlign('center');
+        ctx.fillText('Created with Love Time', canvasWidth / 2, canvasHeight - 30);
+        ctx.fillText(new Date().toLocaleDateString(), canvasWidth / 2, canvasHeight - 10);
+        
+        // 绘制完成，保存到相册
+        ctx.draw(true, () => {  // 使用同步绘制
+          // 延迟一会儿确保绘制完成
+          setTimeout(() => {
+            uni.canvasToTempFilePath({
+              x: 0,
+              y: 0,
+              width: canvasWidth,
+              height: canvasHeight,
+              destWidth: canvasWidth,
+              destHeight: canvasHeight,
+              canvasId: 'exportCanvas',
+              fileType: 'png',
+              quality: 1,
+              success: (res) => {
+                // 检查返回的临时文件路径
+                if (!res.tempFilePath) {
+                  uni.hideLoading();
+                  uni.showToast({
+                    title: '导出失败：无法生成图片',
+                    icon: 'none'
+                  });
+                  return;
+                }
+                
+                // 保存到相册
+                uni.saveImageToPhotosAlbum({
+                  filePath: res.tempFilePath,
+                  success: () => {
+                    uni.hideLoading();
+                    uni.showToast({
+                      title: '图片已保存到相册',
+                      icon: 'success'
+                    });
+                  },
+                  fail: (err) => {
+                    uni.hideLoading();
+                    console.error('保存图片失败:', err);
+                    // 检查是否是因为权限问题
+                    if (err.errMsg && err.errMsg.includes('auth deny')) {
+                      uni.showModal({
+                        title: '权限申请',
+                        content: '需要相册权限才能保存图片，请在设置中开启相册权限',
+                        showCancel: true,
+                        confirmText: '去设置',
+                        success: (modalRes) => {
+                          if (modalRes.confirm) {
+                            // #ifdef MP-WEIXIN
+                            uni.openSetting({
+                              success: (settingRes) => {
+                                if (settingRes.authSetting['scope.writePhotosAlbum']) {
+                                  uni.showToast({
+                                    title: '权限已开启，请重新导出',
+                                    icon: 'none'
+                                  });
+                                }
+                              },
+                              fail: (settingErr) => {
+                                console.error('打开设置失败:', settingErr);
+                                uni.showToast({
+                                  title: '打开设置失败',
+                                  icon: 'none'
+                                });
+                              }
+                            });
+                            // #endif
+                          }
+                        },
+                        fail: (modalErr) => {
+                          console.error('显示模态框失败:', modalErr);
+                          uni.showToast({
+                            title: '操作失败',
+                            icon: 'none'
+                          });
+                        }
+                      });
+                    } else {
+                      uni.showToast({
+                        title: '保存失败，请重试',
+                        icon: 'none'
+                      });
+                    }
+                  }
+                });
+              },
+              fail: (err) => {
+                uni.hideLoading();
+                console.error('导出图片失败:', err);
+                uni.showToast({
+                  title: '导出失败: ' + (err.errMsg || '无法生成图片'),
+                  icon: 'none'
+                });
+              }
+            }, this);
+          }, 1500); // 增加延迟时间确保绘制完成
+        });
+      } catch (error) {
+        uni.hideLoading();
+        console.error('导出图片失败:', error);
+        uni.showToast({
+          title: '导出失败: ' + (error.message || '未知错误'),
+          icon: 'none'
+        });
+      }
+    },
+    
+    // 在Canvas上绘制图片的异步方法
+    drawImageOnCanvas(ctx, imageUrl, x, y, width, height) {
+      return new Promise((resolve) => {
+        // 检查图片URL是否有效
+        if (!imageUrl || typeof imageUrl !== 'string') {
+          console.warn('无效的图片URL:', imageUrl);
+          this.drawPlaceholder(ctx, x, y, width, height);
+          resolve();
+          return;
+        }
+        
+        // 在不同平台使用不同的图片加载方式
+        // #ifdef MP-WEIXIN
+        // 微信小程序环境下使用 getImageInfo
+        uni.getImageInfo({
+          src: imageUrl,
+          success: (info) => {
+            // 确保图片有效再绘制
+            if (info && info.path) {
+              try {
+                ctx.drawImage(info.path, x, y, width, height);
+              } catch (drawErr) {
+                console.warn('绘制图片失败:', drawErr);
+                this.drawPlaceholder(ctx, x, y, width, height);
+              }
+            } else {
+              // 图片无效时绘制占位符
+              this.drawPlaceholder(ctx, x, y, width, height);
+            }
+            resolve();
+          },
+          fail: (err) => {
+            console.warn('图片加载失败:', imageUrl, err);
+            // 图片加载失败时绘制占位符
+            this.drawPlaceholder(ctx, x, y, width, height);
+            resolve();
+          }
+        });
+        // #endif
+        
+        // #ifndef MP-WEIXIN
+        // 其他环境使用传统方式
+        const img = new Image();
+        img.onload = () => {
+          // 确保图片有效再绘制
+          if (img.complete && img.naturalWidth !== 0) {
+            try {
+              ctx.drawImage(img, x, y, width, height);
+            } catch (drawErr) {
+              console.warn('绘制图片失败:', drawErr);
+              this.drawPlaceholder(ctx, x, y, width, height);
+            }
+          } else {
+            // 图片无效时绘制占位符
+            this.drawPlaceholder(ctx, x, y, width, height);
+          }
+          resolve();
+        };
+        img.onerror = () => {
+          console.warn('图片加载失败:', imageUrl);
+          // 图片加载失败时绘制占位符
+          this.drawPlaceholder(ctx, x, y, width, height);
+          resolve();
+        };
+        img.src = imageUrl;
+        // #endif
+      });
+    },
+    
+    // 绘制占位符（当图片加载失败时）
+    drawPlaceholder(ctx, x, y, width, height) {
+      // 绘制浅色背景
+      ctx.setFillStyle('#f0f0f0');
+      ctx.fillRect(x, y, width, height);
+      
+      // 绘制占位符图标
+      ctx.setStrokeStyle('#cccccc');
+      ctx.setLineWidth(2);
+      
+      // 绘制X形状
+      ctx.beginPath();
+      ctx.moveTo(x + 10, y + 10);
+      ctx.lineTo(x + width - 10, y + height - 10);
+      ctx.moveTo(x + width - 10, y + 10);
+      ctx.lineTo(x + 10, y + height - 10);
+      ctx.stroke();
+    },
+
+    // 绘制圆角矩形
+    drawRoundedRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+      ctx.setFillStyle('#ffffff');
+      ctx.fill();
+    },
+
     getSystemInfo() {
       // #ifdef MP-WEIXIN
       try {
@@ -283,6 +582,65 @@ export default {
         }
       });
     },
+    // 上传图片到服务器的函数
+    async uploadImageToServer(imagePath, projectId, positionIndex) {
+      return new Promise((resolve, reject) => {
+        // 使用uni.uploadFile上传图片
+        const loginInfo = uni.getStorageSync('login_info');
+        const token = loginInfo?.token;
+        
+        if (!token) {
+          reject(new Error('未登录，无法上传图片'));
+          return;
+        }
+        
+        // 使用项目中已有的http工具进行上传，确保与项目其他上传功能保持一致
+        // 传递projectId和positionIndex参数
+        http.upload({
+          url: '/api/heart-wall/photos/upload',
+          filePath: imagePath,
+          name: 'file',
+          header: {
+            'Authorization': `Bearer ${token}`
+          },
+          formData: {
+            projectId: projectId.toString(),
+            positionIndex: positionIndex.toString()
+          }
+        }).then(response => {
+          // 从响应中提取图片URL
+          // 根据实际响应结构解析：{photos: [{photoUrl: '...'}]}
+          let photoUrl = null;
+          // 检查photos数组
+          if (response.photos && Array.isArray(response.photos) && response.photos.length > 0) {
+            photoUrl = response.photos[0].photoUrl || response.photos[0].thumbnailUrl;
+          } else if (response.data?.photos && Array.isArray(response.data.photos) && response.data.photos.length > 0) {
+            photoUrl = response.data.photos[0].photoUrl || response.data.photos[0].thumbnailUrl;
+          } else if (response.data?.data?.photos && Array.isArray(response.data.data.photos) && response.data.data.photos.length > 0) {
+            photoUrl = response.data.data.photos[0].photoUrl || response.data.data.photos[0].thumbnailUrl;
+          } else if (response.data?.photoUrl) {
+            photoUrl = response.data.photoUrl;
+          } else if (response.data?.url) {
+            photoUrl = response.data.url;
+          } else if (response.photoUrl) {
+            photoUrl = response.photoUrl;
+          } else if (response.url) {
+            photoUrl = response.url;
+          }
+          
+          if (photoUrl) {
+            resolve(photoUrl);
+          } else {
+            console.warn('⚠️ [爱心墙创建页] 上传响应结构:', response);
+            reject(new Error('上传成功但未返回图片URL'));
+          }
+        }).catch(error => {
+          console.error('❌ [爱心墙创建页] 上传图片到服务器失败:', error);
+          reject(new Error('上传失败: ' + (error.message || error.errMsg || '未知错误')));
+        });
+      });
+    },
+    
     async onPickSingle(idx) {
       if (!this.heartMask[idx]) return;
       
@@ -311,7 +669,7 @@ export default {
             
             // 1. 上传新图片到服务器
             console.log('📤 [爱心墙创建页] 上传新图片到服务器...');
-            const photoUrl = await this.uploadImageToServer(newImagePath);
+            const photoUrl = await this.uploadImageToServer(newImagePath, this.editingProjectId, idx);
             console.log('✅ [爱心墙创建页] 新图片上传成功，URL:', photoUrl);
             
             // 2. 更新后端照片信息

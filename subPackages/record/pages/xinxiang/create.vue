@@ -86,16 +86,27 @@
         <!-- 预计送达时间 -->
         <view class="form-item">
           <text class="form-label">预计送达时间</text>
-          <picker 
-            mode="date" 
-            :value="form.deliveryDate" 
-            @change="onDateChange"
-            :start="minDate"
-          >
-            <view class="picker-display">
-              {{ form.deliveryDate || '请选择日期' }}
-            </view>
-          </picker>
+          <view class="datetime-container">
+            <picker 
+              mode="date" 
+              :value="form.deliveryDate" 
+              @change="onDateChange"
+              :start="minDate"
+            >
+              <view class="picker-display">
+                {{ form.deliveryDate || '请选择日期' }}
+              </view>
+            </picker>
+            <picker 
+              mode="time" 
+              :value="form.deliveryTime" 
+              @change="onTimeChange"
+            >
+              <view class="picker-display time-picker">
+                {{ form.deliveryTime || '请选择时间' }}
+              </view>
+            </picker>
+          </view>
         </view>
 
         <!-- 字体样式 -->
@@ -263,6 +274,7 @@ export default {
       form: {
         title: '',
         deliveryDate: '',
+        deliveryTime: '00:00', // 添加默认时间
         content: '',
         fontStyle: 'default'
       },
@@ -795,6 +807,11 @@ export default {
       this.form.deliveryDate = e.detail.value;
     },
     
+    // 时间选择
+    onTimeChange(e) {
+      this.form.deliveryTime = e.detail.value;
+    },
+    
     // 下一步
     nextStep() {
       if (!this.selectedStyle && !this.isCustomStyle) {
@@ -872,6 +889,13 @@ export default {
           uni.showToast({ title: '日期格式错误，请重新选择', icon: 'none' });
           return;
         }
+      
+        // 验证时间格式
+        if (!this.form.deliveryTime || !/^\d{2}:\d{2}$/.test(this.form.deliveryTime)) {
+          uni.hideLoading();
+          uni.showToast({ title: '时间格式错误，请重新选择', icon: 'none' });
+          return;
+        }
 
         // 构建后端API请求数据
         const letterData = {
@@ -879,7 +903,7 @@ export default {
           content: this.form.content.trim(),
           deliveryMethod: 'PARTNER', // 目前只支持PARTNER
           scheduledDate: this.form.deliveryDate, // 格式：YYYY-MM-DD
-          scheduledTime: `${this.form.deliveryDate}T00:00:00.000`, // 默认时间，确保后端可解析
+          scheduledTime: `${this.form.deliveryDate}T${this.form.deliveryTime}:00.000`, // 完整时间格式
           status: 'DRAFT', // 草稿状态
           fontStyle: this.selectedFontStyle
         };
@@ -1538,7 +1562,18 @@ export default {
 }
 
 .picker-display {
+  padding: 20rpx;
+  background: #ffffff;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  border: 1rpx solid #F3E8FF;
   color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  margin-bottom: 20rpx; /* 添加底部间距 */
+}
+
+.picker-display.time-picker {
+  margin-bottom: 0; /* 时间选择器不需要底部间距 */
 }
 
 .form-textarea {
@@ -1871,4 +1906,11 @@ export default {
   color: #3d2a00;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
+
+.datetime-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
 </style>

@@ -1,5 +1,6 @@
 "use strict";
 const common_vendor = require("../../../../common/vendor.js");
+const api_anniversary = require("../../../../api/anniversary.js");
 const common_assets = require("../../../../common/assets.js");
 const _sfc_main = {
   data() {
@@ -138,23 +139,23 @@ const _sfc_main = {
       }
       this.navBarHeight = 44;
     },
-    // 保存纪念日数据到本地存储
-    saveAnniversaryData() {
+    // 加载纪念日数据（从后端获取）
+    async loadAnniversaryData() {
       try {
-        common_vendor.index.setStorageSync("anniversaryList", this.anniversaryList);
-      } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:330", "保存纪念日数据失败", error);
-      }
-    },
-    // 加载纪念日数据
-    loadAnniversaryData() {
-      try {
-        const data = common_vendor.index.getStorageSync("anniversaryList");
-        if (data) {
-          this.anniversaryList = data;
+        const response = await api_anniversary.getAnniversaryList();
+        if (response && response.data && response.data.anniversaryList) {
+          this.anniversaryList = response.data.anniversaryList;
+        } else {
+          common_vendor.index.__f__("warn", "at subPackages/record/pages/anniversary/index.vue:341", "获取纪念日列表数据格式异常:", response);
+          this.anniversaryList = [];
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:341", "加载纪念日数据失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:345", "加载纪念日数据失败:", error);
+        common_vendor.index.showToast({
+          title: "加载数据失败",
+          icon: "none"
+        });
+        this.anniversaryList = [];
       }
     },
     // 格式化日期显示
@@ -180,13 +181,24 @@ const _sfc_main = {
       return diffDays > 0 ? diffDays : 0;
     },
     // 切换提醒状态
-    toggleRemind(index) {
-      this.anniversaryList[index].remind = !this.anniversaryList[index].remind;
-      const message = this.anniversaryList[index].remind ? "已设置提醒" : "已取消提醒";
-      common_vendor.index.showToast({
-        title: message,
-        icon: "success"
-      });
+    async toggleRemind(index) {
+      try {
+        const item = this.anniversaryList[index];
+        const newRemindState = !item.remind;
+        await api_anniversary.toggleAnniversaryRemind(item.id, newRemindState);
+        this.anniversaryList[index].remind = newRemindState;
+        const message = newRemindState ? "已设置提醒" : "已取消提醒";
+        common_vendor.index.showToast({
+          title: message,
+          icon: "success"
+        });
+      } catch (error) {
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:393", "切换提醒状态失败:", error);
+        common_vendor.index.showToast({
+          title: "操作失败",
+          icon: "none"
+        });
+      }
     },
     // 选择日期
     onDateChange(e) {
@@ -215,7 +227,7 @@ const _sfc_main = {
       this.editingAnniversary.remind = e.detail.value;
     },
     // 添加纪念日
-    addAnniversary() {
+    async addAnniversary() {
       if (!this.newAnniversary.title) {
         common_vendor.index.showToast({
           title: "请输入纪念日标题",
@@ -230,35 +242,52 @@ const _sfc_main = {
         });
         return;
       }
-      const newItem = {
-        id: Date.now(),
-        // 使用时间戳作为唯一ID
-        title: this.newAnniversary.title,
-        date: this.newAnniversary.date,
-        icon: this.newAnniversary.icon,
-        color: this.newAnniversary.color,
-        remind: this.newAnniversary.remind
-      };
-      this.anniversaryList.push(newItem);
-      this.saveAnniversaryData();
-      this.newAnniversary.title = "";
-      const today = /* @__PURE__ */ new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, "0");
-      const day = String(today.getDate()).padStart(2, "0");
-      this.newAnniversary.date = `${year}-${month}-${day}`;
-      this.newAnniversary.icon = "mdi:calendar-heart";
-      this.newAnniversary.color = "#FF91A4";
-      this.newAnniversary.remind = false;
-      this.showAddModal = false;
-      common_vendor.index.showToast({
-        title: "添加成功",
-        icon: "success"
-      });
+      try {
+        const response = await api_anniversary.addAnniversary({
+          title: this.newAnniversary.title,
+          date: this.newAnniversary.date,
+          icon: this.newAnniversary.icon,
+          color: this.newAnniversary.color,
+          remind: this.newAnniversary.remind
+        });
+        if (response && response.data) {
+          const newItem = {
+            id: response.data.id,
+            title: response.data.title,
+            date: response.data.date,
+            icon: response.data.icon,
+            color: response.data.color,
+            remind: response.data.remind
+          };
+          this.anniversaryList.push(newItem);
+          this.newAnniversary.title = "";
+          const today = /* @__PURE__ */ new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, "0");
+          const day = String(today.getDate()).padStart(2, "0");
+          this.newAnniversary.date = `${year}-${month}-${day}`;
+          this.newAnniversary.icon = "mdi:calendar-heart";
+          this.newAnniversary.color = "#FF91A4";
+          this.newAnniversary.remind = false;
+          this.showAddModal = false;
+          common_vendor.index.showToast({
+            title: "添加成功",
+            icon: "success"
+          });
+        } else {
+          throw new Error("添加纪念日响应数据异常");
+        }
+      } catch (error) {
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:489", "添加纪念日失败:", error);
+        common_vendor.index.showToast({
+          title: "添加失败",
+          icon: "none"
+        });
+      }
     },
     // 测试删除方法
     testDelete(index) {
-      common_vendor.index.__f__("log", "at subPackages/record/pages/anniversary/index.vue:454", "测试删除方法被调用，索引：", index);
+      common_vendor.index.__f__("log", "at subPackages/record/pages/anniversary/index.vue:498", "测试删除方法被调用，索引：", index);
       common_vendor.index.showModal({
         title: "确认删除",
         content: "确定要删除这个纪念日吗？",
@@ -268,15 +297,15 @@ const _sfc_main = {
           }
         },
         fail: (err) => {
-          common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:467", "显示确认框失败:", err);
+          common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:511", "显示确认框失败:", err);
           this.deleteAnniversary(index);
         }
       });
     },
     // 删除纪念日
-    deleteAnniversary(index) {
+    async deleteAnniversary(index) {
       if (index < 0 || index >= this.anniversaryList.length) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:477", "无效的索引:", index);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:521", "无效的索引:", index);
         common_vendor.index.showToast({
           title: "删除失败",
           icon: "none"
@@ -284,21 +313,19 @@ const _sfc_main = {
         return;
       }
       try {
+        const item = this.anniversaryList[index];
+        await api_anniversary.deleteAnniversary(item.id);
         this.isDeleting = index;
         setTimeout(() => {
-          const item = this.anniversaryList[index];
           this.anniversaryList.splice(index, 1);
-          this.saveAnniversaryData();
           this.isDeleting = -1;
           common_vendor.index.showToast({
             title: "删除成功",
             icon: "success"
           });
-          if (item.remind && !this.hasReminders) {
-          }
         }, 300);
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:511", "删除纪念日失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:551", "删除纪念日失败:", error);
         this.isDeleting = -1;
         common_vendor.index.showToast({
           title: "删除失败",
@@ -320,7 +347,7 @@ const _sfc_main = {
       this.showEditModal = true;
     },
     // 保存编辑的纪念日
-    saveEditedAnniversary() {
+    async saveEditedAnniversary() {
       if (!this.editingAnniversary.title) {
         common_vendor.index.showToast({
           title: "请输入纪念日标题",
@@ -335,21 +362,39 @@ const _sfc_main = {
         });
         return;
       }
-      const index = this.anniversaryList.findIndex((item) => item.id === this.editingAnniversary.id);
-      if (index !== -1) {
-        this.anniversaryList[index] = {
-          id: this.editingAnniversary.id,
+      try {
+        const response = await api_anniversary.updateAnniversary(this.editingAnniversary.id, {
           title: this.editingAnniversary.title,
           date: this.editingAnniversary.date,
           icon: this.editingAnniversary.icon,
           color: this.editingAnniversary.color,
           remind: this.editingAnniversary.remind
-        };
-        this.saveAnniversaryData();
-        this.showEditModal = false;
+        });
+        if (response && response.data) {
+          const index = this.anniversaryList.findIndex((item) => item.id === this.editingAnniversary.id);
+          if (index !== -1) {
+            this.anniversaryList[index] = {
+              id: response.data.id,
+              title: response.data.title,
+              date: response.data.date,
+              icon: response.data.icon,
+              color: response.data.color,
+              remind: response.data.remind
+            };
+          }
+          this.showEditModal = false;
+          common_vendor.index.showToast({
+            title: "保存成功",
+            icon: "success"
+          });
+        } else {
+          throw new Error("更新纪念日响应数据异常");
+        }
+      } catch (error) {
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:625", "保存纪念日失败:", error);
         common_vendor.index.showToast({
-          title: "保存成功",
-          icon: "success"
+          title: "保存失败",
+          icon: "none"
         });
       }
     }

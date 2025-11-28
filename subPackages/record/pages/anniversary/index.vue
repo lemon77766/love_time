@@ -168,6 +168,15 @@
 </template>
 
 <script>
+// 引入纪念日API
+import { 
+  getAnniversaryList, 
+  addAnniversary, 
+  updateAnniversary, 
+  deleteAnniversary, 
+  toggleAnniversaryRemind 
+} from '@/api/anniversary.js';
+
 export default {
   data() {
     return {
@@ -281,7 +290,7 @@ export default {
     const day = String(today.getDate()).padStart(2, '0');
     this.newAnniversary.date = `${year}-${month}-${day}`;
     
-    // 加载本地存储的纪念日数据
+    // 加载纪念日数据（从后端获取）
     this.loadAnniversaryData();
   },
   methods: {
@@ -322,23 +331,24 @@ export default {
       this.navBarHeight = 44;
       // #endif
     },
-    // 保存纪念日数据到本地存储
-    saveAnniversaryData() {
+    // 加载纪念日数据（从后端获取）
+    async loadAnniversaryData() {
       try {
-        uni.setStorageSync('anniversaryList', this.anniversaryList);
-      } catch (error) {
-        console.error('保存纪念日数据失败', error);
-      }
-    },
-    // 加载纪念日数据
-    loadAnniversaryData() {
-      try {
-        const data = uni.getStorageSync('anniversaryList');
-        if (data) {
-          this.anniversaryList = data;
+        const response = await getAnniversaryList();
+        if (response && response.data && response.data.anniversaryList) {
+          this.anniversaryList = response.data.anniversaryList;
+        } else {
+          console.warn('获取纪念日列表数据格式异常:', response);
+          this.anniversaryList = [];
         }
       } catch (error) {
-        console.error('加载纪念日数据失败', error);
+        console.error('加载纪念日数据失败:', error);
+        uni.showToast({
+          title: '加载数据失败',
+          icon: 'none'
+        });
+        // 出错时初始化为空数组
+        this.anniversaryList = [];
       }
     },
     // 格式化日期显示
@@ -363,13 +373,29 @@ export default {
       return diffDays > 0 ? diffDays : 0;
     },
     // 切换提醒状态
-    toggleRemind(index) {
-      this.anniversaryList[index].remind = !this.anniversaryList[index].remind;
-      const message = this.anniversaryList[index].remind ? '已设置提醒' : '已取消提醒';
-      uni.showToast({
-        title: message,
-        icon: 'success'
-      });
+    async toggleRemind(index) {
+      try {
+        const item = this.anniversaryList[index];
+        const newRemindState = !item.remind;
+        
+        // 调用后端接口更新提醒状态
+        await toggleAnniversaryRemind(item.id, newRemindState);
+        
+        // 更新本地状态
+        this.anniversaryList[index].remind = newRemindState;
+        
+        const message = newRemindState ? '已设置提醒' : '已取消提醒';
+        uni.showToast({
+          title: message,
+          icon: 'success'
+        });
+      } catch (error) {
+        console.error('切换提醒状态失败:', error);
+        uni.showToast({
+          title: '操作失败',
+          icon: 'none'
+        });
+      }
     },
     // 选择日期
     onDateChange(e) {
@@ -398,7 +424,7 @@ export default {
       this.editingAnniversary.remind = e.detail.value;
     },
     // 添加纪念日
-    addAnniversary() {
+    async addAnniversary() {
       if (!this.newAnniversary.title) {
         uni.showToast({
           title: '请输入纪念日标题',
@@ -415,39 +441,57 @@ export default {
         return;
       }
       
-      // 添加到列表
-      const newItem = {
-        id: Date.now(), // 使用时间戳作为唯一ID
-        title: this.newAnniversary.title,
-        date: this.newAnniversary.date,
-        icon: this.newAnniversary.icon,
-        color: this.newAnniversary.color,
-        remind: this.newAnniversary.remind
-      };
-      
-      this.anniversaryList.push(newItem);
-      
-      // 保存到本地存储
-      this.saveAnniversaryData();
-      
-      // 重置表单
-      this.newAnniversary.title = '';
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
-      this.newAnniversary.date = `${year}-${month}-${day}`;
-      this.newAnniversary.icon = 'mdi:calendar-heart';
-      this.newAnniversary.color = '#FF91A4';
-      this.newAnniversary.remind = false;
-      
-      // 关闭弹窗
-      this.showAddModal = false;
-      
-      uni.showToast({
-        title: '添加成功',
-        icon: 'success'
-      });
+      try {
+        // 调用后端接口添加纪念日
+        const response = await addAnniversary({
+          title: this.newAnniversary.title,
+          date: this.newAnniversary.date,
+          icon: this.newAnniversary.icon,
+          color: this.newAnniversary.color,
+          remind: this.newAnniversary.remind
+        });
+        
+        if (response && response.data) {
+          // 添加到列表
+          const newItem = {
+            id: response.data.id,
+            title: response.data.title,
+            date: response.data.date,
+            icon: response.data.icon,
+            color: response.data.color,
+            remind: response.data.remind
+          };
+          
+          this.anniversaryList.push(newItem);
+          
+          // 重置表单
+          this.newAnniversary.title = '';
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, '0');
+          const day = String(today.getDate()).padStart(2, '0');
+          this.newAnniversary.date = `${year}-${month}-${day}`;
+          this.newAnniversary.icon = 'mdi:calendar-heart';
+          this.newAnniversary.color = '#FF91A4';
+          this.newAnniversary.remind = false;
+          
+          // 关闭弹窗
+          this.showAddModal = false;
+          
+          uni.showToast({
+            title: '添加成功',
+            icon: 'success'
+          });
+        } else {
+          throw new Error('添加纪念日响应数据异常');
+        }
+      } catch (error) {
+        console.error('添加纪念日失败:', error);
+        uni.showToast({
+          title: '添加失败',
+          icon: 'none'
+        });
+      }
     },
     // 测试删除方法
     testDelete(index) {
@@ -471,7 +515,7 @@ export default {
       });
     },
     // 删除纪念日
-    deleteAnniversary(index) {
+    async deleteAnniversary(index) {
       // 确保index有效
       if (index < 0 || index >= this.anniversaryList.length) {
         console.error('无效的索引:', index);
@@ -483,16 +527,17 @@ export default {
       }
       
       try {
+        const item = this.anniversaryList[index];
+        
+        // 调用后端接口删除纪念日
+        await deleteAnniversary(item.id);
+        
         // 设置删除动画状态
         this.isDeleting = index;
         
         // 延迟执行删除操作，以便显示动画
         setTimeout(() => {
-          const item = this.anniversaryList[index];
           this.anniversaryList.splice(index, 1);
-          
-          // 保存到本地存储
-          this.saveAnniversaryData();
           
           // 重置删除状态
           this.isDeleting = -1;
@@ -501,11 +546,6 @@ export default {
             title: '删除成功',
             icon: 'success'
           });
-          
-          // 如果删除的是设置了提醒的纪念日，检查是否还有提醒
-          if (item.remind && !this.hasReminders) {
-            // 可以在这里添加其他逻辑，比如更新全局提醒状态
-          }
         }, 300); // 300ms 动画时间
       } catch (error) {
         console.error('删除纪念日失败:', error);
@@ -530,7 +570,7 @@ export default {
       this.showEditModal = true;
     },
     // 保存编辑的纪念日
-    saveEditedAnniversary() {
+    async saveEditedAnniversary() {
       if (!this.editingAnniversary.title) {
         uni.showToast({
           title: '请输入纪念日标题',
@@ -547,27 +587,45 @@ export default {
         return;
       }
       
-      // 查找并更新纪念日
-      const index = this.anniversaryList.findIndex(item => item.id === this.editingAnniversary.id);
-      if (index !== -1) {
-        this.anniversaryList[index] = {
-          id: this.editingAnniversary.id,
+      try {
+        // 调用后端接口更新纪念日
+        const response = await updateAnniversary(this.editingAnniversary.id, {
           title: this.editingAnniversary.title,
           date: this.editingAnniversary.date,
           icon: this.editingAnniversary.icon,
           color: this.editingAnniversary.color,
           remind: this.editingAnniversary.remind
-        };
+        });
         
-        // 保存到本地存储
-        this.saveAnniversaryData();
-        
-        // 关闭弹窗
-        this.showEditModal = false;
-        
+        if (response && response.data) {
+          // 查找并更新纪念日
+          const index = this.anniversaryList.findIndex(item => item.id === this.editingAnniversary.id);
+          if (index !== -1) {
+            this.anniversaryList[index] = {
+              id: response.data.id,
+              title: response.data.title,
+              date: response.data.date,
+              icon: response.data.icon,
+              color: response.data.color,
+              remind: response.data.remind
+            };
+          }
+          
+          // 关闭弹窗
+          this.showEditModal = false;
+          
+          uni.showToast({
+            title: '保存成功',
+            icon: 'success'
+          });
+        } else {
+          throw new Error('更新纪念日响应数据异常');
+        }
+      } catch (error) {
+        console.error('保存纪念日失败:', error);
         uni.showToast({
-          title: '保存成功',
-          icon: 'success'
+          title: '保存失败',
+          icon: 'none'
         });
       }
     }

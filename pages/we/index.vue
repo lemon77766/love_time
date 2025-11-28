@@ -230,8 +230,19 @@ export default {
     
     // 跳转到编辑资料页面
     goToEdit() {
+      console.log('跳转到编辑资料页面');
       uni.navigateTo({
-        url: '/subPackages/record/pages/profile/edit'
+        url: '/subPackages/record/pages/profile/edit',
+        success: () => {
+          console.log('成功跳转到编辑资料页面');
+        },
+        fail: (err) => {
+          console.error('跳转到编辑资料页面失败', err);
+          uni.showToast({
+            title: '跳转失败，请重试',
+            icon: 'none'
+          });
+        }
       });
     },
     

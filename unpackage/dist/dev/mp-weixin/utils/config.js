@@ -1,6 +1,6 @@
 "use strict";
 const devConfig = {
-  baseURL: "https://smallpeppers.cn",
+  baseURL: "http://192.168.94.229:8886",
   timeout: 1e4,
   // 普通请求超时时间
   uploadTimeout: 12e4,
@@ -115,8 +115,22 @@ const devConfig = {
       // 获取统计信息
       SEND: "/api/future-letter",
       // 发送未来情书 (需要拼接id/send)
-      FONTS: "/api/future-letter/fonts"
+      FONTS: "/api/future-letter/fonts",
       // 获取可选字体
+      UNREAD: "/api/future-letter/unread"
+      // 获取未读情书
+    },
+    ANNIVERSARY: {
+      LIST: "/api/anniversary/list",
+      // 获取纪念日列表
+      CREATE: "/api/anniversary/create",
+      // 创建纪念日
+      UPDATE: "/api/anniversary/update",
+      // 更新纪念日 (需要拼接id)
+      DELETE: "/api/anniversary/delete",
+      // 删除纪念日 (需要拼接id)
+      REMIND: "/api/anniversary/remind"
+      // 切换提醒状态 (需要拼接id)
     }
   }
 };

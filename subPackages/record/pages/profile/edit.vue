@@ -23,15 +23,19 @@
       <!-- 头像编辑区域 -->
       <view class="section avatar-section">
         <text class="section-title">头像</text>
-        <view class="avatar-edit-container">
-          <image 
-            class="current-avatar" 
-            :src="tempAvatar || userInfo.displayAvatar || userInfo.avatarUrl || '/static/login/love.jpg'" 
-            mode="aspectFill"
-            @click="chooseAvatar"
-          />
-          <view class="avatar-mask" @click="chooseAvatar">
-            <text class="camera-icon">📷</text>
+        <view class="avatar-container">
+          <view class="current-avatar-wrapper">
+            <image 
+              class="current-avatar" 
+              :src="tempAvatar || userInfo.displayAvatar || userInfo.avatarUrl || '/static/login/love.jpg'" 
+              mode="aspectFill"
+            />
+          </view>
+          <view class="avatar-actions">
+            <button class="avatar-btn" @click="chooseAvatar">
+              <text class="btn-icon">📷</text>
+              <text class="btn-text">更换头像</text>
+            </button>
           </view>
         </view>
       </view>
@@ -39,14 +43,21 @@
       <!-- 昵称编辑区域 -->
       <view class="section nickname-section">
         <text class="section-title">昵称</text>
-        <input 
-          class="nickname-input" 
-          v-model="tempNickname" 
-          placeholder="请输入昵称"
-          maxlength="20"
-          @input="onNicknameInput"
-        />
-        <text class="char-count">{{ nicknameCharCount }}/20</text>
+        <view class="nickname-container">
+          <view class="input-wrapper">
+            <input 
+              class="nickname-input" 
+              v-model="tempNickname" 
+              placeholder="请输入昵称"
+              maxlength="20"
+              @input="onNicknameInput"
+            />
+            <text class="char-count">{{ nicknameCharCount }}/20</text>
+          </view>
+          <view class="nickname-tips">
+            <text class="tips-text">支持中英文、数字，2-20个字符</text>
+          </view>
+        </view>
       </view>
 
       <!-- 保存按钮 -->
@@ -56,7 +67,8 @@
           :disabled="isSaving" 
           @click="saveProfile"
         >
-          <text class="save-text">{{ isSaving ? '保存中...' : '保存' }}</text>
+          <text class="save-icon">💾</text>
+          <text class="save-text">{{ isSaving ? '保存中...' : '保存资料' }}</text>
         </button>
       </view>
     </view>
@@ -199,6 +211,32 @@ export default {
       });
       
       try {
+        console.log('📤 [上传头像] 开始上传，文件路径:', filePath);
+        
+        // 验证文件路径
+        if (!filePath) {
+          throw new Error('未选择文件');
+        }
+        
+        // 获取token（改进的token获取方式）
+        let token = uni.getStorageSync('token');
+        if (!token) {
+          // 如果没有直接存储的token，尝试从login_info中获取
+          const loginInfo = uni.getStorageSync('login_info');
+          if (loginInfo && loginInfo.token) {
+            token = loginInfo.token;
+          } else if (loginInfo && loginInfo.data && loginInfo.data.token) {
+            token = loginInfo.data.token;
+          }
+        }
+        
+        console.log('🔑 [上传头像] Token:', token ? `${token.substring(0, 20)}...` : '未找到');
+        
+        // 验证token是否存在
+        if (!token) {
+          throw new Error('未找到登录凭证，请重新登录');
+        }
+        
         // 使用 uni.uploadFile 上传图片
         const uploadResult = await new Promise((resolve, reject) => {
           uni.uploadFile({
@@ -206,32 +244,75 @@ export default {
             filePath: filePath,
             name: 'file',
             header: {
-              'Authorization': uni.getStorageSync('token') || ''
+              'Authorization': `Bearer ${token}`  // 确保使用Bearer前缀
             },
             success: (uploadRes) => {
+              console.log('📥 [上传头像] 上传成功，响应:', uploadRes);
               resolve(uploadRes);
             },
             fail: (uploadErr) => {
+              console.error('❌ [上传头像] 上传失败，错误:', uploadErr);
               reject(uploadErr);
             }
           });
         });
         
+        // 检查响应状态
+        if (uploadResult.statusCode !== 200) {
+          throw new Error(`上传失败，服务器返回状态码: ${uploadResult.statusCode}`);
+        }
+        
         // 解析上传结果
-        const data = JSON.parse(uploadResult.data);
-        if (data.code === 200 && data.data) {
-          this.tempAvatar = data.data; // 保存新头像URL
+        let data;
+        try {
+          data = JSON.parse(uploadResult.data);
+          console.log('📥 [上传头像] 解析后的数据:', data);
+        } catch (parseError) {
+          // 如果JSON解析失败，直接使用原始数据
+          console.error('❌ [上传头像] JSON解析失败，使用原始数据:', uploadResult.data);
+          data = uploadResult.data;
+        }
+        
+        // 检查响应数据结构并提取图片URL
+        if (data && typeof data === 'object') {
+          // 成功条件：code为200且有data字段，或者有photoUrl/url字段
+          if ((data.code === 200 && data.data) || data.photoUrl || data.url || (data.data && (data.data.photoUrl || data.data.url))) {
+            // 提取图片URL
+            const photoUrl = data.photoUrl || data.url || (data.data && (data.data.photoUrl || data.data.url));
+            if (photoUrl) {
+              this.tempAvatar = photoUrl; // 保存新头像URL
+              console.log('✅ [上传头像] 上传成功，图片URL:', photoUrl);
+              uni.showToast({
+                title: '上传成功',
+                icon: 'success'
+              });
+            } else {
+              throw new Error('响应中未找到图片URL');
+            }
+          } else {
+            // 从响应中提取错误消息
+            const errorMsg = data.message || data.msg || data.errorMessage || '上传失败';
+            throw new Error(errorMsg || '上传失败');
+          }
+        } else if (typeof data === 'string' && data.includes('http')) {
+          // 如果返回的是字符串且包含URL，则直接使用
+          this.tempAvatar = data;
+          console.log('✅ [上传头像] 上传成功，图片URL:', data);
           uni.showToast({
             title: '上传成功',
             icon: 'success'
           });
         } else {
-          throw new Error(data.message || '上传失败');
+          // 响应不是对象格式
+          console.error('❌ [上传头像] 服务器响应格式不正确:', data);
+          throw new Error('服务器响应格式不正确');
         }
       } catch (error) {
         console.error('上传头像失败', error);
+        // 显示更详细的错误信息
+        const errorMessage = error.message || '上传失败';
         uni.showToast({
-          title: error.message || '上传失败',
+          title: errorMessage,
           icon: 'none'
         });
       } finally {
@@ -354,9 +435,10 @@ export default {
 }
 
 .title-text {
-  font-size: 36rpx;
+  font-size: 40rpx; /* 增大字体 */
   font-weight: 500;
   color: #4A4A4A;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .navbar-left {
@@ -367,7 +449,7 @@ export default {
 }
 
 .back-icon {
-  font-size: 40rpx;
+  font-size: 50rpx; /* 增大字体 */
   font-weight: 600;
   color: #4A4A4A;
   line-height: 1;
@@ -388,8 +470,8 @@ export default {
 
 /* 内容区域 */
 .content {
-  padding: 30rpx;
-  padding-top: calc(30rpx + 44px);
+  padding: 15rpx; /* 减少留白 */
+  padding-top: calc(15rpx + 44px); /* 减少导航栏下方留白 */
 }
 
 /* 区块样式 */
@@ -398,92 +480,136 @@ export default {
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 20rpx;
+  padding: 20rpx; /* 减少内边距 */
+  margin-bottom: 10rpx; /* 减少区块间距 */
   box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
 }
 
 .section-title {
   display: block;
-  font-size: 30rpx;
+  font-size: 34rpx; /* 增大标题字体 */
   font-weight: 600;
   color: #333;
-  margin-bottom: 20rpx;
+  margin-bottom: 12rpx; /* 减少标题下方留白 */
 }
 
 /* 头像编辑区域 */
-.avatar-edit-container {
+.avatar-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: relative;
+  gap: 30rpx;
+}
+
+.current-avatar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
 }
 
 .current-avatar {
-  width: 160rpx;
-  height: 160rpx;
-  border-radius: 80rpx;
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 60rpx;
   border: 4rpx solid #ffffff;
   box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.1);
 }
 
-.avatar-mask {
-  position: absolute;
-  bottom: 0;
-  right: 30%;
-  width: 50rpx;
-  height: 50rpx;
-  border-radius: 25rpx;
-  background: rgba(0, 0, 0, 0.6);
+.avatar-actions {
+  width: 100%;
+}
+
+.avatar-btn {
+  width: auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6rpx;
+  padding: 8rpx 16rpx;
+  background: linear-gradient(135deg, #ffd166 0%, #ff9ebc 100%);
+  border-radius: 20rpx;
+  border: none;
+  font-size: 20rpx;
+  color: #ffffff;
   cursor: pointer;
+  box-shadow: 0 2rpx 8rpx rgba(255, 158, 188, 0.25);
+  white-space: nowrap;
 }
 
-.camera-icon {
-  font-size: 24rpx;
-  color: #ffffff;
+.avatar-btn:active {
+  opacity: 0.85;
+}
+
+.btn-icon {
+  font-size: 20rpx;
+}
+
+.btn-text {
+  font-size: 20rpx;
 }
 
 /* 昵称编辑区域 */
+.nickname-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
 .nickname-input {
   width: 100%;
-  padding: 20rpx;
+  padding: 28rpx; /* 增大内边距，使输入框更高 */
+  padding-right: 80rpx; /* 为字符计数留出空间 */
   border: 1rpx solid #e5e5e5;
   border-radius: 12rpx;
-  font-size: 28rpx;
+  font-size: 32rpx; /* 增大字体 */
   background: #ffffff;
   box-sizing: border-box;
 }
 
 .char-count {
-  display: block;
-  font-size: 24rpx;
+  position: absolute;
+  right: 20rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 28rpx; /* 增大字体，与输入框匹配 */
   color: #999;
-  text-align: right;
-  margin-top: 10rpx;
+}
+
+.nickname-tips {
+  margin-top: 8rpx;
+}
+
+.tips-text {
+  font-size: 24rpx; /* 增大提示文字 */
+  color: #999;
 }
 
 /* 保存按钮 */
 .save-section {
-  margin-top: 50rpx;
+  margin-top: 30rpx; /* 减少顶部间距 */
 }
 
 .save-btn {
-  width: 100%;
+  width: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 28rpx;
-  background: #2bad81;
-  border-radius: 48rpx;
+  gap: 6rpx;
+  padding: 12rpx 24rpx;
+  background: linear-gradient(135deg, #ffd166 0%, #ff9ebc 100%);
+  border-radius: 20rpx;
   border: none;
   color: #ffffff;
-  font-size: 32rpx;
+  font-size: 20rpx;
   font-weight: 600;
-  box-shadow: 0 8rpx 20rpx rgba(43, 173, 129, 0.25);
+  box-shadow: 0 2rpx 8rpx rgba(255, 158, 188, 0.25);
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .save-btn:active {
@@ -495,7 +621,11 @@ export default {
   cursor: not-allowed;
 }
 
+.save-icon {
+  font-size: 20rpx;
+}
+
 .save-text {
-  font-size: 32rpx;
+  font-size: 20rpx;
 }
 </style>

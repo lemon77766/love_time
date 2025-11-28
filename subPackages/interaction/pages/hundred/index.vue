@@ -18,9 +18,6 @@
       </view>
     </view>
     
-    <!-- 顶部背景图（从项目根 static 目录加载，避免分包相对路径问题） -->
-    <image class="top-bg" src="/static/hundred/shangmian.jpg" mode="aspectFill"></image>
-    
     <!-- 标题和进度 -->
     <view class="header-section">
       <text class="main-title">情侣100件小事挑战</text>
@@ -923,17 +920,9 @@ export default {
   justify-content: center;
 }
 
-/* 顶部背景图 */
-.top-bg {
-  width: 100%;
-  height: 360rpx;
-  display: block;
-  
-}
-
 /* 标题区域 */
 .header-section {
-  padding: 24rpx 32rpx;
+  padding: 60rpx 32rpx 24rpx 32rpx;
   position: relative;
 }
 

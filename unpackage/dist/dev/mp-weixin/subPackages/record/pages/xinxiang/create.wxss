@@ -464,7 +464,17 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 .picker-display {
+  padding: 20rpx;
+  background: #ffffff;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  border: 1rpx solid #F3E8FF;
   color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  margin-bottom: 20rpx; /* 添加底部间距 */
+}
+.picker-display.time-picker {
+  margin-bottom: 0; /* 时间选择器不需要底部间距 */
 }
 .form-textarea {
   min-height: 300rpx;
@@ -754,3 +764,9 @@
   color: #3d2a00;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
+.datetime-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
