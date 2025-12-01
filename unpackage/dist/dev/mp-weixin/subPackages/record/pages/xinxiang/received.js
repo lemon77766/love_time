@@ -65,7 +65,7 @@ const _sfc_main = {
           };
         });
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/received.vue:199", "加载收到的信件失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/received.vue:198", "加载收到的信件失败", error);
         this.letters = [];
         if (error.statusCode !== 401) {
           common_vendor.index.showToast({
@@ -135,7 +135,7 @@ const _sfc_main = {
       if (letter.style === "custom") {
         return letter.customImage;
       }
-      return `/static/xinxiang/xin${letter.style}.jpg`;
+      return `/subPackages/record/static/xinxiang/xin${letter.style}.jpg`;
     },
     // 查看信件详情
     async viewLetter(letter, index) {
@@ -172,7 +172,7 @@ const _sfc_main = {
         this.showDetailModal = true;
       } catch (error) {
         common_vendor.index.hideLoading();
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/received.vue:327", "获取信件详情失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/received.vue:326", "获取信件详情失败", error);
         this.currentLetter = letter;
         this.currentIndex = index;
         this.showDetailModal = true;
@@ -227,24 +227,22 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     h: 1 - $data.currentLetter.opacity / 100,
     i: common_vendor.t($data.currentLetter.title),
     j: common_vendor.n($options.getFontClass($data.currentLetter)),
-    k: common_vendor.t($data.currentLetter.deliveryDate),
-    l: common_vendor.n($options.getFontClass($data.currentLetter)),
-    m: $data.currentLetter.sentAt
+    k: $data.currentLetter.sentAt
   }, $data.currentLetter.sentAt ? {
-    n: common_vendor.t($data.currentLetter.sentAt),
-    o: common_vendor.n($options.getFontClass($data.currentLetter))
+    l: common_vendor.t($data.currentLetter.sentAt),
+    m: common_vendor.n($options.getFontClass($data.currentLetter))
   } : {}, {
-    p: common_vendor.t($data.currentLetter.content),
-    q: common_vendor.n($options.getFontClass($data.currentLetter)),
+    n: common_vendor.t($data.currentLetter.content),
+    o: common_vendor.n($options.getFontClass($data.currentLetter)),
+    p: common_vendor.n($options.getFontClass($data.currentLetter)),
+    q: common_vendor.t($data.currentLetter.createTime),
     r: common_vendor.n($options.getFontClass($data.currentLetter)),
-    s: common_vendor.t($data.currentLetter.createTime),
-    t: common_vendor.n($options.getFontClass($data.currentLetter)),
-    v: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args)),
-    w: common_vendor.o(() => {
+    s: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args)),
+    t: common_vendor.o(() => {
     }),
-    x: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args))
+    v: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args))
   }) : {}, {
-    y: $options.containerPaddingTop
+    w: $options.containerPaddingTop
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

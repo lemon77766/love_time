@@ -135,7 +135,7 @@
 import http from '@/utils/http.js';
 import config from '@/utils/config.js';
 import { getCoupleInfo, getPartnerInfo, isBound as checkIsBound, clearCoupleInfo } from '../../utils/couple.js';
-import { getCoupleStatus, unbindCouple } from '../../api/couple.js';
+import { getCoupleStatus, unbindCouple, getLoveDays } from '../../api/couple.js';
 import { saveCoupleInfo } from '../../utils/couple.js';
 import { updateUserProfile } from '../../api/user.js';
 import { isGuestUser } from '../../utils/auth.js';
@@ -161,6 +161,8 @@ export default {
       isBound: false,
       partnerInfo: null,
       bindTime: '',
+      // 相爱天数相关
+      loveDays: 0,
       // 成就数据
       achievements: [
         { icon: '🧁', name: '美食家', bgColor: 'rgba(255, 217, 61, 0.2)' },
@@ -170,8 +172,13 @@ export default {
     };
   },
   computed: {
-    // 计算在一起的天数
+    // 计算在一起的天数（优先使用接口返回的数据）
     daysTogether() {
+      // 如果接口返回了相爱天数，优先使用接口数据
+      if (this.loveDays > 0) {
+        return this.loveDays;
+      }
+      // 否则使用本地计算的绑定天数
       if (!this.bindTime) return 0;
       try {
         const bindDate = new Date(this.bindTime);
@@ -201,6 +208,7 @@ export default {
     }
     this.loadUserInfo();
     this.loadCoupleInfo();
+    this.loadLoveDays();
   },
   onShow() {
     // 每次页面显示时检查是否为游客用户
@@ -211,6 +219,7 @@ export default {
     // 每次页面显示时重新加载用户信息和情侣信息
     this.loadUserInfo();
     this.loadCoupleInfo();
+    this.loadLoveDays();
   },
   
   methods: {
@@ -301,6 +310,36 @@ export default {
     },
     
 
+    // 加载相爱天数
+    async loadLoveDays() {
+      // 游客用户不加载相爱天数
+      if (isGuestUser()) {
+        console.log('游客用户，跳过加载相爱天数');
+        this.loveDays = 0;
+        return;
+      }
+      
+      // 只有在已绑定的情况下才调用接口
+      if (!this.isBound) {
+        // 未绑定时重置数据
+        this.loveDays = 0;
+        return;
+      }
+      
+      try {
+        const response = await getLoveDays();
+        if (response && response.data) {
+          this.loveDays = response.data.loveDays || 0;
+          console.log('✅ 成功加载相爱天数:', this.loveDays);
+        } else {
+          console.warn('⚠️ 获取相爱天数失败，无法识别有效数据结构:', response);
+        }
+      } catch (error) {
+        console.error('❌ 获取相爱天数失败:', error);
+        // 接口调用失败时，使用本地计算的绑定天数作为降级方案
+      }
+    },
+    
     // 加载情侣信息
     async loadCoupleInfo() {
       // 游客用户不加载情侣信息

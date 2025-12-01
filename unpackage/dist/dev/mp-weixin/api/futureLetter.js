@@ -217,6 +217,33 @@ function deleteFutureLetter(letterId) {
     throw error;
   });
 }
+function getUnreadLetters() {
+  const url = "/api/future-letter/unread";
+  const fullUrl = utils_config.config.baseURL + url;
+  common_vendor.index.__f__("log", "at api/futureLetter.js:438", "🔗 [未来情书API] 开始获取未读情书列表");
+  common_vendor.index.__f__("log", "at api/futureLetter.js:439", "📍 请求地址:", fullUrl);
+  common_vendor.index.__f__("log", "at api/futureLetter.js:440", "📋 请求方法: GET");
+  common_vendor.index.__f__("log", "at api/futureLetter.js:441", "⏰ 请求时间:", (/* @__PURE__ */ new Date()).toLocaleString());
+  return utils_http.http.get(url).then((response) => {
+    common_vendor.index.__f__("log", "at api/futureLetter.js:444", "✅ [未来情书API] 获取未读情书列表成功");
+    common_vendor.index.__f__("log", "at api/futureLetter.js:445", "📦 响应数据:", response);
+    if (response && response.data) {
+      const letters = Array.isArray(response.data) ? response.data : response.data.letters || [];
+      common_vendor.index.__f__("log", "at api/futureLetter.js:449", `📊 未读情书数量: ${letters.length}`);
+      return response;
+    } else if (Array.isArray(response)) {
+      common_vendor.index.__f__("log", "at api/futureLetter.js:453", `📊 未读情书数量: ${response.length}`);
+      return { success: true, data: response };
+    } else {
+      common_vendor.index.__f__("warn", "at api/futureLetter.js:456", "⚠️ 响应数据格式异常:", response);
+      return { success: true, data: [] };
+    }
+  }).catch((error) => {
+    common_vendor.index.__f__("error", "at api/futureLetter.js:460", "❌ [未来情书API] 获取未读情书列表失败");
+    common_vendor.index.__f__("error", "at api/futureLetter.js:461", "🔴 错误信息:", error);
+    throw error;
+  });
+}
 exports.createFutureLetter = createFutureLetter;
 exports.deleteFutureLetter = deleteFutureLetter;
 exports.getFutureLetterDetail = getFutureLetterDetail;
@@ -224,5 +251,6 @@ exports.getFutureLetterFonts = getFutureLetterFonts;
 exports.getFutureLetterList = getFutureLetterList;
 exports.getReceivedLetters = getReceivedLetters;
 exports.getSentLetters = getSentLetters;
+exports.getUnreadLetters = getUnreadLetters;
 exports.sendFutureLetter = sendFutureLetter;
 //# sourceMappingURL=../../.sourcemap/mp-weixin/api/futureLetter.js.map

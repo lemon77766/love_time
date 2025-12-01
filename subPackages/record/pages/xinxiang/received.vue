@@ -91,7 +91,6 @@
             <view class="letter-content">
               <view class="letter-header">
                 <text class="letter-title" :class="getFontClass(currentLetter)">{{ currentLetter.title }}</text>
-                <text class="letter-date" :class="getFontClass(currentLetter)">送达时间：{{ currentLetter.deliveryDate }}</text>
                 <text v-if="currentLetter.sentAt" class="letter-date" :class="getFontClass(currentLetter)">收到时间：{{ currentLetter.sentAt }}</text>
               </view>
               
@@ -277,7 +276,7 @@ export default {
       if (letter.style === 'custom') {
         return letter.customImage;
       }
-      return `/static/xinxiang/xin${letter.style}.jpg`;
+      return `/subPackages/record/static/xinxiang/xin${letter.style}.jpg`;
     },
     
     // 查看信件详情

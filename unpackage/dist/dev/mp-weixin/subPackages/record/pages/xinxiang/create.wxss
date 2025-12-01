@@ -437,11 +437,6 @@
   flex-direction: column;
   gap: 24rpx;
 }
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 24rpx;
-}
 .form-item {
   display: flex;
   flex-direction: column;

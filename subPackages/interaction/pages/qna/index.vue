@@ -323,7 +323,8 @@ export default {
           console.warn('⚠️ 问题ID无效:', q.id);
           return false;
         }
-        const isAnswered = answeredIds.includes(questionId);
+        // 确保使用相同的数据类型进行比较
+        const isAnswered = answeredIds.some(answeredId => Number(answeredId) === questionId);
         return !isAnswered && q.isActive !== false; // 过滤掉已禁用的问题
       });
       
@@ -492,6 +493,8 @@ export default {
               payload.answered_at ||
               historyRecord.partnerAnsweredAt;
           }
+          // 强制触发Vue响应式更新
+          this.$forceUpdate();
         }
         return { updated: true, answer, normalized };
       }
@@ -616,7 +619,7 @@ export default {
           // 添加到本地历史记录
           const record = {
             id: responseData?.answerId || res?.answerId || responseData?.id || Date.now(),
-            questionId: submittedQuestionId, // 使用保存的ID，确保一致性
+            questionId: Number(submittedQuestionId), // 确保使用数字类型
             question: this.currentQuestion.text,
             myAnswer: this.myAnswer,
             partnerAnswer: partnerAnswerFromSubmit || this.partnerAnswer || '',
@@ -630,6 +633,13 @@ export default {
           });
           this.history.unshift(record);
           this.saveHistory();
+          
+          // 更新当前显示的答案（关键修复点）
+          this.myAnswer = this.myAnswer;
+          this.partnerAnswer = partnerAnswerFromSubmit || this.partnerAnswer || '';
+          
+          // 强制触发Vue响应式更新
+          this.$forceUpdate();
           
           uni.showToast({ title: '提交成功', icon: 'success' });
           
@@ -649,6 +659,15 @@ export default {
           };
           this.history.unshift(record);
           this.saveHistory();
+          
+          // 更新当前显示的答案（关键修复点）
+          this.myAnswer = this.myAnswer;
+          this.partnerAnswer = '';
+          this.hasSubmitted = true;
+          
+          // 强制触发Vue响应式更新
+          this.$forceUpdate();
+          
           uni.showToast({ title: '提交成功（已保存到本地）', icon: 'success' });
           
           // 保留在当前题目，用户手动点击"下一题"
@@ -704,6 +723,15 @@ export default {
               };
               this.history.unshift(record);
               this.saveHistory();
+              
+              // 更新当前显示的答案（关键修复点）
+              this.myAnswer = this.myAnswer;
+              this.partnerAnswer = '';
+              this.hasSubmitted = true;
+              
+              // 强制触发Vue响应式更新
+              this.$forceUpdate();
+              
               uni.showToast({ title: '已保存到本地', icon: 'none' });
               
               // 保留在当前题目，用户手动点击"下一题"
@@ -827,6 +855,9 @@ export default {
           partnerAnswer: this.partnerAnswer ? this.partnerAnswer.substring(0, 30) + '...' : '空'
         });
         
+        // 强制触发Vue响应式更新
+        this.$forceUpdate();
+        
         // 无论历史记录中是否有对方答案，都从后端获取最新的对方答案
         console.log('📥 从后端获取最新的对方答案，问题ID:', questionId);
         try {
@@ -936,7 +967,7 @@ export default {
           
           return {
             id,
-            questionId,
+            questionId: questionId != null ? Number(questionId) : null, // 确保使用数字类型
             question: question || `问题ID: ${questionId}`, // 如果仍然找不到，显示ID作为备用
             myAnswer,
             partnerAnswer,

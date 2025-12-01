@@ -50,12 +50,21 @@ export function getUserInfo() {
  * @param {object} userInfo - 用户信息对象
  * @returns {boolean} 是否保存成功
  */
-export function saveLoginInfo(userInfo) {
+export function saveLoginInfo(userInfo, token = null) {
   try {
+    // 获取现有的登录信息，保留token等字段
+    const existingLoginInfo = uni.getStorageSync('login_info') || {};
+    
+    // 如果传入了新的token，则使用新的token，否则保留原有的token
+    const finalToken = token || existingLoginInfo.token || '';
+    
     const loginInfo = {
+      ...existingLoginInfo, // 保留现有信息
       isLoggedIn: true,
       userInfo: userInfo,
-      loginTime: new Date().toISOString()
+      loginTime: new Date().toISOString(),
+      // 确保token字段存在
+      token: finalToken
     };
     uni.setStorageSync('login_info', loginInfo);
     return true;

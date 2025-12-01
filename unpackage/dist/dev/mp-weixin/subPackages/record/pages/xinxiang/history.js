@@ -67,56 +67,64 @@ const _sfc_main = {
       try {
         const response = await api_futureLetter.getFutureLetterList();
         const backendLetters = this.extractLetterArray(response).filter(Boolean);
-        this.letters = backendLetters.filter((letter) => letter.status !== "SENT").map((letter) => ({
-          id: letter.id,
-          title: letter.title,
-          content: letter.content,
-          deliveryDate: letter.scheduledDate || letter.deliveryDate,
-          // 兼容不同字段
-          createTime: letter.createdAt || letter.createTime,
-          status: letter.status,
-          style: this.getStyleFromBackground(letter.backgroundImage),
-          customImage: letter.backgroundImage,
-          opacity: 100,
-          // 默认透明度
-          fontStyle: letter.fontStyle || letter.font_style || "default",
-          // 保留后端原始数据
-          _backendData: letter
-        }));
+        this.letters = backendLetters.filter((letter) => letter.status !== "SENT").map((letter) => {
+          const deliveryDateRaw = letter.scheduledDate || letter.deliveryDate;
+          const createTimeRaw = letter.createdAt || letter.createTime;
+          return {
+            id: letter.id,
+            title: letter.title,
+            content: letter.content,
+            deliveryDate: this.formatToMinute(deliveryDateRaw),
+            createTime: this.formatToMinute(createTimeRaw),
+            status: letter.status,
+            style: this.getStyleFromBackground(letter.backgroundImage),
+            customImage: letter.backgroundImage,
+            opacity: 100,
+            // 默认透明度
+            fontStyle: letter.fontStyle || letter.font_style || "default",
+            // 保留后端原始数据
+            _backendData: letter
+          };
+        });
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:246", "加载信件失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:251", "加载信件失败", error);
         try {
           const localLetters = common_vendor.index.getStorageSync("xinxiang_letters") || [];
           this.letters = localLetters.filter((letter) => letter.status !== "SENT");
         } catch (e) {
-          common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:252", "加载本地信件失败", e);
+          common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:257", "加载本地信件失败", e);
           this.letters = [];
         }
         if (error.statusCode !== 401) {
-          common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:259", "从后端加载信件失败，使用本地数据");
+          common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:264", "从后端加载信件失败，使用本地数据");
         }
       }
       try {
         const sentResponse = await api_futureLetter.getSentLetters();
         const backendSentLetters = this.extractLetterArray(sentResponse);
-        this.sentLetters = backendSentLetters.map((letter) => ({
-          id: letter.id,
-          title: letter.title,
-          content: letter.content,
-          deliveryDate: letter.scheduledDate || letter.deliveryDate,
-          createTime: letter.createdAt || letter.createTime,
-          sentAt: letter.sentAt,
-          status: letter.status,
-          style: this.getStyleFromBackground(letter.backgroundImage),
-          customImage: letter.backgroundImage,
-          opacity: 100,
-          fontStyle: letter.fontStyle || letter.font_style || "default",
-          _backendData: letter
-        }));
+        this.sentLetters = backendSentLetters.map((letter) => {
+          const deliveryDateRaw = letter.scheduledDate || letter.deliveryDate;
+          const createTimeRaw = letter.createdAt || letter.createTime;
+          const sentAtRaw = letter.sentAt;
+          return {
+            id: letter.id,
+            title: letter.title,
+            content: letter.content,
+            deliveryDate: this.formatToMinute(deliveryDateRaw),
+            createTime: this.formatToMinute(createTimeRaw),
+            sentAt: this.formatToMinute(sentAtRaw),
+            status: letter.status,
+            style: this.getStyleFromBackground(letter.backgroundImage),
+            customImage: letter.backgroundImage,
+            opacity: 100,
+            fontStyle: letter.fontStyle || letter.font_style || "default",
+            _backendData: letter
+          };
+        });
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:282", "加载已发送信件失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:293", "加载已发送信件失败", error);
         if (error.statusCode !== 401) {
-          common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:284", "从后端加载已发送信件失败");
+          common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:295", "从后端加载已发送信件失败");
         }
       }
     },
@@ -153,7 +161,7 @@ const _sfc_main = {
       if (letter.style === "custom") {
         return letter.customImage;
       }
-      return `/static/xinxiang/xin${letter.style}.jpg`;
+      return `/subPackages/record/static/xinxiang/xin${letter.style}.jpg`;
     },
     // 兼容多种响应结构
     extractLetterArray(response) {
@@ -184,6 +192,22 @@ const _sfc_main = {
       }
       return [];
     },
+    // 将时间统一格式化到分钟
+    formatToMinute(dateInput) {
+      if (!dateInput)
+        return "--";
+      const dateValue = dateInput instanceof Date ? dateInput : new Date(dateInput);
+      if (Number.isNaN(dateValue.getTime())) {
+        return typeof dateInput === "string" ? dateInput : "--";
+      }
+      const pad = (num) => num < 10 ? `0${num}` : `${num}`;
+      const year = dateValue.getFullYear();
+      const month = pad(dateValue.getMonth() + 1);
+      const day = pad(dateValue.getDate());
+      const hours = pad(dateValue.getHours());
+      const minutes = pad(dateValue.getMinutes());
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    },
     // 查看信件详情
     async viewLetter(letter, index) {
       try {
@@ -192,6 +216,9 @@ const _sfc_main = {
         common_vendor.index.hideLoading();
         if (response && response.data) {
           const detailData = response.data;
+          const detailDeliveryDate = detailData.scheduledDate || detailData.deliveryDate || letter.deliveryDate;
+          const detailCreateTime = detailData.createdAt || detailData.createTime || letter.createTime;
+          const detailSentAt = detailData.sentAt || letter.sentAt;
           this.currentLetter = {
             ...letter,
             ...detailData,
@@ -199,9 +226,9 @@ const _sfc_main = {
             id: detailData.id || letter.id,
             title: detailData.title || letter.title,
             content: detailData.content || letter.content,
-            deliveryDate: detailData.scheduledDate || detailData.deliveryDate || letter.deliveryDate,
-            createTime: detailData.createdAt || detailData.createTime || letter.createTime,
-            sentAt: detailData.sentAt || letter.sentAt,
+            deliveryDate: this.formatToMinute(detailDeliveryDate),
+            createTime: this.formatToMinute(detailCreateTime),
+            sentAt: this.formatToMinute(detailSentAt),
             status: detailData.status || letter.status,
             style: this.getStyleFromBackground(detailData.backgroundImage || letter.backgroundImage),
             customImage: detailData.backgroundImage || letter.customImage,
@@ -216,7 +243,7 @@ const _sfc_main = {
         this.showDetailModal = true;
       } catch (error) {
         common_vendor.index.hideLoading();
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:401", "获取信件详情失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:434", "获取信件详情失败", error);
         this.currentLetter = letter;
         this.currentIndex = index;
         this.showDetailModal = true;
@@ -273,12 +300,12 @@ const _sfc_main = {
               common_vendor.index.setStorageSync("xinxiang_letters", localLetters);
             }
           } catch (e) {
-            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:471", "更新本地存储失败", e);
+            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:504", "更新本地存储失败", e);
           }
           common_vendor.index.showToast({ title: "已删除", icon: "success" });
         } catch (error) {
           common_vendor.index.hideLoading();
-          common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:477", "删除信件失败:", error);
+          common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:510", "删除信件失败:", error);
           common_vendor.index.showToast({
             title: error.message || "删除失败，请重试",
             icon: "none"
@@ -340,24 +367,27 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     n: common_vendor.o((...args) => $options.goWrite && $options.goWrite(...args))
   } : {}), {
     o: $data.showDetailModal
-  }, $data.showDetailModal ? {
+  }, $data.showDetailModal ? common_vendor.e({
     p: $options.getLetterBackground($data.currentLetter),
     q: 1 - $data.currentLetter.opacity / 100,
     r: common_vendor.t($data.currentLetter.title),
     s: common_vendor.n($options.getFontClass($data.currentLetter)),
-    t: common_vendor.t($data.currentLetter.deliveryDate),
-    v: common_vendor.n($options.getFontClass($data.currentLetter)),
-    w: common_vendor.t($data.currentLetter.content),
-    x: common_vendor.n($options.getFontClass($data.currentLetter)),
-    y: common_vendor.n($options.getFontClass($data.currentLetter)),
-    z: common_vendor.t($data.currentLetter.createTime),
-    A: common_vendor.n($options.getFontClass($data.currentLetter)),
-    B: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args)),
-    C: common_vendor.o(() => {
-    }),
-    D: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args))
+    t: $data.currentLetter.sentAt && $data.currentLetter.sentAt !== "--"
+  }, $data.currentLetter.sentAt && $data.currentLetter.sentAt !== "--" ? {
+    v: common_vendor.t($data.currentLetter.sentAt),
+    w: common_vendor.n($options.getFontClass($data.currentLetter))
   } : {}, {
-    E: $options.containerPaddingTop
+    x: common_vendor.t($data.currentLetter.content),
+    y: common_vendor.n($options.getFontClass($data.currentLetter)),
+    z: common_vendor.n($options.getFontClass($data.currentLetter)),
+    A: common_vendor.t($data.currentLetter.createTime),
+    B: common_vendor.n($options.getFontClass($data.currentLetter)),
+    C: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args)),
+    D: common_vendor.o(() => {
+    }),
+    E: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args))
+  }) : {}, {
+    F: $options.containerPaddingTop
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

@@ -65,7 +65,7 @@ const _sfc_main = {
       if (this.isCustomStyle) {
         return this.customImage;
       }
-      return `/static/xinxiang/xin${this.selectedStyle}.jpg`;
+      return `/subPackages/record/static/xinxiang/xin${this.selectedStyle}.jpg`;
     },
     selectedFontStyle() {
       return this.form.fontStyle || "default";
@@ -434,7 +434,7 @@ const _sfc_main = {
         if (this.isCustomStyle && this.customImage) {
           backgroundImage = this.customImage;
         } else {
-          backgroundImage = `/static/xinxiang/xin${this.selectedStyle}.jpg`;
+          backgroundImage = `/subPackages/record/static/xinxiang/xin${this.selectedStyle}.jpg`;
         }
         if (!this.form.deliveryDate || !/^\d{4}-\d{2}-\d{2}$/.test(this.form.deliveryDate)) {
           common_vendor.index.hideLoading();
@@ -451,10 +451,8 @@ const _sfc_main = {
           content: this.form.content.trim(),
           deliveryMethod: "PARTNER",
           // 目前只支持PARTNER
-          scheduledDate: this.form.deliveryDate,
-          // 格式：YYYY-MM-DD
-          scheduledTime: `${this.form.deliveryDate}T${this.form.deliveryTime}:00.000`,
-          // 完整时间格式
+          scheduledTime: `${this.form.deliveryDate} ${this.form.deliveryTime}:00`,
+          // 完整时间格式 (yyyy-MM-dd HH:mm:ss)
           status: "DRAFT",
           // 草稿状态
           fontStyle: this.selectedFontStyle
@@ -463,14 +461,14 @@ const _sfc_main = {
         if (receiverId) {
           letterData.receiverId = Number(receiverId);
           if (isNaN(letterData.receiverId)) {
-            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:916", "receiverId 不是有效数字:", receiverId);
+            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:915", "receiverId 不是有效数字:", receiverId);
             delete letterData.receiverId;
           }
         }
         if (backgroundImage && backgroundImage.trim()) {
           letterData.backgroundImage = backgroundImage.trim();
         }
-        common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:926", "📤 [创建情书] 最终请求参数:", JSON.stringify(letterData, null, 2));
+        common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:925", "📤 [创建情书] 最终请求参数:", JSON.stringify(letterData, null, 2));
         const response = await api_futureLetter.createFutureLetter(letterData);
         if (response && response.success !== false && ((_a = response.data) == null ? void 0 : _a.id)) {
           const letterId = response.data.id;
@@ -496,7 +494,7 @@ const _sfc_main = {
                 letters.unshift(localData);
                 common_vendor.index.setStorageSync("xinxiang_letters", letters);
               } catch (e) {
-                common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:963", "保存本地预览数据失败", e);
+                common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:962", "保存本地预览数据失败", e);
               }
               common_vendor.index.showToast({ title: "提交成功", icon: "success" });
               this.showPreviewModal = true;
@@ -510,7 +508,7 @@ const _sfc_main = {
             }
           } catch (sendError) {
             common_vendor.index.hideLoading();
-            common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/create.vue:983", "发送未来情书失败:", sendError);
+            common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/create.vue:982", "发送未来情书失败:", sendError);
             const localData = {
               id: letterId,
               style: this.isCustomStyle ? "custom" : this.selectedStyle,
@@ -528,7 +526,7 @@ const _sfc_main = {
               letters.unshift(localData);
               common_vendor.index.setStorageSync("xinxiang_letters", letters);
             } catch (e) {
-              common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:1004", "保存本地预览数据失败", e);
+              common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:1003", "保存本地预览数据失败", e);
             }
             common_vendor.index.showToast({
               title: sendError.message || "创建成功，但发送失败，请稍后重试",
@@ -545,7 +543,7 @@ const _sfc_main = {
         }
       } catch (error) {
         common_vendor.index.hideLoading();
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/create.vue:1024", "创建未来情书失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/create.vue:1023", "创建未来情书失败:", error);
         common_vendor.index.showToast({
           title: error.message || "创建失败，请重试",
           icon: "none",
@@ -573,7 +571,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   }, $data.currentStep === 1 ? common_vendor.e({
     g: common_vendor.f([1, 2, 3], (i, k0, i0) => {
       return common_vendor.e({
-        a: `/static/xinxiang/xin${i}.jpg`,
+        a: `/subPackages/record/static/xinxiang/xin${i}.jpg`,
         b: $data.selectedStyle === i && !$data.isCustomStyle
       }, $data.selectedStyle === i && !$data.isCustomStyle ? {} : {}, {
         c: i,

@@ -274,38 +274,64 @@ export default {
         }
         
         // 检查响应数据结构并提取图片URL
+        let photoUrl = null;
+        
+        // 根据不同的响应格式提取图片URL
         if (data && typeof data === 'object') {
-          // 成功条件：code为200且有data字段，或者有photoUrl/url字段
-          if ((data.code === 200 && data.data) || data.photoUrl || data.url || (data.data && (data.data.photoUrl || data.data.url))) {
-            // 提取图片URL
-            const photoUrl = data.photoUrl || data.url || (data.data && (data.data.photoUrl || data.data.url));
-            if (photoUrl) {
-              this.tempAvatar = photoUrl; // 保存新头像URL
-              console.log('✅ [上传头像] 上传成功，图片URL:', photoUrl);
-              uni.showToast({
-                title: '上传成功',
-                icon: 'success'
-              });
-            } else {
-              throw new Error('响应中未找到图片URL');
-            }
-          } else {
-            // 从响应中提取错误消息
-            const errorMsg = data.message || data.msg || data.errorMessage || '上传失败';
-            throw new Error(errorMsg || '上传失败');
+          // 格式1: { code: 200, imgUrl: "..." }
+          if (data.code === 200 && data.imgUrl) {
+            photoUrl = data.imgUrl;
+          }
+          // 格式2: { code: 200, data: { imgUrl: "..." } }
+          else if (data.code === 200 && data.data && typeof data.data === 'object' && data.data.imgUrl) {
+            photoUrl = data.data.imgUrl;
+          }
+          // 格式3: { code: 200, data: "..." } (data直接是URL)
+          else if (data.code === 200 && data.data && typeof data.data === 'string' && data.data.includes('http')) {
+            photoUrl = data.data;
+          }
+          // 格式4: { photoUrl: "..." }
+          else if (data.photoUrl) {
+            photoUrl = data.photoUrl;
+          }
+          // 格式5: { url: "..." }
+          else if (data.url) {
+            photoUrl = data.url;
+          }
+          // 格式6: { data: { photoUrl: "..." } }
+          else if (data.data && typeof data.data === 'object' && data.data.photoUrl) {
+            photoUrl = data.data.photoUrl;
+          }
+          // 格式7: { data: { url: "..." } }
+          else if (data.data && typeof data.data === 'object' && data.data.url) {
+            photoUrl = data.data.url;
           }
         } else if (typeof data === 'string' && data.includes('http')) {
-          // 如果返回的是字符串且包含URL，则直接使用
-          this.tempAvatar = data;
-          console.log('✅ [上传头像] 上传成功，图片URL:', data);
+          // 格式8: 直接返回URL字符串
+          photoUrl = data;
+        }
+        
+        if (photoUrl) {
+          this.tempAvatar = photoUrl; // 保存新头像URL
+          console.log('✅ [上传头像] 上传成功，图片URL:', photoUrl);
+          
+          // 强制刷新图片显示
+          this.$forceUpdate();
+          
+          // 添加时间戳防止缓存
+          const timestamp = new Date().getTime();
+          this.tempAvatar = photoUrl + '?t=' + timestamp;
+          
           uni.showToast({
             title: '上传成功',
             icon: 'success'
           });
         } else {
-          // 响应不是对象格式
-          console.error('❌ [上传头像] 服务器响应格式不正确:', data);
-          throw new Error('服务器响应格式不正确');
+          // 从响应中提取错误消息
+          const errorMsg = (data && typeof data === 'object') ? 
+            (data.message || data.msg || data.errorMessage || '上传失败') : 
+            '上传失败';
+          throw new Error(errorMsg || '上传失败');
         }
       } catch (error) {
         console.error('上传头像失败', error);
@@ -348,7 +374,7 @@ export default {
             displayAvatar: this.tempAvatar || this.userInfo.displayAvatar || this.userInfo.avatarUrl
           };
           
-          // 保存到本地存储
+          // 保存到本地存储（保留token）
           saveLoginInfo(updatedUserInfo);
           
           // 更新全局用户信息

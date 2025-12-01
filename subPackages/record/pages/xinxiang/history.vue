@@ -122,7 +122,7 @@
             <view class="letter-content">
               <view class="letter-header">
                 <text class="letter-title" :class="getFontClass(currentLetter)">{{ currentLetter.title }}</text>
-                <text class="letter-date" :class="getFontClass(currentLetter)">送达时间：{{ currentLetter.deliveryDate }}</text>
+                <text v-if="currentLetter.sentAt && currentLetter.sentAt !== '--'" class="letter-date" :class="getFontClass(currentLetter)">发送时间：{{ currentLetter.sentAt }}</text>
               </view>
               
               <view class="letter-body">
@@ -228,20 +228,25 @@ export default {
         const backendLetters = this.extractLetterArray(response).filter(Boolean);
         this.letters = backendLetters
           .filter(letter => letter.status !== 'SENT') // 过滤掉已发送的
-          .map(letter => ({
-            id: letter.id,
-            title: letter.title,
-            content: letter.content,
-            deliveryDate: letter.scheduledDate || letter.deliveryDate, // 兼容不同字段
-            createTime: letter.createdAt || letter.createTime,
-            status: letter.status,
-            style: this.getStyleFromBackground(letter.backgroundImage),
-            customImage: letter.backgroundImage,
-            opacity: 100, // 默认透明度
-            fontStyle: letter.fontStyle || letter.font_style || 'default',
-            // 保留后端原始数据
-            _backendData: letter
-          }));
+          .map(letter => {
+            const deliveryDateRaw = letter.scheduledDate || letter.deliveryDate;
+            const createTimeRaw = letter.createdAt || letter.createTime;
+            
+            return {
+              id: letter.id,
+              title: letter.title,
+              content: letter.content,
+              deliveryDate: this.formatToMinute(deliveryDateRaw),
+              createTime: this.formatToMinute(createTimeRaw),
+              status: letter.status,
+              style: this.getStyleFromBackground(letter.backgroundImage),
+              customImage: letter.backgroundImage,
+              opacity: 100, // 默认透明度
+              fontStyle: letter.fontStyle || letter.font_style || 'default',
+              // 保留后端原始数据
+              _backendData: letter
+            };
+          });
       } catch (error) {
         console.error('加载信件失败', error);
         // 如果API调用失败，尝试从本地存储加载（降级方案）
@@ -264,20 +269,26 @@ export default {
       try {
         const sentResponse = await getSentLetters();
         const backendSentLetters = this.extractLetterArray(sentResponse);
-        this.sentLetters = backendSentLetters.map(letter => ({
-          id: letter.id,
-          title: letter.title,
-          content: letter.content,
-          deliveryDate: letter.scheduledDate || letter.deliveryDate,
-          createTime: letter.createdAt || letter.createTime,
-          sentAt: letter.sentAt,
-          status: letter.status,
-          style: this.getStyleFromBackground(letter.backgroundImage),
-          customImage: letter.backgroundImage,
-          opacity: 100,
-          fontStyle: letter.fontStyle || letter.font_style || 'default',
-          _backendData: letter
-        }));
+        this.sentLetters = backendSentLetters.map(letter => {
+          const deliveryDateRaw = letter.scheduledDate || letter.deliveryDate;
+          const createTimeRaw = letter.createdAt || letter.createTime;
+          const sentAtRaw = letter.sentAt;
+          
+          return {
+            id: letter.id,
+            title: letter.title,
+            content: letter.content,
+            deliveryDate: this.formatToMinute(deliveryDateRaw),
+            createTime: this.formatToMinute(createTimeRaw),
+            sentAt: this.formatToMinute(sentAtRaw),
+            status: letter.status,
+            style: this.getStyleFromBackground(letter.backgroundImage),
+            customImage: letter.backgroundImage,
+            opacity: 100,
+            fontStyle: letter.fontStyle || letter.font_style || 'default',
+            _backendData: letter
+          };
+        });
       } catch (error) {
         console.error('加载已发送信件失败', error);
         if (error.statusCode !== 401) {
@@ -323,7 +334,7 @@ export default {
       if (letter.style === 'custom') {
         return letter.customImage;
       }
-      return `/static/xinxiang/xin${letter.style}.jpg`;
+      return `/subPackages/record/static/xinxiang/xin${letter.style}.jpg`;
     },
     
     // 兼容多种响应结构
@@ -357,6 +368,25 @@ export default {
       return [];
     },
     
+    // 将时间统一格式化到分钟
+    formatToMinute(dateInput) {
+      if (!dateInput) return '--';
+      
+      const dateValue = dateInput instanceof Date ? dateInput : new Date(dateInput);
+      if (Number.isNaN(dateValue.getTime())) {
+        return typeof dateInput === 'string' ? dateInput : '--';
+      }
+      
+      const pad = num => (num < 10 ? `0${num}` : `${num}`);
+      const year = dateValue.getFullYear();
+      const month = pad(dateValue.getMonth() + 1);
+      const day = pad(dateValue.getDate());
+      const hours = pad(dateValue.getHours());
+      const minutes = pad(dateValue.getMinutes());
+      
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    },
+    
     // 查看信件详情
     async viewLetter(letter, index) {
       try {
@@ -371,6 +401,9 @@ export default {
         // 处理响应数据
         if (response && response.data) {
           const detailData = response.data;
+          const detailDeliveryDate = detailData.scheduledDate || detailData.deliveryDate || letter.deliveryDate;
+          const detailCreateTime = detailData.createdAt || detailData.createTime || letter.createTime;
+          const detailSentAt = detailData.sentAt || letter.sentAt;
           // 合并详情数据到当前信件对象
           this.currentLetter = {
             ...letter,
@@ -379,9 +412,9 @@ export default {
             id: detailData.id || letter.id,
             title: detailData.title || letter.title,
             content: detailData.content || letter.content,
-            deliveryDate: detailData.scheduledDate || detailData.deliveryDate || letter.deliveryDate,
-            createTime: detailData.createdAt || detailData.createTime || letter.createTime,
-            sentAt: detailData.sentAt || letter.sentAt,
+            deliveryDate: this.formatToMinute(detailDeliveryDate),
+            createTime: this.formatToMinute(detailCreateTime),
+            sentAt: this.formatToMinute(detailSentAt),
             status: detailData.status || letter.status,
             style: this.getStyleFromBackground(detailData.backgroundImage || letter.backgroundImage),
             customImage: detailData.backgroundImage || letter.customImage,

@@ -44,7 +44,7 @@
           :class="{ selected: selectedStyle === i && !isCustomStyle }"
           @click="selectPresetStyle(i)"
         >
-          <image class="style-image" :src="`/static/xinxiang/xin${i}.jpg`" mode="aspectFill"></image>
+          <image class="style-image" :src="`/subPackages/record/static/xinxiang/xin${i}.jpg`" mode="aspectFill"></image>
           <view v-if="selectedStyle === i && !isCustomStyle" class="check-mark">✓</view>
         </view>
       </view>
@@ -303,7 +303,7 @@ export default {
       if (this.isCustomStyle) {
         return this.customImage;
       }
-      return `/static/xinxiang/xin${this.selectedStyle}.jpg`;
+      return `/subPackages/record/static/xinxiang/xin${this.selectedStyle}.jpg`;
     },
     selectedFontStyle() {
       return this.form.fontStyle || 'default';
@@ -880,7 +880,7 @@ export default {
           backgroundImage = this.customImage;
         } else {
           // 预设样式可以转换为完整URL或使用样式ID
-          backgroundImage = `/static/xinxiang/xin${this.selectedStyle}.jpg`;
+          backgroundImage = `/subPackages/record/static/xinxiang/xin${this.selectedStyle}.jpg`;
         }
 
         // 验证日期格式
@@ -902,8 +902,7 @@ export default {
           title: this.form.title.trim(),
           content: this.form.content.trim(),
           deliveryMethod: 'PARTNER', // 目前只支持PARTNER
-          scheduledDate: this.form.deliveryDate, // 格式：YYYY-MM-DD
-          scheduledTime: `${this.form.deliveryDate}T${this.form.deliveryTime}:00.000`, // 完整时间格式
+          scheduledTime: `${this.form.deliveryDate} ${this.form.deliveryTime}:00`, // 完整时间格式 (yyyy-MM-dd HH:mm:ss)
           status: 'DRAFT', // 草稿状态
           fontStyle: this.selectedFontStyle
         };
@@ -1526,11 +1525,6 @@ export default {
 }
 
 /* 表单 */
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 24rpx;
-}
 .form {
   display: flex;
   flex-direction: column;

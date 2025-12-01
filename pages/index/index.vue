@@ -51,8 +51,8 @@
         </view>
           <view class="stat-item" @click="goToFirstAnniversary">
             <iconify-icon icon="mdi:calendar-heart" :size="32" color="#FF91A4" />
-            <text class="stat-text">{{ nextAnniversaryText }}</text>
-        </view>
+            <text class="stat-text">纪念</text>
+            </view>
       </view>
     </view>
 
@@ -149,11 +149,11 @@
 import { getCoupleInfo, getPartnerInfo, isBound as checkIsBound, clearCoupleInfo } from '../../utils/couple.js';
 import { getCoupleStatus, getLoveDays } from '../../api/couple.js';
 import { saveCoupleInfo } from '../../utils/couple.js';
-import { getUserInfo, isLoggedIn, isGuestUser } from '../../utils/auth.js';
+import { getUserInfo, isLoggedIn, isGuestUser, checkLoginRequired, checkLogin } from '../../utils/auth.js';
 import CustomTabbar from '@/components/custom-tabbar/index.vue';
 
-// 引入纪念日API
-import { getAnniversaryList } from '@/api/anniversary.js';
+// 引入未来情书API
+import { getUnreadLetters } from '@/api/futureLetter.js';
 
 export default {
   components: {
@@ -205,15 +205,6 @@ export default {
         return 0;
       }
     },
-    // 计算下一个纪念日
-    nextAnniversaryText() {
-      // 如果有纪念日列表，显示"纪念"
-      if (this.anniversaryList && this.anniversaryList.length > 0) {
-        return "纪念";
-      }
-      // 默认显示
-      return "纪念";
-    },
     containerPaddingTop() {
       // 将px转换为rpx: rpx = px * 750 / screenWidth
       // 添加20rpx额外间距
@@ -223,26 +214,28 @@ export default {
       return totalHeightRpx + 20 + 'rpx';
     }
   },
-  async onLoad() {
+  onLoad() {
     this.getSystemInfo();
     this.loadUserInfo();
-    // 不再强制要求登录，允许未登录用户浏览
-    await this.loadCoupleInfo();
+    this.loadCoupleInfo();
     this.loadLoveDays();
-    this.loadAnniversaryData(); // 加载纪念日数据
-    this.loadRecentActivities();
+    
+    // 登录成功后检查未读情书
+    this.checkUnreadLetters();
   },
-  async onShow() {
+  
+  onShow() {
     // 每次页面显示时重新加载用户信息和情侣信息
     this.loadUserInfo();
-    await this.loadCoupleInfo();
+    this.loadCoupleInfo();
+    
+    // 重新加载相爱天数
     this.loadLoveDays();
-    this.loadAnniversaryData(); // 重新加载纪念日数据
-    this.loadRecentActivities();
   },
+  
   methods: {
-    // 检查是否需要登录
-    checkLoginRequired() {
+    // 检查是否需要登录 (重命名本地方法以避免冲突)
+    checkLocalLoginRequired() {
       // 如果是游客用户，提示需要登录
       if (isGuestUser()) {
         uni.showModal({
@@ -266,7 +259,7 @@ export default {
     // 跳转到第一个纪念日
     goToFirstAnniversary() {
       // 检查是否需要登录
-      if (!this.checkLoginRequired()) return;
+      if (!this.checkLocalLoginRequired()) return;
       
       // 跳转到纪念日页面
       uni.navigateTo({
@@ -315,7 +308,7 @@ export default {
     },
     goToSweetQA() {
       // 检查是否需要登录
-      if (!this.checkLoginRequired()) return;
+      if (!this.checkLocalLoginRequired()) return;
       
       // 跳转到恋与问答页面
       uni.navigateTo({
@@ -324,7 +317,7 @@ export default {
     },
     goToHundredThings() {
       // 检查是否需要登录
-      if (!this.checkLoginRequired()) return;
+      if (!this.checkLocalLoginRequired()) return;
       
       // 跳转到一百件事页面
       uni.navigateTo({
@@ -333,7 +326,7 @@ export default {
     },
     goToHeartWall() {
       // 检查是否需要登录
-      if (!this.checkLoginRequired()) return;
+      if (!this.checkLocalLoginRequired()) return;
       
       // 跳转到心形墙页面
       uni.navigateTo({
@@ -342,7 +335,7 @@ export default {
     },
     goToFutureLetter() {
       // 检查是否需要登录
-      if (!this.checkLoginRequired()) return;
+      if (!this.checkLocalLoginRequired()) return;
       
       // 跳转到未来情书页面
       uni.navigateTo({
@@ -577,33 +570,11 @@ export default {
         }
       ];
     },
-    // 加载纪念日数据（从后端获取）
-    async loadAnniversaryData() {
-      try {
-        // 只有在已绑定的情况下才加载纪念日数据
-        if (!this.isBound) {
-          this.anniversaryList = [];
-          return;
-        }
-        
-        const response = await getAnniversaryList();
-        if (response && response.data && response.data.anniversaryList) {
-          this.anniversaryList = response.data.anniversaryList;
-        } else {
-          console.warn('获取纪念日列表数据格式异常:', response);
-          this.anniversaryList = [];
-        }
-      } catch (error) {
-        console.error('加载纪念日数据失败:', error);
-        // 出错时初始化为空数组
-        this.anniversaryList = [];
-      }
-    },
     
     // 跳转到邀请页面
     goToInvite() {
       // 检查是否需要登录
-      if (!this.checkLoginRequired()) return;
+      if (!this.checkLocalLoginRequired()) return;
       
       uni.navigateTo({
         url: '/pages/invite/index'
@@ -622,7 +593,47 @@ export default {
       uni.navigateTo({
         url: '/pages/we/index'
       });
-    }
+    },
+    
+    // 检查未读情书
+    async checkUnreadLetters() {
+      // 检查是否需要登录 (使用从auth.js导入的函数)
+      if (!checkLogin()) return;
+      
+      try {
+        // 调用API获取未读情书
+        const response = await getUnreadLetters();
+        
+        // 检查返回的数据
+        if (response && response.data && response.data.letters && response.data.letters.length > 0) {
+          // 有未读情书，显示第一封
+          const letter = response.data.letters[0];
+          this.showLetterModal(letter);
+        }
+      } catch (error) {
+        console.error('检查未读情书失败:', error);
+        // 不中断应用流程，静默处理错误
+      }
+    },
+    
+    // 显示情书模态框
+    showLetterModal(letter) {
+      uni.showModal({
+        title: letter.title || '收到一封情书',
+        content: letter.content || '你有一封来自恋人的情书',
+        showCancel: true,
+        confirmText: '查看',
+        cancelText: '稍后',
+        success: (res) => {
+          if (res.confirm) {
+            // 跳转到未来情书页面
+            uni.navigateTo({
+              url: '/subPackages/record/pages/xinxiang/received'
+            });
+          }
+        }
+      });
+    },
   }
 };
 </script>

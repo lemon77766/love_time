@@ -156,36 +156,42 @@ const _sfc_main = {
           common_vendor.index.__f__("error", "at subPackages/record/pages/profile/edit.vue:272", "❌ [上传头像] JSON解析失败，使用原始数据:", uploadResult.data);
           data = uploadResult.data;
         }
+        let photoUrl = null;
         if (data && typeof data === "object") {
-          if (data.code === 200 && data.data || data.photoUrl || data.url || data.data && (data.data.photoUrl || data.data.url)) {
-            const photoUrl = data.photoUrl || data.url || data.data && (data.data.photoUrl || data.data.url);
-            if (photoUrl) {
-              this.tempAvatar = photoUrl;
-              common_vendor.index.__f__("log", "at subPackages/record/pages/profile/edit.vue:284", "✅ [上传头像] 上传成功，图片URL:", photoUrl);
-              common_vendor.index.showToast({
-                title: "上传成功",
-                icon: "success"
-              });
-            } else {
-              throw new Error("响应中未找到图片URL");
-            }
-          } else {
-            const errorMsg = data.message || data.msg || data.errorMessage || "上传失败";
-            throw new Error(errorMsg || "上传失败");
+          if (data.code === 200 && data.imgUrl) {
+            photoUrl = data.imgUrl;
+          } else if (data.code === 200 && data.data && typeof data.data === "object" && data.data.imgUrl) {
+            photoUrl = data.data.imgUrl;
+          } else if (data.code === 200 && data.data && typeof data.data === "string" && data.data.includes("http")) {
+            photoUrl = data.data;
+          } else if (data.photoUrl) {
+            photoUrl = data.photoUrl;
+          } else if (data.url) {
+            photoUrl = data.url;
+          } else if (data.data && typeof data.data === "object" && data.data.photoUrl) {
+            photoUrl = data.data.photoUrl;
+          } else if (data.data && typeof data.data === "object" && data.data.url) {
+            photoUrl = data.data.url;
           }
         } else if (typeof data === "string" && data.includes("http")) {
-          this.tempAvatar = data;
-          common_vendor.index.__f__("log", "at subPackages/record/pages/profile/edit.vue:300", "✅ [上传头像] 上传成功，图片URL:", data);
+          photoUrl = data;
+        }
+        if (photoUrl) {
+          this.tempAvatar = photoUrl;
+          common_vendor.index.__f__("log", "at subPackages/record/pages/profile/edit.vue:316", "✅ [上传头像] 上传成功，图片URL:", photoUrl);
+          this.$forceUpdate();
+          const timestamp = (/* @__PURE__ */ new Date()).getTime();
+          this.tempAvatar = photoUrl + "?t=" + timestamp;
           common_vendor.index.showToast({
             title: "上传成功",
             icon: "success"
           });
         } else {
-          common_vendor.index.__f__("error", "at subPackages/record/pages/profile/edit.vue:307", "❌ [上传头像] 服务器响应格式不正确:", data);
-          throw new Error("服务器响应格式不正确");
+          const errorMsg = data && typeof data === "object" ? data.message || data.msg || data.errorMessage || "上传失败" : "上传失败";
+          throw new Error(errorMsg || "上传失败");
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/profile/edit.vue:311", "上传头像失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/profile/edit.vue:337", "上传头像失败", error);
         const errorMessage = error.message || "上传失败";
         common_vendor.index.showToast({
           title: errorMessage,
@@ -230,7 +236,7 @@ const _sfc_main = {
           throw new Error((response == null ? void 0 : response.message) || "保存失败");
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/profile/edit.vue:370", "保存用户资料失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/profile/edit.vue:396", "保存用户资料失败", error);
         common_vendor.index.showToast({
           title: error.message || "保存失败",
           icon: "none"

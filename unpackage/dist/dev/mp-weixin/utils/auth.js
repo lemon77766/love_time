@@ -27,17 +27,23 @@ function getUserInfo() {
     return null;
   }
 }
-function saveLoginInfo(userInfo) {
+function saveLoginInfo(userInfo, token = null) {
   try {
+    const existingLoginInfo = common_vendor.index.getStorageSync("login_info") || {};
+    const finalToken = token || existingLoginInfo.token || "";
     const loginInfo = {
+      ...existingLoginInfo,
+      // 保留现有信息
       isLoggedIn: true,
       userInfo,
-      loginTime: (/* @__PURE__ */ new Date()).toISOString()
+      loginTime: (/* @__PURE__ */ new Date()).toISOString(),
+      // 确保token字段存在
+      token: finalToken
     };
     common_vendor.index.setStorageSync("login_info", loginInfo);
     return true;
   } catch (e) {
-    common_vendor.index.__f__("error", "at utils/auth.js:63", "保存登录信息失败", e);
+    common_vendor.index.__f__("error", "at utils/auth.js:72", "保存登录信息失败", e);
     return false;
   }
 }
@@ -72,7 +78,7 @@ function logout(silent = false) {
       }, silent ? 500 : 1500);
       resolve(true);
     } catch (e) {
-      common_vendor.index.__f__("error", "at utils/auth.js:114", "退出登录失败", e);
+      common_vendor.index.__f__("error", "at utils/auth.js:123", "退出登录失败", e);
       common_vendor.index.showToast({
         title: "退出失败，请重试",
         icon: "none",
@@ -82,6 +88,11 @@ function logout(silent = false) {
     }
   });
 }
+function checkLogin() {
+  const loggedIn = isLoggedIn();
+  return loggedIn;
+}
+exports.checkLogin = checkLogin;
 exports.getUserInfo = getUserInfo;
 exports.isGuestUser = isGuestUser;
 exports.isLoggedIn = isLoggedIn;

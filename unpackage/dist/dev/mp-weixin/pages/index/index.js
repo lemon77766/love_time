@@ -3,7 +3,7 @@ const common_vendor = require("../../common/vendor.js");
 const utils_couple = require("../../utils/couple.js");
 const api_couple = require("../../api/couple.js");
 const utils_auth = require("../../utils/auth.js");
-const api_anniversary = require("../../api/anniversary.js");
+const api_futureLetter = require("../../api/futureLetter.js");
 const CustomTabbar = () => "../../components/custom-tabbar/index.js";
 const _sfc_main = {
   components: {
@@ -54,13 +54,6 @@ const _sfc_main = {
         return 0;
       }
     },
-    // 计算下一个纪念日
-    nextAnniversaryText() {
-      if (this.anniversaryList && this.anniversaryList.length > 0) {
-        return "纪念";
-      }
-      return "纪念";
-    },
     containerPaddingTop() {
       const totalHeightPx = this.statusBarHeight + this.navBarHeight;
       const pxToRpx = 750 / this.screenWidth;
@@ -68,24 +61,21 @@ const _sfc_main = {
       return totalHeightRpx + 20 + "rpx";
     }
   },
-  async onLoad() {
+  onLoad() {
     this.getSystemInfo();
     this.loadUserInfo();
-    await this.loadCoupleInfo();
+    this.loadCoupleInfo();
     this.loadLoveDays();
-    this.loadAnniversaryData();
-    this.loadRecentActivities();
+    this.checkUnreadLetters();
   },
-  async onShow() {
+  onShow() {
     this.loadUserInfo();
-    await this.loadCoupleInfo();
+    this.loadCoupleInfo();
     this.loadLoveDays();
-    this.loadAnniversaryData();
-    this.loadRecentActivities();
   },
   methods: {
-    // 检查是否需要登录
-    checkLoginRequired() {
+    // 检查是否需要登录 (重命名本地方法以避免冲突)
+    checkLocalLoginRequired() {
       if (utils_auth.isGuestUser()) {
         common_vendor.index.showModal({
           title: "需要登录",
@@ -106,7 +96,7 @@ const _sfc_main = {
     },
     // 跳转到第一个纪念日
     goToFirstAnniversary() {
-      if (!this.checkLoginRequired())
+      if (!this.checkLocalLoginRequired())
         return;
       common_vendor.index.navigateTo({
         url: "/subPackages/record/pages/anniversary/index"
@@ -132,28 +122,28 @@ const _sfc_main = {
       this.navBarHeight = 54;
     },
     goToSweetQA() {
-      if (!this.checkLoginRequired())
+      if (!this.checkLocalLoginRequired())
         return;
       common_vendor.index.navigateTo({
         url: "/subPackages/interaction/pages/qna/index"
       });
     },
     goToHundredThings() {
-      if (!this.checkLoginRequired())
+      if (!this.checkLocalLoginRequired())
         return;
       common_vendor.index.navigateTo({
         url: "/subPackages/interaction/pages/hundred/index"
       });
     },
     goToHeartWall() {
-      if (!this.checkLoginRequired())
+      if (!this.checkLocalLoginRequired())
         return;
       common_vendor.index.navigateTo({
         url: "/subPackages/record/pages/heartwall/index"
       });
     },
     goToFutureLetter() {
-      if (!this.checkLoginRequired())
+      if (!this.checkLocalLoginRequired())
         return;
       common_vendor.index.navigateTo({
         url: "/subPackages/record/pages/xinxiang/index"
@@ -178,14 +168,14 @@ const _sfc_main = {
           }
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:376", "加载用户信息失败", error);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:369", "加载用户信息失败", error);
       }
     },
     // 加载情侣信息
     async loadCoupleInfo() {
       var _a, _b;
       if (utils_auth.isGuestUser()) {
-        common_vendor.index.__f__("log", "at pages/index/index.vue:383", "游客用户，跳过加载情侣信息");
+        common_vendor.index.__f__("log", "at pages/index/index.vue:376", "游客用户，跳过加载情侣信息");
         this.isBound = false;
         this.partnerInfo = null;
         this.bindTime = "";
@@ -212,7 +202,7 @@ const _sfc_main = {
                 this.partnerInfo = response.data.partnerInfo || {};
                 this.bindTime = response.data.bindTime || "";
               } else {
-                common_vendor.index.__f__("log", "at pages/index/index.vue:416", "⚠️ 服务器返回未绑定，清除本地状态");
+                common_vendor.index.__f__("log", "at pages/index/index.vue:409", "⚠️ 服务器返回未绑定，清除本地状态");
                 utils_couple.clearCoupleInfo();
                 this.isBound = false;
                 this.partnerInfo = null;
@@ -220,7 +210,7 @@ const _sfc_main = {
               }
             }
           } catch (e) {
-            common_vendor.index.__f__("error", "at pages/index/index.vue:424", "同步绑定状态失败", e);
+            common_vendor.index.__f__("error", "at pages/index/index.vue:417", "同步绑定状态失败", e);
           }
           return;
         }
@@ -249,7 +239,7 @@ const _sfc_main = {
             }
           }
         } catch (e) {
-          common_vendor.index.__f__("error", "at pages/index/index.vue:459", "查询绑定状态失败", e);
+          common_vendor.index.__f__("error", "at pages/index/index.vue:452", "查询绑定状态失败", e);
           this.isBound = utils_couple.isBound();
           if (this.isBound) {
             this.partnerInfo = utils_couple.getPartnerInfo();
@@ -258,7 +248,7 @@ const _sfc_main = {
           }
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:469", "加载情侣信息失败", e);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:462", "加载情侣信息失败", e);
         this.isBound = utils_couple.isBound();
         if (this.isBound) {
           this.partnerInfo = utils_couple.getPartnerInfo();
@@ -268,7 +258,7 @@ const _sfc_main = {
     // 加载相爱天数
     async loadLoveDays() {
       if (utils_auth.isGuestUser()) {
-        common_vendor.index.__f__("log", "at pages/index/index.vue:480", "游客用户，跳过加载相爱天数");
+        common_vendor.index.__f__("log", "at pages/index/index.vue:473", "游客用户，跳过加载相爱天数");
         this.loveDays = 0;
         this.anniversaryDate = "";
         this.relationshipName = "";
@@ -287,16 +277,16 @@ const _sfc_main = {
           this.loveDays = this.toNumberOrZero(loveDaysPayload.loveDays);
           this.anniversaryDate = loveDaysPayload.anniversaryDate || "";
           this.relationshipName = loveDaysPayload.relationshipName || "";
-          common_vendor.index.__f__("log", "at pages/index/index.vue:503", "✅ 成功加载相爱天数:", {
+          common_vendor.index.__f__("log", "at pages/index/index.vue:496", "✅ 成功加载相爱天数:", {
             loveDays: this.loveDays,
             anniversaryDate: this.anniversaryDate,
             relationshipName: this.relationshipName
           });
         } else {
-          common_vendor.index.__f__("warn", "at pages/index/index.vue:509", "⚠️ 获取相爱天数失败，无法识别有效数据结构:", response);
+          common_vendor.index.__f__("warn", "at pages/index/index.vue:502", "⚠️ 获取相爱天数失败，无法识别有效数据结构:", response);
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:512", "❌ 获取相爱天数失败:", error);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:505", "❌ 获取相爱天数失败:", error);
       }
     },
     normalizeLoveDaysResponse(response) {
@@ -348,28 +338,9 @@ const _sfc_main = {
         }
       ];
     },
-    // 加载纪念日数据（从后端获取）
-    async loadAnniversaryData() {
-      try {
-        if (!this.isBound) {
-          this.anniversaryList = [];
-          return;
-        }
-        const response = await api_anniversary.getAnniversaryList();
-        if (response && response.data && response.data.anniversaryList) {
-          this.anniversaryList = response.data.anniversaryList;
-        } else {
-          common_vendor.index.__f__("warn", "at pages/index/index.vue:593", "获取纪念日列表数据格式异常:", response);
-          this.anniversaryList = [];
-        }
-      } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:597", "加载纪念日数据失败:", error);
-        this.anniversaryList = [];
-      }
-    },
     // 跳转到邀请页面
     goToInvite() {
-      if (!this.checkLoginRequired())
+      if (!this.checkLocalLoginRequired())
         return;
       common_vendor.index.navigateTo({
         url: "/pages/invite/index"
@@ -385,6 +356,37 @@ const _sfc_main = {
       }
       common_vendor.index.navigateTo({
         url: "/pages/we/index"
+      });
+    },
+    // 检查未读情书
+    async checkUnreadLetters() {
+      if (!utils_auth.checkLogin())
+        return;
+      try {
+        const response = await api_futureLetter.getUnreadLetters();
+        if (response && response.data && response.data.letters && response.data.letters.length > 0) {
+          const letter = response.data.letters[0];
+          this.showLetterModal(letter);
+        }
+      } catch (error) {
+        common_vendor.index.__f__("error", "at pages/index/index.vue:614", "检查未读情书失败:", error);
+      }
+    },
+    // 显示情书模态框
+    showLetterModal(letter) {
+      common_vendor.index.showModal({
+        title: letter.title || "收到一封情书",
+        content: letter.content || "你有一封来自恋人的情书",
+        showCancel: true,
+        confirmText: "查看",
+        cancelText: "稍后",
+        success: (res) => {
+          if (res.confirm) {
+            common_vendor.index.navigateTo({
+              url: "/subPackages/record/pages/xinxiang/received"
+            });
+          }
+        }
       });
     }
   }
@@ -438,45 +440,44 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: 32,
       color: "#FF91A4"
     }),
-    n: common_vendor.t($options.nextAnniversaryText),
-    o: common_vendor.o((...args) => $options.goToFirstAnniversary && $options.goToFirstAnniversary(...args))
+    n: common_vendor.o((...args) => $options.goToFirstAnniversary && $options.goToFirstAnniversary(...args))
   } : {
-    p: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/login/love.jpg",
-    q: common_vendor.p({
+    o: $data.userInfo.displayAvatar || $data.userInfo.avatarUrl || "/static/login/love.jpg",
+    p: common_vendor.p({
       icon: "mdi:heart",
       size: 48,
       color: "#ff6b6b"
     }),
-    r: common_vendor.o((...args) => $options.goToInvite && $options.goToInvite(...args))
+    q: common_vendor.o((...args) => $options.goToInvite && $options.goToInvite(...args))
   }, {
-    s: common_vendor.p({
+    r: common_vendor.p({
       icon: "mdi:chat-question",
       size: 48,
       color: "#FF9EBC"
     }),
-    t: common_vendor.o((...args) => $options.goToSweetQA && $options.goToSweetQA(...args)),
-    v: common_vendor.p({
+    s: common_vendor.o((...args) => $options.goToSweetQA && $options.goToSweetQA(...args)),
+    t: common_vendor.p({
       icon: "mdi:check-all",
       size: 48,
       color: "#D9ACFF"
     }),
-    w: common_vendor.o((...args) => $options.goToHundredThings && $options.goToHundredThings(...args)),
-    x: common_vendor.p({
+    v: common_vendor.o((...args) => $options.goToHundredThings && $options.goToHundredThings(...args)),
+    w: common_vendor.p({
       icon: "mdi:heart-box",
       size: 48,
       color: "#FF6B6B"
     }),
-    y: common_vendor.o((...args) => $options.goToHeartWall && $options.goToHeartWall(...args)),
-    z: common_vendor.p({
+    x: common_vendor.o((...args) => $options.goToHeartWall && $options.goToHeartWall(...args)),
+    y: common_vendor.p({
       icon: "mdi:book-heart",
       size: 48,
       color: "#FF91A4"
     }),
-    A: common_vendor.o((...args) => $options.goToFutureLetter && $options.goToFutureLetter(...args)),
-    B: common_vendor.t($data.wishText),
-    C: $data.recentActivities.length > 0
+    z: common_vendor.o((...args) => $options.goToFutureLetter && $options.goToFutureLetter(...args)),
+    A: common_vendor.t($data.wishText),
+    B: $data.recentActivities.length > 0
   }, $data.recentActivities.length > 0 ? {
-    D: common_vendor.f($data.recentActivities, (activity, index, i0) => {
+    C: common_vendor.f($data.recentActivities, (activity, index, i0) => {
       return {
         a: "401c6bf2-11-" + i0,
         b: common_vendor.p({
@@ -489,10 +490,10 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       };
     })
   } : {}, {
-    E: common_vendor.p({
+    D: common_vendor.p({
       current: 0
     }),
-    F: $options.containerPaddingTop
+    E: $options.containerPaddingTop
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);
