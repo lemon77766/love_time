@@ -10,7 +10,7 @@
       <view class="navbar-content" :style="{ height: navBarHeight + 'px' }">
         <view class="navbar-title">
           <iconify-icon icon="mdi:heart" :size="24" color="#ff6b6b" class="navbar-heart-icon" />
-          <text class="title-text">CoupleTime</text>
+          <text class="title-text">恋与时光</text>
         </view>
         <view class="navbar-right" @click="goToProfile">
           <iconify-icon icon="mdi:account" :size="24" color="#666" />
@@ -41,11 +41,11 @@
           <text class="days-together">相爱第 {{ daysTogether }} 天</text>
         </view>
         <view class="couple-stats">
-          <view class="stat-item">
+          <view class="stat-item" @click="showVirtualPersonTip">
             <iconify-icon icon="mdi:robot" :size="32" color="#4A90E2" />
             <text class="stat-text">虚拟人</text>
           </view>
-          <view class="stat-item">
+          <view class="stat-item" @click="showQuarrelTip">
             <iconify-icon icon="mdi:emoticon-angry" :size="32" color="#FF6B6B" />
             <text class="stat-text">吵架</text>
         </view>
@@ -149,7 +149,7 @@
 import { getCoupleInfo, getPartnerInfo, isBound as checkIsBound, clearCoupleInfo } from '../../utils/couple.js';
 import { getCoupleStatus, getLoveDays } from '../../api/couple.js';
 import { saveCoupleInfo } from '../../utils/couple.js';
-import { getUserInfo, isLoggedIn, isGuestUser, checkLoginRequired, checkLogin } from '../../utils/auth.js';
+import { getUserInfo, isLoggedIn, isGuestUser, checkLogin } from '../../utils/auth.js';
 import CustomTabbar from '@/components/custom-tabbar/index.vue';
 
 // 引入未来情书API
@@ -254,6 +254,24 @@ export default {
         return false;
       }
       return true;
+    },
+    
+    // 显示虚拟人功能待开发提示
+    showVirtualPersonTip() {
+      uni.showToast({
+        title: '该功能待开发',
+        icon: 'none',
+        duration: 2000
+      });
+    },
+    
+    // 显示吵架功能待开发提示
+    showQuarrelTip() {
+      uni.showToast({
+        title: '该功能待开发',
+        icon: 'none',
+        duration: 2000
+      });
     },
     
     // 跳转到第一个纪念日
@@ -901,6 +919,12 @@ export default {
   flex-direction: column;
   align-items: center;
   gap: 8rpx;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.stat-item:active {
+  opacity: 0.6;
 }
 
 

@@ -1,6 +1,6 @@
 "use strict";
 const devConfig = {
-  baseURL: "http://192.168.94.229:8886",
+  baseURL: "https://smallpeppers.cn",
   timeout: 1e4,
   // 普通请求超时时间
   uploadTimeout: 12e4,

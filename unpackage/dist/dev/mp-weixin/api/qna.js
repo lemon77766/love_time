@@ -1,4 +1,5 @@
 "use strict";
+const common_vendor = require("../common/vendor.js");
 const utils_http = require("../utils/http.js");
 const utils_config = require("../utils/config.js");
 function getQuestions() {
@@ -15,6 +16,11 @@ function getHistory(params = {}) {
   return utils_http.http.get(utils_config.config.API.QNA.HISTORY, params);
 }
 function getPartnerAnswer(questionId) {
+  common_vendor.index.__f__("log", "at api/qna.js:128", "🔍 调用获取对方答案API:", {
+    url: utils_config.config.API.QNA.PARTNER_ANSWER,
+    questionId,
+    questionIdType: typeof questionId
+  });
   return utils_http.http.get(utils_config.config.API.QNA.PARTNER_ANSWER, { questionId });
 }
 function addCustomQuestion(questionText) {

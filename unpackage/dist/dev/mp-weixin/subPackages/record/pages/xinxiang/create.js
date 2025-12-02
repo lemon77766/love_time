@@ -453,8 +453,8 @@ const _sfc_main = {
           // 目前只支持PARTNER
           scheduledTime: `${this.form.deliveryDate} ${this.form.deliveryTime}:00`,
           // 完整时间格式 (yyyy-MM-dd HH:mm:ss)
-          status: "DRAFT",
-          // 草稿状态
+          status: "UNSCHEDULED",
+          // 草稿状态改为UNREAD
           fontStyle: this.selectedFontStyle
         };
         letterData.font_style = this.selectedFontStyle;

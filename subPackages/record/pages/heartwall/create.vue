@@ -166,13 +166,17 @@ export default {
         return;
       }
       
-      uni.showLoading({ title: '正在生成图片...', mask: true });
+      uni.showLoading({ title: '正在生成精美图片...', mask: true });
       
       try {
         // 使用固定的画布尺寸
         const canvasWidth = 750; // 与Canvas元素宽度一致
         const canvasHeight = 1000; // 与Canvas元素高度一致
-        const cellSize = (canvasWidth - 40) / 9; // 9x9网格，左右各留20px边距
+        const cellSize = 70; // 固定格子大小
+        const gridWidth = cellSize * 9;
+        const gridHeight = cellSize * 9;
+        const startX = (canvasWidth - gridWidth) / 2; // 居中显示
+        const startY = 180; // 从顶部180px开始绘制
         
         // 创建画布上下文
         const ctx = uni.createCanvasContext('exportCanvas', this);
@@ -180,32 +184,49 @@ export default {
         // 清空画布
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
         
-        // 设置画布背景
-        ctx.setFillStyle('#FFFAF4');
+        // 设置画布背景 - 渐变背景
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+        gradient.addColorStop(0, '#FFF0F5'); // 浅粉色
+        gradient.addColorStop(1, '#FFE4E1'); // 浅玫瑰色
+        ctx.setFillStyle(gradient);
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
         
+        // 绘制顶部装饰线条
+        ctx.setStrokeStyle('#FFB6C1');
+        ctx.setLineWidth(2);
+        ctx.beginPath();
+        ctx.moveTo(startX, startY - 30);
+        ctx.lineTo(startX + gridWidth, startY - 30);
+        ctx.stroke();
+        
+        // 绘制底部装饰线条
+        ctx.beginPath();
+        ctx.moveTo(startX, startY + gridHeight + 30);
+        ctx.lineTo(startX + gridWidth, startY + gridHeight + 30);
+        ctx.stroke();
+        
         // 绘制装饰性心形图标
-        ctx.setFontSize(20);
-        ctx.setFillStyle('#FFB5C2');
+        ctx.setFontSize(36);
+        ctx.setFillStyle('#FF69B4');
         ctx.setTextAlign('center');
-        ctx.fillText('♥', canvasWidth / 2, 30);
+        ctx.setTextBaseline('middle');
+        ctx.fillText('♥', canvasWidth / 2, 60);
         
         // 绘制标题
-        ctx.setFontSize(24);
-        ctx.setFillStyle('#4A4A4A');
+        ctx.setFontSize(28);
+        ctx.setFillStyle('#8B4513'); // 棕色
         ctx.setTextAlign('center');
-        ctx.fillText('爱心照片墙', canvasWidth / 2, 60);
+        ctx.setTextBaseline('middle');
+        ctx.fillText('爱心照片墙', canvasWidth / 2, 100);
         
         // 绘制统计信息
-        ctx.setFontSize(16);
-        ctx.setFillStyle('#666666');
+        ctx.setFontSize(18);
+        ctx.setFillStyle('#8B4513');
         ctx.setTextAlign('center');
-        ctx.fillText(`共 ${this.filledCount} 张照片`, canvasWidth / 2, 90);
+        ctx.setTextBaseline('middle');
+        ctx.fillText(`共 ${this.filledCount} 张珍贵照片`, canvasWidth / 2, 140);
         
         // 绘制心形图案
-        const startX = 20; // 左边距
-        const startY = 110; // 标题和统计信息下方开始绘制
-        
         // 绘制每个格子
         for (let row = 0; row < 9; row++) {
           for (let col = 0; col < 9; col++) {
@@ -217,25 +238,45 @@ export default {
               const y = startY + row * cellSize;
               
               // 绘制圆角矩形背景
-              this.drawRoundedRect(ctx, x, y, cellSize, cellSize, 6);
-              ctx.setStrokeStyle('#FFB5C2');
+              this.drawRoundedRect(ctx, x, y, cellSize, cellSize, 10);
+              ctx.setFillStyle('rgba(255, 255, 255, 0.9)');
+              ctx.fill();
+              ctx.setStrokeStyle('#FFB6C1');
+              ctx.setLineWidth(1);
               ctx.stroke();
               
               // 如果有图片，则绘制图片
               if (this.images[idx]) {
                 // 等待图片加载完成后再绘制
-                await this.drawImageOnCanvas(ctx, this.images[idx], x, y, cellSize, cellSize);
+                await this.drawImageOnCanvas(ctx, this.images[idx], x + 2, y + 2, cellSize - 4, cellSize - 4);
+              } else {
+                // 绘制空格子的提示
+                ctx.setFontSize(12);
+                ctx.setFillStyle('#FFB6C1');
+                ctx.setTextAlign('center');
+                ctx.setTextBaseline('middle');
+                ctx.fillText('+', x + cellSize / 2, y + cellSize / 2);
               }
             }
           }
         }
         
         // 绘制底部信息
-        ctx.setFontSize(14);
-        ctx.setFillStyle('#999999');
+        ctx.setFontSize(16);
+        ctx.setFillStyle('#8B4513');
         ctx.setTextAlign('center');
-        ctx.fillText('Created with Love Time', canvasWidth / 2, canvasHeight - 30);
-        ctx.fillText(new Date().toLocaleDateString(), canvasWidth / 2, canvasHeight - 10);
+        ctx.setTextBaseline('middle');
+        ctx.fillText('Created with Love Time', canvasWidth / 2, canvasHeight - 50);
+        ctx.fillText(new Date().toLocaleDateString('zh-CN', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }), canvasWidth / 2, canvasHeight - 20);
+        
+        // 绘制底部装饰心形
+        ctx.setFontSize(20);
+        ctx.setFillStyle('#FF69B4');
+        ctx.fillText('♥ ♡ ♥ ♡ ♥', canvasWidth / 2, canvasHeight - 80);
         
         // 绘制完成，保存到相册
         ctx.draw(true, () => {  // 使用同步绘制
@@ -246,8 +287,8 @@ export default {
               y: 0,
               width: canvasWidth,
               height: canvasHeight,
-              destWidth: canvasWidth,
-              destHeight: canvasHeight,
+              destWidth: canvasWidth * 2, // 提高分辨率
+              destHeight: canvasHeight * 2,
               canvasId: 'exportCanvas',
               fileType: 'png',
               quality: 1,
@@ -268,7 +309,7 @@ export default {
                   success: () => {
                     uni.hideLoading();
                     uni.showToast({
-                      title: '图片已保存到相册',
+                      title: '精美图片已保存到相册',
                       icon: 'success'
                     });
                   },
@@ -415,20 +456,21 @@ export default {
     // 绘制占位符（当图片加载失败时）
     drawPlaceholder(ctx, x, y, width, height) {
       // 绘制浅色背景
-      ctx.setFillStyle('#f0f0f0');
-      ctx.fillRect(x, y, width, height);
+      ctx.setFillStyle('rgba(255, 255, 255, 0.7)');
+      this.drawRoundedRect(ctx, x, y, width, height, 8);
+      ctx.fill();
+      
+      // 绘制边框
+      ctx.setStrokeStyle('#FFB6C1');
+      ctx.setLineWidth(1);
+      ctx.stroke();
       
       // 绘制占位符图标
-      ctx.setStrokeStyle('#cccccc');
-      ctx.setLineWidth(2);
-      
-      // 绘制X形状
-      ctx.beginPath();
-      ctx.moveTo(x + 10, y + 10);
-      ctx.lineTo(x + width - 10, y + height - 10);
-      ctx.moveTo(x + width - 10, y + 10);
-      ctx.lineTo(x + 10, y + height - 10);
-      ctx.stroke();
+      ctx.setFontSize(20);
+      ctx.setFillStyle('#FFB6C1');
+      ctx.setTextAlign('center');
+      ctx.setTextBaseline('middle');
+      ctx.fillText('♥', x + width / 2, y + height / 2);
     },
 
     // 绘制圆角矩形

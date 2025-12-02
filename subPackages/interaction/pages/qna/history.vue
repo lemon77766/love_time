@@ -69,26 +69,21 @@ export default {
     }
   },
   async onLoad() {
-    // 获取系统信息
     const systemInfo = uni.getSystemInfoSync();
     this.statusBarHeight = systemInfo.statusBarHeight || 0;
     this.screenWidth = systemInfo.screenWidth || 375;
-    
-    // 检查登录状态
+
     const loginInfo = uni.getStorageSync('login_info');
     if (!loginInfo || !loginInfo.token) {
       uni.showModal({
         title: '需要登录',
         content: '请先登录',
         showCancel: false,
-        success: () => {
-          uni.reLaunch({ url: '/pages/login/index' });
-        }
+        success: () => uni.reLaunch({ url: '/pages/login/index' })
       });
       return;
     }
-    
-    // 先加载问题列表，再加载历史记录，确保历史记录可以匹配到问题文本
+
     await this.loadQuestions();
     await this.loadHistory();
   },
@@ -267,8 +262,14 @@ export default {
           const id = item.id || item.answerId;
           const questionId = item.questionId || item.question_id;
           
-          // 优先使用后端返回的 question，如果没有则从问题列表中查找
+          // 优先使用后端返回的问题文本
           let question = item.question || item.questionText || item.question_text;
+          console.log('🔍 处理历史记录项:', { 
+            originalItem: item, 
+            questionId, 
+            initialQuestion: question 
+          });
+          
           if (!question && questionId != null) {
             const allQuestions = [...(this.defaultQuestions || []), ...(this.customQuestions || [])];
             const foundQuestion = allQuestions.find(q => q && q.id != null && Number(q.id) === Number(questionId));
@@ -281,7 +282,7 @@ export default {
           const partnerAnswer = item.partnerAnswer || item.partner_answer || '';
           const time = item.time || item.answeredAt || item.createdAt || item.created_at || item.updatedAt || new Date().toLocaleString();
           
-          return {
+          const formattedItem = {
             id,
             questionId,
             question: question || `问题ID: ${questionId}`,
@@ -290,8 +291,20 @@ export default {
             time,
             questionCategory: item.questionCategory || item.category,
             answeredAt: item.answeredAt,
-            ...item
+            // 保留原始对象的其他字段，但不覆盖我们处理过的字段
+            ...Object.fromEntries(
+              Object.entries(item).filter(([key]) => 
+                !['id', 'questionId', 'question', 'myAnswer', 'partnerAnswer', 'time', 'questionCategory', 'answeredAt'].includes(key)
+              )
+            )
           };
+          
+          console.log('🔧 格式化历史记录项:', {
+            original: item,
+            formatted: formattedItem
+          });
+          
+          return formattedItem;
         });
         
         // 从新到旧排序（顶部最新）
@@ -303,7 +316,16 @@ export default {
         
         console.log('✅ 历史记录加载成功:', {
           count: this.history.length,
-          totalCount: normalizedRes.raw?.totalCount ?? normalizedRes.data?.totalCount ?? normalizedRes.data?.total
+          totalCount: normalizedRes.raw?.totalCount ?? normalizedRes.data?.totalCount ?? normalizedRes.data?.total,
+          sample: this.history.slice(0, 3)
+        });
+        
+        // 输出完整的历史记录数据用于调试
+        console.log('📋 完整历史记录数据:', this.history);
+        console.log('✅ 历史记录加载成功:', {
+          count: this.history.length,
+          totalCount: normalizedRes.raw?.totalCount ?? normalizedRes.data?.totalCount ?? normalizedRes.data?.total,
+          sample: this.history.slice(0, 3)
         });
       } catch (e) {
         console.error('加载历史记录失败', e);
@@ -334,29 +356,17 @@ export default {
     },
     pad2(n) { return String(n).padStart(2, '0'); },
     openItem(item) {
-      // 确保获取正确的 questionId（兼容不同的字段名）
-      const questionId = item.questionId || item.question_id;
-      if (!questionId) {
-        console.error('❌ 历史记录项缺少 questionId:', item);
+      if (!item.questionId) {
         uni.showToast({ title: '问题ID缺失，无法跳转', icon: 'none' });
         return;
       }
       
-      const qid = encodeURIComponent(questionId);
-      const time = encodeURIComponent(item.time || '');
-      const questionText = encodeURIComponent(item.question || '');
+      const qid = encodeURIComponent(item.questionId);
+      const qtext = encodeURIComponent(item.question);
       
-      console.log('🔗 跳转到问题页面:', {
-        questionId: questionId,
-        question: item.question ? item.question.substring(0, 20) + '...' : '',
-        time: time
+      uni.navigateTo({ 
+        url: `/subPackages/interaction/pages/qna/index?qid=${qid}&qtext=${qtext}` 
       });
-      
-      let targetUrl = `/subPackages/interaction/pages/qna/index?qid=${qid}&time=${time}`;
-      if (questionText) {
-        targetUrl += `&qtext=${questionText}`;
-      }
-      uni.navigateTo({ url: targetUrl });
     }
   }
 };
@@ -509,6 +519,13 @@ export default {
 .status.todo { 
   background: #ffffff; 
   border-color: #FFB5C2;
+}
+
+.debug {
+  display: block;
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  color: #999;
 }
 
 .empty { 

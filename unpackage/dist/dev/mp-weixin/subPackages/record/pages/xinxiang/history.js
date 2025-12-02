@@ -68,7 +68,7 @@ const _sfc_main = {
         const response = await api_futureLetter.getFutureLetterList();
         const backendLetters = this.extractLetterArray(response).filter(Boolean);
         this.letters = backendLetters.filter((letter) => letter.status !== "SENT").map((letter) => {
-          const deliveryDateRaw = letter.scheduledDate || letter.deliveryDate;
+          const deliveryDateRaw = letter.scheduledTime || letter.scheduledDate || letter.deliveryDate;
           const createTimeRaw = letter.createdAt || letter.createTime;
           return {
             id: letter.id,
@@ -87,23 +87,23 @@ const _sfc_main = {
           };
         });
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:251", "加载信件失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:252", "加载信件失败", error);
         try {
           const localLetters = common_vendor.index.getStorageSync("xinxiang_letters") || [];
           this.letters = localLetters.filter((letter) => letter.status !== "SENT");
         } catch (e) {
-          common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:257", "加载本地信件失败", e);
+          common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:258", "加载本地信件失败", e);
           this.letters = [];
         }
         if (error.statusCode !== 401) {
-          common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:264", "从后端加载信件失败，使用本地数据");
+          common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:265", "从后端加载信件失败，使用本地数据");
         }
       }
       try {
         const sentResponse = await api_futureLetter.getSentLetters();
         const backendSentLetters = this.extractLetterArray(sentResponse);
         this.sentLetters = backendSentLetters.map((letter) => {
-          const deliveryDateRaw = letter.scheduledDate || letter.deliveryDate;
+          const deliveryDateRaw = letter.scheduledTime || letter.scheduledDate || letter.deliveryDate;
           const createTimeRaw = letter.createdAt || letter.createTime;
           const sentAtRaw = letter.sentAt;
           return {
@@ -122,9 +122,9 @@ const _sfc_main = {
           };
         });
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:293", "加载已发送信件失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:294", "加载已发送信件失败", error);
         if (error.statusCode !== 401) {
-          common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:295", "从后端加载已发送信件失败");
+          common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:296", "从后端加载已发送信件失败");
         }
       }
     },
@@ -216,7 +216,7 @@ const _sfc_main = {
         common_vendor.index.hideLoading();
         if (response && response.data) {
           const detailData = response.data;
-          const detailDeliveryDate = detailData.scheduledDate || detailData.deliveryDate || letter.deliveryDate;
+          const detailDeliveryDate = detailData.scheduledTime || detailData.scheduledDate || detailData.deliveryDate || letter.deliveryDate;
           const detailCreateTime = detailData.createdAt || detailData.createTime || letter.createTime;
           const detailSentAt = detailData.sentAt || letter.sentAt;
           this.currentLetter = {
@@ -243,7 +243,7 @@ const _sfc_main = {
         this.showDetailModal = true;
       } catch (error) {
         common_vendor.index.hideLoading();
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:434", "获取信件详情失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:435", "获取信件详情失败", error);
         this.currentLetter = letter;
         this.currentIndex = index;
         this.showDetailModal = true;
@@ -300,12 +300,12 @@ const _sfc_main = {
               common_vendor.index.setStorageSync("xinxiang_letters", localLetters);
             }
           } catch (e) {
-            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:504", "更新本地存储失败", e);
+            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:505", "更新本地存储失败", e);
           }
           common_vendor.index.showToast({ title: "已删除", icon: "success" });
         } catch (error) {
           common_vendor.index.hideLoading();
-          common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:510", "删除信件失败:", error);
+          common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:511", "删除信件失败:", error);
           common_vendor.index.showToast({
             title: error.message || "删除失败，请重试",
             icon: "none"
@@ -377,17 +377,22 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     v: common_vendor.t($data.currentLetter.sentAt),
     w: common_vendor.n($options.getFontClass($data.currentLetter))
   } : {}, {
-    x: common_vendor.t($data.currentLetter.content),
-    y: common_vendor.n($options.getFontClass($data.currentLetter)),
-    z: common_vendor.n($options.getFontClass($data.currentLetter)),
-    A: common_vendor.t($data.currentLetter.createTime),
+    x: $data.currentLetter.deliveryDate && $data.currentLetter.deliveryDate !== "--"
+  }, $data.currentLetter.deliveryDate && $data.currentLetter.deliveryDate !== "--" ? {
+    y: common_vendor.t($data.currentLetter.deliveryDate),
+    z: common_vendor.n($options.getFontClass($data.currentLetter))
+  } : {}, {
+    A: common_vendor.t($data.currentLetter.content),
     B: common_vendor.n($options.getFontClass($data.currentLetter)),
-    C: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args)),
-    D: common_vendor.o(() => {
+    C: common_vendor.n($options.getFontClass($data.currentLetter)),
+    D: common_vendor.t($data.currentLetter.createTime),
+    E: common_vendor.n($options.getFontClass($data.currentLetter)),
+    F: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args)),
+    G: common_vendor.o(() => {
     }),
-    E: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args))
+    H: common_vendor.o((...args) => $options.closeDetail && $options.closeDetail(...args))
   }) : {}, {
-    F: $options.containerPaddingTop
+    I: $options.containerPaddingTop
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render]]);

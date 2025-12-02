@@ -161,6 +161,9 @@ export default {
       // 保存目标问题ID，用于 currentQuestion 计算属性
       this.targetQuestionId = qid;
       
+      // 设置防止自动切换标志，避免从历史记录查看时自动跳转
+      this.preventAutoSwitch = true;
+      
       // 尝试在未回答问题中找到（如果问题还未回答）
       const idx = this.unansweredQuestions.findIndex(q => q.id === qid);
       if (idx >= 0) {
@@ -175,8 +178,8 @@ export default {
           console.log('✅ 问题已回答，但存在于问题列表中，将显示该问题');
         } else {
           console.warn('⚠️ 问题ID不存在于问题列表中:', qid);
-          // 如果问题不存在，重置为默认显示
-          this.targetQuestionId = null;
+          // 问题可能已被下架或未包含在当前问题列表中
+          // 保留 targetQuestionId，后续在 currentQuestion 中使用 qtext 回退显示
           this.qIndex = 0;
         }
       }
@@ -246,13 +249,7 @@ export default {
       statusBarHeight: 0,
       navBarHeight: 44,
       screenWidth: 375,
-      defaultQuestions: [
-        { id: 1, text: '我们第一次约会的地点是哪里？', isDefault: true },
-        { id: 2, text: '你最喜欢我做的哪道菜？', isDefault: true },
-        { id: 3, text: '如果周末只做一件事，你希望是什么？', isDefault: true },
-        { id: 4, text: '你心中的完美旅行是什么样的？', isDefault: true },
-        { id: 5, text: '这一年里，你最感动的一刻是什么？', isDefault: true }
-      ],
+      defaultQuestions: [],
       customQuestions: [],
       qIndex: 0,
       myAnswer: '',
@@ -263,8 +260,7 @@ export default {
       newQuestion: '',
       history: [],
       targetQuestionId: null, // 从历史记录跳转过来的目标问题ID
-      targetQuestionFallbackText: '', // 历史跳转时携带的题干
-      preventAutoSwitch: false // 添加标志防止提交后自动切换问题
+      targetQuestionFallbackText: '' // 添加标志防止提交后自动切换问题
     };
   },
   watch: {
@@ -289,67 +285,50 @@ export default {
     },
     questions() {
       // 过滤掉无效的问题对象，确保每个问题都有 id 和 text
-      const validDefaultQuestions = (this.defaultQuestions || []).filter(q => q && q.id != null);
       const validCustomQuestions = (this.customQuestions || []).filter(q => q && q.id != null);
+      const validDefaultQuestions = (this.defaultQuestions || []).filter(q => q && q.id != null);
+      
+      // 始终返回系统默认题 + 自定义题，两类题目都包含在题库中
+      // 默认题在前，自定义题在后，便于维护原有题目顺序
       return [...validDefaultQuestions, ...validCustomQuestions];
     },
     // 计算未回答的问题列表
     unansweredQuestions() {
-      // 如果设置了防止自动切换标志，则返回所有问题（不进行过滤）
-      if (this.preventAutoSwitch) {
-        return this.questions.filter(q => q && q.id != null && q.isActive !== false);
-      }
-      
-      // 获取已回答的问题ID列表（确保类型一致）
-      const answeredIds = this.history
-        .map(h => {
-          // 兼容不同的字段名
-          const qid = h.questionId || h.question_id || h.id;
-          // 统一转换为数字类型进行比较
+      const answeredIds = new Set(
+        this.history.map(h => {
+          const qid = h.questionId || h.question_id;
           return qid != null ? Number(qid) : null;
-        })
-        .filter(id => id != null);
+        }).filter(id => id != null)
+      );
       
-      // 过滤出未回答的问题（添加安全检查）
       const unanswered = this.questions.filter(q => {
-        // 安全检查：确保 q 存在且有 id 属性
-        if (!q || q.id === undefined || q.id === null) {
-          console.warn('⚠️ 发现无效的问题对象:', q);
-          return false;
-        }
-        const questionId = Number(q.id);
-        // 检查转换后的ID是否有效
-        if (isNaN(questionId)) {
-          console.warn('⚠️ 问题ID无效:', q.id);
-          return false;
-        }
-        // 确保使用相同的数据类型进行比较
-        const isAnswered = answeredIds.some(answeredId => Number(answeredId) === questionId);
-        return !isAnswered && q.isActive !== false; // 过滤掉已禁用的问题
+        if (!q || q.id == null) return false;
+        return !answeredIds.has(Number(q.id)) && q.isActive !== false;
       });
       
-      // 开发环境下输出调试信息
       if (process.env.NODE_ENV === 'development') {
         console.log('🔍 未回答问题计算:', {
           totalQuestions: this.questions.length,
-          answeredIds: answeredIds,
+          answeredCount: answeredIds.size,
           unansweredCount: unanswered.length,
-          answeredCount: answeredIds.length,
-          historyCount: this.history.length,
-          questions: this.questions.map(q => ({ id: q.id, text: q.text })),
-          history: this.history.map(h => ({ 
-            questionId: h.questionId || h.question_id,
-            question: h.question || h.questionText
-          }))
         });
       }
       
       return unanswered;
     },
     currentQuestion() {
+      console.log('🔍 currentQuestion 计算开始:', {
+        targetQuestionId: this.targetQuestionId,
+        targetQuestionFallbackText: this.targetQuestionFallbackText,
+        qIndex: this.qIndex,
+        unansweredQuestionsLength: this.unansweredQuestions.length
+      });
+      
       // 如果指定了目标问题ID（从历史记录跳转），优先显示该问题
       if (this.targetQuestionId != null) {
         const targetId = Number(this.targetQuestionId);
+        console.log('📌 检查目标问题ID:', targetId);
+        
         // 从所有问题中查找目标问题
         const targetQuestion = this.questions.find(q => q && q.id != null && Number(q.id) === targetId);
         if (targetQuestion) {
@@ -359,6 +338,7 @@ export default {
           });
           return targetQuestion;
         } else {
+          console.log('❓ 目标问题在问题列表中未找到');
           if (this.targetQuestionFallbackText) {
             console.warn('⚠️ 目标问题不在问题列表，使用历史记录携带的题干');
             return {
@@ -375,11 +355,37 @@ export default {
         }
       }
       
+      // 如果已经提交了当前问题的答案，保持在当前问题而不是切换到下一个
+      if (this.hasSubmitted && this.targetQuestionId == null) {
+        // 尝试从历史记录中找到最新提交的问题
+        if (this.history.length > 0 && this.history[0] && this.history[0].questionId) {
+          const lastSubmittedId = Number(this.history[0].questionId);
+          const currentQuestion = this.questions.find(q => 
+            q && q.id != null && Number(q.id) === lastSubmittedId
+          );
+          
+          if (currentQuestion) {
+            console.log('🔒 保持已提交的问题:', {
+              id: currentQuestion.id,
+              text: currentQuestion.text.substring(0, 20) + '...'
+            });
+            return currentQuestion;
+          }
+        }
+      }
+      
       // 从未回答的问题中获取当前问题
       if (this.unansweredQuestions.length === 0) {
+        console.log('🎉 所有问题已回答完毕');
         return { id: 0, text: '所有问题已回答完毕！🎉' };
       }
-      return this.unansweredQuestions[this.qIndex] || this.unansweredQuestions[0];
+      
+      const current = this.unansweredQuestions[this.qIndex] || this.unansweredQuestions[0];
+      console.log('➡️ 返回当前问题:', {
+        index: this.qIndex,
+        question: current ? current.text.substring(0, 20) + '...' : 'null'
+      });
+      return current;
     }
   },
   mounted() {
@@ -503,12 +509,15 @@ export default {
       return { updated: false, answer: '', normalized };
     },
     formatQuestionList(list, categoryFallback = 'preset') {
+      console.log('🔧 formatQuestionList 调用:', { list, categoryFallback });
       if (!Array.isArray(list)) {
+        console.log('⚠️ list 不是数组');
         return [];
       }
-      return list
+      const result = list
         .filter(q => q && q.id != null)
         .map(q => {
+          console.log('🔧 处理问题项:', q);
           const formatted = {
             ...q,
             id: q.id,
@@ -517,11 +526,14 @@ export default {
             isActive: q.isActive !== false,
             orderIndex: q.orderIndex ?? 999
           };
+          console.log('🔧 格式化后的问题项:', formatted);
           if (formatted.questionText) {
             delete formatted.questionText;
           }
           return formatted;
         });
+      console.log('🔧 formatQuestionList 结果:', result);
+      return result;
     },
     goBack() {
       uni.navigateBack();
@@ -568,11 +580,23 @@ export default {
         uni.showLoading({ title: '提交中...' });
         
         // 调用后端API提交答案
-        const res = await submitAnswer({
+        const answerData = {
           questionId: this.currentQuestion.id,
           answer: this.myAnswer,
           questionText: this.currentQuestion.text
+        };
+        
+        console.log('📤 准备提交答案:', {
+          questionId: answerData.questionId,
+          answer: answerData.answer,
+          questionText: answerData.questionText,
+          currentQuestion: this.currentQuestion,
+          allQuestions: this.questions.map(q => ({ id: q.id, text: q.text })),
+          customQuestions: this.customQuestions.map(q => ({ id: q.id, text: q.text })),
+          defaultQuestions: this.defaultQuestions.map(q => ({ id: q.id, text: q.text }))
         });
+        
+        const res = await submitAnswer(answerData);
         
         console.log('📥 提交答案响应:', res);
         
@@ -597,9 +621,17 @@ export default {
           
           // 无论提交接口是否返回对方答案，都主动调用接口获取对方答案（确保获取最新数据）
           try {
+            console.log('🔍 开始获取对方答案，问题ID:', submittedQuestionId);
             const partnerRes = await getPartnerAnswer(submittedQuestionId);
+            console.log('📥 对方答案接口原始响应:', partnerRes);
             const partnerResult = this.handlePartnerAnswerResponse(partnerRes, {
               context: `submit questionId=${submittedQuestionId}`
+            });
+            console.log('🔧 对方答案处理结果:', {
+              updated: partnerResult.updated,
+              hasAnswer: !!partnerResult.answer,
+              answerPreview: partnerResult.answer ? partnerResult.answer.substring(0, 20) + '...' : '空',
+              currentPartnerAnswer: this.partnerAnswer
             });
             if (partnerResult.updated && partnerResult.answer) {
               partnerAnswerFromSubmit = partnerResult.answer;
@@ -609,7 +641,12 @@ export default {
             }
           } catch (partnerError) {
             // 获取对方答案失败不影响主流程，只记录日志
-            console.warn('⚠️ 获取对方答案失败（不影响提交）:', partnerError);
+            console.error('❌ 获取对方答案接口调用失败:', partnerError);
+            console.error('❌ 错误详情:', {
+              message: partnerError.message,
+              statusCode: partnerError.statusCode,
+              data: partnerError.data
+            });
             // 如果提交接口返回了对方答案，继续使用它；否则清空（会显示"对方暂未作答"提示）
             if (!partnerAnswerFromSubmit) {
               this.partnerAnswer = '';
@@ -626,6 +663,22 @@ export default {
             time: new Date().toLocaleString(),
             createdAt: new Date().toISOString()
           };
+          
+          // 检查是否已存在相同问题的历史记录，避免重复
+          const existingIndex = this.history.findIndex(h => 
+            h.questionId === record.questionId || 
+            (h.questionId && record.questionId && Number(h.questionId) === Number(record.questionId))
+          );
+          
+          if (existingIndex >= 0) {
+            // 更新现有记录而不是添加新记录
+            console.log('🔄 更新现有历史记录:', record);
+            this.history[existingIndex] = record;
+          } else {
+            // 添加新记录
+            console.log('💾 添加新的历史记录:', record);
+            this.history.unshift(record);
+          }
           console.log('💾 保存历史记录:', {
             questionId: record.questionId,
             questionText: record.question.substring(0, 20) + '...',
@@ -659,6 +712,22 @@ export default {
           };
           this.history.unshift(record);
           this.saveHistory();
+          
+          // 检查是否已存在相同问题的历史记录，避免重复
+          const existingIndex = this.history.findIndex(h => 
+            h.questionId === record.questionId || 
+            (h.questionId && record.questionId && Number(h.questionId) === Number(record.questionId))
+          );
+          
+          if (existingIndex >= 0) {
+            // 更新现有记录而不是添加新记录
+            console.log('🔄 更新现有历史记录（异常情况）:', record);
+            this.history[existingIndex] = record;
+          } else {
+            // 添加新记录
+            console.log('💾 添加新的历史记录（异常情况）:', record);
+            this.history.unshift(record);
+          }
           
           // 更新当前显示的答案（关键修复点）
           this.myAnswer = this.myAnswer;
@@ -721,7 +790,23 @@ export default {
                 createdAt: new Date().toISOString(),
                 _pendingSync: true // 标记为待同步
               };
-              this.history.unshift(record);
+              
+              // 检查是否已存在相同问题的历史记录，避免重复
+              const existingIndex = this.history.findIndex(h => 
+                h.questionId === record.questionId || 
+                (h.questionId && record.questionId && Number(h.questionId) === Number(record.questionId))
+              );
+              
+              if (existingIndex >= 0) {
+                // 更新现有记录而不是添加新记录
+                console.log('🔄 更新现有历史记录（404情况）:', record);
+                this.history[existingIndex] = record;
+              } else {
+                // 添加新记录
+                console.log('💾 添加新的历史记录（404情况）:', record);
+                this.history.unshift(record);
+              }
+              // 注意：上面已经添加了记录，这里不再重复添加
               this.saveHistory();
               
               // 更新当前显示的答案（关键修复点）
@@ -761,133 +846,63 @@ export default {
       }
     },
     nextQuestion() {
-      // 清除目标问题ID，恢复正常的问题切换逻辑
-      if (this.targetQuestionId != null) {
-        console.log('🔄 清除目标问题ID，恢复正常切换逻辑');
-        this.targetQuestionId = null;
-        this.targetQuestionFallbackText = '';
-      }
+      // 解除问题锁定，允许切换到下一个
+      this.targetQuestionId = null;
+      this.targetQuestionFallbackText = '';
       
-      // 保存当前问题ID，用于调试
-      const currentId = this.currentQuestion && this.currentQuestion.id;
-      console.log('➡️ 切换到下一题，当前问题ID:', currentId);
-      
-      // 重新计算未回答问题列表，显示下一个
-      // 注意：由于历史记录可能已更新，unansweredQuestions 会重新计算
-      const unansweredCount = this.unansweredQuestions.length;
-      
-      if (unansweredCount === 0) {
+      // 重置提交状态，允许切换到下一个问题
+      this.hasSubmitted = false;
+      this.myAnswer = '';
+      this.partnerAnswer = '';
+
+      const unanswered = this.unansweredQuestions;
+      if (unanswered.length === 0) {
         uni.showToast({ title: '所有问题已回答完毕！', icon: 'success' });
+        // 停留在最后一个已回答的问题上
         return;
       }
-      
-      // 计算下一个问题的索引
-      if (this.qIndex < unansweredCount - 1) {
-        this.qIndex += 1;
-      } else {
-        this.qIndex = 0; // 回到第一个未回答的
-      }
-      
-      // 注意：清空答案和重置状态会在 loadAnswerForCurrentQuestion 中处理
-      // watch 会监听到 currentQuestion.id 的变化，自动调用 loadAnswerForCurrentQuestion
-      // 但为了确保立即执行，我们也可以手动调用
-      const nextId = this.currentQuestion && this.currentQuestion.id;
-      console.log('➡️ 下一题ID:', nextId);
+
+      // 直接从最新的未回答问题列表中选择第一个
+      this.qIndex = 0;
+
+      // 使用 $nextTick 确保 DOM 更新后再加载答案
+      this.$nextTick(() => {
+        this.loadAnswerForCurrentQuestion();
+      });
     },
     // 加载当前问题的答案（从历史记录或后端）
     async loadAnswerForCurrentQuestion() {
-      if (!this.currentQuestion) {
-        console.warn('⚠️ loadAnswerForCurrentQuestion: 当前问题不存在');
-        return;
-      }
-      
-      const questionId = Number(this.currentQuestion.id);
-
-      if (!Number.isFinite(questionId)) {
-        console.warn('⚠️ loadAnswerForCurrentQuestion: 当前问题ID无效', this.currentQuestion);
-        return;
-      }
-
-      if (questionId === 0) {
-        console.log('🎉 所有问题已回答完毕，停止加载答案流程');
+      if (!this.currentQuestion || !Number.isFinite(this.currentQuestion.id) || this.currentQuestion.id === 0) {
         this.myAnswer = '';
         this.partnerAnswer = '';
         this.hasSubmitted = false;
         return;
       }
 
-      console.log('📋 加载问题答案:', {
-        questionId,
-        questionText: this.currentQuestion.text,
-        historyCount: this.history.length
-      });
-      
-      // 先清空当前答案
-      this.myAnswer = '';
-      this.partnerAnswer = '';
-      this.hasSubmitted = false;
-      
-      // 检查历史记录中是否有这个问题的答案
-      const historyRecord = this.history.find(h => {
-        const hQuestionId = h.questionId || h.question_id;
-        const hIdNum = hQuestionId != null ? Number(hQuestionId) : null;
-        const match = hIdNum !== null && hIdNum === questionId;
-        if (match) {
-          console.log('✅ 找到历史记录:', {
-            questionId: hIdNum,
-            myAnswer: h.myAnswer ? h.myAnswer.substring(0, 20) + '...' : '',
-            partnerAnswer: h.partnerAnswer ? h.partnerAnswer.substring(0, 20) + '...' : ''
-          });
-        }
-        return match;
-      });
-      
+      const questionId = Number(this.currentQuestion.id);
+      const historyRecord = this.history.find(h => Number(h.questionId) === questionId);
+
       if (historyRecord) {
-        // 如果历史记录中有，从历史记录加载
         this.myAnswer = historyRecord.myAnswer || '';
         this.partnerAnswer = historyRecord.partnerAnswer || '';
-        this.hasSubmitted = true; // 标记为已提交状态
+        this.hasSubmitted = true;
         
-        console.log('📋 从历史记录加载答案:', {
-          questionId,
-          hasMyAnswer: !!this.myAnswer,
-          hasPartnerAnswer: !!this.partnerAnswer,
-          partnerAnswer: this.partnerAnswer ? this.partnerAnswer.substring(0, 30) + '...' : '空'
-        });
-        
-        // 强制触发Vue响应式更新
-        this.$forceUpdate();
-        
-        // 无论历史记录中是否有对方答案，都从后端获取最新的对方答案
-        console.log('📥 从后端获取最新的对方答案，问题ID:', questionId);
+        // 即使历史记录中有，也从后端获取最新的对方答案以保证数据同步
         try {
           const partnerRes = await getPartnerAnswer(questionId);
           this.handlePartnerAnswerResponse(partnerRes, {
             historyRecord,
-            context: `loadHistory questionId=${questionId}`
+            context: `loadAnswer questionId=${questionId}`
           });
         } catch (e) {
-          console.error('❌ 获取对方答案失败:', e);
-          console.error('错误详情:', {
-            message: e.message,
-            statusCode: e.statusCode,
-            data: e.data
-          });
-          // 获取失败不影响显示，使用历史记录中的答案
+          console.error(`❌ 获取对方答案失败 (问题ID: ${questionId}):`, e);
         }
       } else {
-        // 如果历史记录中没有，检查后端是否有对方答案（可能对方回答了但自己还没回答）
-        try {
-          const partnerRes = await getPartnerAnswer(questionId);
-          this.handlePartnerAnswerResponse(partnerRes, {
-            context: `pre-submit check questionId=${questionId}`,
-            updateState: false
-          });
-        } catch (e) {
-          // 忽略错误
-          console.warn('⚠️ 检查对方答案失败:', e);
-        }
+        this.myAnswer = '';
+        this.partnerAnswer = '';
+        this.hasSubmitted = false;
       }
+      this.$forceUpdate();
     },
     openHistory() {
       
@@ -901,111 +916,76 @@ export default {
       this.saveHistory();
       uni.showToast({ title: '记录已清空', icon: 'none' });
     },
+    // 标准化历史记录项（从后端或本地存储）
+    normalizeHistoryItem(item) {
+      if (!item) return null;
+
+      const id = item.id || item.answerId;
+      const questionId = item.questionId || item.question_id;
+
+      // 优先使用后端返回的题干，其次从问题列表中回填
+      let question = item.question || item.questionText || item.question_text;
+      if (!question && questionId != null) {
+        const allQuestions = [
+          ...(this.defaultQuestions || []),
+          ...(this.customQuestions || [])
+        ];
+        const foundQuestion = allQuestions.find(q => q && q.id != null && Number(q.id) === Number(questionId));
+        if (foundQuestion && foundQuestion.text) {
+          question = foundQuestion.text;
+        }
+      }
+
+      // 把后端的 answer 字段映射为 myAnswer，保持与页面内部逻辑一致
+      const myAnswer = item.myAnswer || item.answer || item.my_answer;
+      const partnerAnswer = item.partnerAnswer || item.partner_answer || '';
+      const time =
+        item.time ||
+        item.answeredAt ||
+        item.createdAt ||
+        item.created_at ||
+        item.updatedAt ||
+        new Date().toLocaleString();
+
+      return {
+        id,
+        questionId,
+        question: question || `问题ID: ${questionId}`,
+        myAnswer,
+        partnerAnswer,
+        time,
+        questionCategory: item.questionCategory || item.category,
+        answeredAt: item.answeredAt,
+        ...item
+      };
+    },
     // 从后端加载历史记录
     async loadHistoryFromServer() {
       try {
         const res = await getHistory({ page: 1, pageSize: 100 });
-        console.log('📥 历史记录响应:', res);
         const normalizedRes = this.normalizeApiResponse(res, '获取历史记录成功');
+        
         if (!normalizedRes.success) {
-          console.warn('⚠️ 历史记录业务状态返回失败:', {
-            message: normalizedRes.message,
-            raw: normalizedRes.raw
-          });
-        }
-
-        const dataSources = [
-          normalizedRes.data?.list,
-          normalizedRes.data?.history,
-          normalizedRes.data?.answers,
-          Array.isArray(normalizedRes.data) ? normalizedRes.data : null,
-          res?.history,
-          res?.answers,
-          res?.data?.list,
-          res?.data?.history,
-          res?.data?.answers,
-          Array.isArray(res?.data) ? res.data : null,
-          res?.list,
-          Array.isArray(res) ? res : null
-        ];
-        
-        let historyList = [];
-        for (const candidate of dataSources) {
-          if (Array.isArray(candidate)) {
-            historyList = candidate;
-            break;
-          }
-        }
-
-        if (!Array.isArray(historyList)) {
-          historyList = [];
-        }
-        
-        // 标准化历史记录格式，确保字段名一致
-        this.history = historyList.map(item => {
-          // 兼容多种字段名和格式
-          const id = item.id || item.answerId;
-          const questionId = item.questionId || item.question_id;
-          
-          // 优先使用后端返回的 question，如果没有则从问题列表中查找
-          let question = item.question || item.questionText || item.question_text;
-          if (!question && questionId != null) {
-            // 从问题列表中根据 questionId 查找对应的 question 文本
-            const allQuestions = [...(this.defaultQuestions || []), ...(this.customQuestions || [])];
-            const foundQuestion = allQuestions.find(q => q && q.id != null && Number(q.id) === Number(questionId));
-            if (foundQuestion && foundQuestion.text) {
-              question = foundQuestion.text;
-            }
-          }
-          
-          // 兼容 answer、myAnswer、my_answer 等多种字段名
-          const myAnswer = item.myAnswer || item.answer || item.my_answer;
-          const partnerAnswer = item.partnerAnswer || item.partner_answer || '';
-          // 兼容多种时间字段：answeredAt、createdAt、created_at、time、updatedAt
-          const time = item.time || item.answeredAt || item.createdAt || item.created_at || item.updatedAt || new Date().toLocaleString();
-          const createdAt = item.createdAt || item.created_at || item.answeredAt || item.updatedAt || new Date().toISOString();
-          
-          return {
-            id,
-            questionId: questionId != null ? Number(questionId) : null, // 确保使用数字类型
-            question: question || `问题ID: ${questionId}`, // 如果仍然找不到，显示ID作为备用
-            myAnswer,
-            partnerAnswer,
-            time,
-            createdAt,
-            // 保留原始数据中的其他字段（如 questionCategory、answeredAt 等）
-            questionCategory: item.questionCategory || item.category,
-            answeredAt: item.answeredAt,
-            updatedAt: item.updatedAt,
-            ...item
-          };
-        });
-        
-        console.log('✅ 历史记录加载成功:', {
-          count: this.history.length,
-          totalCount: normalizedRes.raw?.totalCount ?? normalizedRes.data?.totalCount,
-          sample: this.history.slice(0, 3)
-        });
-      } catch (e) {
-        console.error('加载历史记录失败', e);
-        console.error('错误详情:', {
-          message: e.message,
-          statusCode: e.statusCode,
-          data: e.data
-        });
-        
-        // 401错误特殊处理（但不弹出提示，因为已经在上面的加载问题中处理了）
-        if (e.statusCode === 401) {
+          console.warn(`⚠️ 历史记录业务状态返回失败: ${normalizedRes.message}`);
+          const localHistory = uni.getStorageSync('qna_history');
+          this.history = Array.isArray(localHistory) ? localHistory : [];
           return;
         }
+
+        const historyList = normalizedRes.data?.list || normalizedRes.data?.history || normalizedRes.data?.answers || (Array.isArray(normalizedRes.data) ? normalizedRes.data : []);
+
+        this.history = historyList.map(item => this.normalizeHistoryItem(item));
         
-        // 如果后端请求失败，尝试从本地存储加载
-        try {
-          const data = uni.getStorageSync('qna_history');
-          this.history = Array.isArray(data) ? data : [];
-        } catch (e2) { 
-          this.history = []; 
-        }
+        console.log('✅ 历史记录加载并标准化成功:', {
+          count: this.history.length,
+          sample: this.history.slice(0, 2)
+        });
+
+      } catch (e) {
+        console.error('加载历史记录失败', e);
+        if (e.statusCode === 401) return; // 登录问题已在其他地方处理
+        const localHistory = uni.getStorageSync('qna_history');
+        this.history = Array.isArray(localHistory) ? localHistory : [];
       }
     },
     // 从后端加载问题列表
@@ -1030,15 +1010,24 @@ export default {
         let customQuestions = null;
         
         if (Array.isArray(topLevelQuestions)) {
+          console.log('📋 使用 topLevelQuestions 格式');
           const formatted = this.formatQuestionList(topLevelQuestions);
           presetQuestions = formatted.filter(q => (q.category || 'preset') === 'preset');
           customQuestions = formatted.filter(q => (q.category || 'preset') === 'custom');
         } else if (rawData && (Array.isArray(rawData.defaultQuestions) || Array.isArray(rawData.customQuestions))) {
+          console.log('📋 使用 rawData 格式');
+          console.log(' rawData.defaultQuestions:', rawData.defaultQuestions);
+          console.log(' rawData.customQuestions:', rawData.customQuestions);
           presetQuestions = this.formatQuestionList(rawData.defaultQuestions, 'preset');
           customQuestions = this.formatQuestionList(rawData.customQuestions, 'custom');
         } else if (res && res.code === 200 && res.data && (Array.isArray(res.data.defaultQuestions) || Array.isArray(res.data.customQuestions))) {
+          console.log('📋 使用 res.data 格式');
+          console.log(' res.data.defaultQuestions:', res.data.defaultQuestions);
+          console.log(' res.data.customQuestions:', res.data.customQuestions);
           presetQuestions = this.formatQuestionList(res.data.defaultQuestions, 'preset');
           customQuestions = this.formatQuestionList(res.data.customQuestions, 'custom');
+        } else {
+          console.log('📋 未识别的数据格式:', { rawData, res });
         }
 
         if (presetQuestions !== null) {

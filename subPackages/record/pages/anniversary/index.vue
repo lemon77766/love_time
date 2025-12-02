@@ -186,58 +186,7 @@ export default {
       showAddModal: false,
       showEditModal: false,
       isDeleting: -1, // 用于删除动画
-      anniversaryList: [
-        {
-          id: 1,
-          title: '我们第一次旅行',
-          date: '2025-10-21',
-          icon: 'mdi:airplane',
-          color: '#4A90E2',
-          remind: true
-        },
-        {
-          id: 2,
-          title: '圆月弯刀的生日',
-          icon: 'mdi:cake',
-          color: '#FFD93D',
-          remind: false
-        },
-        {
-          id: 3,
-          title: '火车上不代表的生日',
-          icon: 'mdi:cake',
-          color: '#FFD93D',
-          remind: false
-        },
-        {
-          id: 4,
-          title: '第一次接吻的日子',
-          icon: 'mdi:heart-outline',
-          color: '#FF91A4',
-          remind: true
-        },
-        {
-          id: 5,
-          title: '第一次拥抱的日子',
-          icon: 'mdi:human-handsup',
-          color: '#FF91A4',
-          remind: false
-        },
-        {
-          id: 6,
-          title: '我们在一起啦',
-          icon: 'mdi:heart-multiple-outline',
-          color: '#FF91A4',
-          remind: true
-        },
-        {
-          id: 7,
-          title: '结婚纪念日',
-          icon: 'mdi:ring',
-          color: '#D9ACFF',
-          remind: false
-        }
-      ],
+      anniversaryList: [],
       newAnniversary: {
         title: '',
         date: '',
@@ -335,14 +284,27 @@ export default {
     async loadAnniversaryData() {
       try {
         const response = await getAnniversaryList();
+        console.log('[纪念日页面] 接收到的原始响应数据:', response);
+        
+        // 处理不同的响应格式
+        let dataList = [];
         if (response && response.data && response.data.anniversaryList) {
-          this.anniversaryList = response.data.anniversaryList;
+          // 标准格式 { data: { anniversaryList: [...] } }
+          dataList = response.data.anniversaryList;
+        } else if (response && response.data && Array.isArray(response.data)) {
+          // 数组直接在data字段中
+          dataList = response.data;
+        } else if (response && Array.isArray(response)) {
+          // 直接返回数组
+          dataList = response;
         } else {
-          console.warn('获取纪念日列表数据格式异常:', response);
-          this.anniversaryList = [];
+          console.warn('[纪念日页面] 获取纪念日列表数据格式异常:', response);
         }
+        
+        console.log('[纪念日页面] 处理后的纪念日列表:', dataList);
+        this.anniversaryList = dataList;
       } catch (error) {
-        console.error('加载纪念日数据失败:', error);
+        console.error('[纪念日页面] 加载纪念日数据失败:', error);
         uni.showToast({
           title: '加载数据失败',
           icon: 'none'

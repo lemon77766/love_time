@@ -46,7 +46,7 @@ const _sfc_main = {
         this.letters = backendLetters.map((letter) => {
           const opacityValue = Number(letter.backgroundOpacity);
           const normalizedOpacity = isNaN(opacityValue) ? 100 : opacityValue <= 1 ? opacityValue * 100 : opacityValue;
-          const deliveryDateRaw = letter.scheduledDate || letter.deliveryDate;
+          const deliveryDateRaw = letter.scheduledTime || letter.scheduledDate || letter.deliveryDate;
           const createTimeRaw = letter.createdAt || letter.createTime;
           const sentAtRaw = letter.sentAt;
           return {
@@ -145,7 +145,7 @@ const _sfc_main = {
         common_vendor.index.hideLoading();
         if (response && response.data) {
           const detailData = response.data;
-          const detailDeliveryDate = detailData.scheduledDate || detailData.deliveryDate || letter.deliveryDate;
+          const detailDeliveryDate = detailData.scheduledTime || detailData.scheduledDate || detailData.deliveryDate || letter.deliveryDate;
           const detailCreateTime = detailData.createdAt || detailData.createTime || letter.createTime;
           const detailSentAt = detailData.sentAt || letter.sentAt;
           this.currentLetter = {
@@ -227,9 +227,9 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     h: 1 - $data.currentLetter.opacity / 100,
     i: common_vendor.t($data.currentLetter.title),
     j: common_vendor.n($options.getFontClass($data.currentLetter)),
-    k: $data.currentLetter.sentAt
-  }, $data.currentLetter.sentAt ? {
-    l: common_vendor.t($data.currentLetter.sentAt),
+    k: $data.currentLetter.deliveryDate && $data.currentLetter.deliveryDate !== "--"
+  }, $data.currentLetter.deliveryDate && $data.currentLetter.deliveryDate !== "--" ? {
+    l: common_vendor.t($data.currentLetter.deliveryDate),
     m: common_vendor.n($options.getFontClass($data.currentLetter))
   } : {}, {
     n: common_vendor.t($data.currentLetter.content),

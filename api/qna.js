@@ -125,6 +125,11 @@ export function getHistory(params = {}) {
  *   }
  */
 export function getPartnerAnswer(questionId) {
+  console.log('🔍 调用获取对方答案API:', {
+    url: config.API.QNA.PARTNER_ANSWER,
+    questionId,
+    questionIdType: typeof questionId
+  });
   return http.get(config.API.QNA.PARTNER_ANSWER, { questionId });
 }
 

@@ -12,58 +12,7 @@ const _sfc_main = {
       showEditModal: false,
       isDeleting: -1,
       // 用于删除动画
-      anniversaryList: [
-        {
-          id: 1,
-          title: "我们第一次旅行",
-          date: "2025-10-21",
-          icon: "mdi:airplane",
-          color: "#4A90E2",
-          remind: true
-        },
-        {
-          id: 2,
-          title: "圆月弯刀的生日",
-          icon: "mdi:cake",
-          color: "#FFD93D",
-          remind: false
-        },
-        {
-          id: 3,
-          title: "火车上不代表的生日",
-          icon: "mdi:cake",
-          color: "#FFD93D",
-          remind: false
-        },
-        {
-          id: 4,
-          title: "第一次接吻的日子",
-          icon: "mdi:heart-outline",
-          color: "#FF91A4",
-          remind: true
-        },
-        {
-          id: 5,
-          title: "第一次拥抱的日子",
-          icon: "mdi:human-handsup",
-          color: "#FF91A4",
-          remind: false
-        },
-        {
-          id: 6,
-          title: "我们在一起啦",
-          icon: "mdi:heart-multiple-outline",
-          color: "#FF91A4",
-          remind: true
-        },
-        {
-          id: 7,
-          title: "结婚纪念日",
-          icon: "mdi:ring",
-          color: "#D9ACFF",
-          remind: false
-        }
-      ],
+      anniversaryList: [],
       newAnniversary: {
         title: "",
         date: "",
@@ -143,14 +92,21 @@ const _sfc_main = {
     async loadAnniversaryData() {
       try {
         const response = await api_anniversary.getAnniversaryList();
+        common_vendor.index.__f__("log", "at subPackages/record/pages/anniversary/index.vue:287", "[纪念日页面] 接收到的原始响应数据:", response);
+        let dataList = [];
         if (response && response.data && response.data.anniversaryList) {
-          this.anniversaryList = response.data.anniversaryList;
+          dataList = response.data.anniversaryList;
+        } else if (response && response.data && Array.isArray(response.data)) {
+          dataList = response.data;
+        } else if (response && Array.isArray(response)) {
+          dataList = response;
         } else {
-          common_vendor.index.__f__("warn", "at subPackages/record/pages/anniversary/index.vue:341", "获取纪念日列表数据格式异常:", response);
-          this.anniversaryList = [];
+          common_vendor.index.__f__("warn", "at subPackages/record/pages/anniversary/index.vue:301", "[纪念日页面] 获取纪念日列表数据格式异常:", response);
         }
+        common_vendor.index.__f__("log", "at subPackages/record/pages/anniversary/index.vue:304", "[纪念日页面] 处理后的纪念日列表:", dataList);
+        this.anniversaryList = dataList;
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:345", "加载纪念日数据失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:307", "[纪念日页面] 加载纪念日数据失败:", error);
         common_vendor.index.showToast({
           title: "加载数据失败",
           icon: "none"
@@ -193,7 +149,7 @@ const _sfc_main = {
           icon: "success"
         });
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:393", "切换提醒状态失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:355", "切换提醒状态失败:", error);
         common_vendor.index.showToast({
           title: "操作失败",
           icon: "none"
@@ -278,7 +234,7 @@ const _sfc_main = {
           throw new Error("添加纪念日响应数据异常");
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:489", "添加纪念日失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:451", "添加纪念日失败:", error);
         common_vendor.index.showToast({
           title: "添加失败",
           icon: "none"
@@ -287,7 +243,7 @@ const _sfc_main = {
     },
     // 测试删除方法
     testDelete(index) {
-      common_vendor.index.__f__("log", "at subPackages/record/pages/anniversary/index.vue:498", "测试删除方法被调用，索引：", index);
+      common_vendor.index.__f__("log", "at subPackages/record/pages/anniversary/index.vue:460", "测试删除方法被调用，索引：", index);
       common_vendor.index.showModal({
         title: "确认删除",
         content: "确定要删除这个纪念日吗？",
@@ -297,7 +253,7 @@ const _sfc_main = {
           }
         },
         fail: (err) => {
-          common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:511", "显示确认框失败:", err);
+          common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:473", "显示确认框失败:", err);
           this.deleteAnniversary(index);
         }
       });
@@ -305,7 +261,7 @@ const _sfc_main = {
     // 删除纪念日
     async deleteAnniversary(index) {
       if (index < 0 || index >= this.anniversaryList.length) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:521", "无效的索引:", index);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:483", "无效的索引:", index);
         common_vendor.index.showToast({
           title: "删除失败",
           icon: "none"
@@ -325,7 +281,7 @@ const _sfc_main = {
           });
         }, 300);
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:551", "删除纪念日失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:513", "删除纪念日失败:", error);
         this.isDeleting = -1;
         common_vendor.index.showToast({
           title: "删除失败",
@@ -391,7 +347,7 @@ const _sfc_main = {
           throw new Error("更新纪念日响应数据异常");
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:625", "保存纪念日失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/anniversary/index.vue:587", "保存纪念日失败:", error);
         common_vendor.index.showToast({
           title: "保存失败",
           icon: "none"

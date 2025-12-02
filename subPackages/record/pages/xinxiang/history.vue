@@ -123,6 +123,7 @@
               <view class="letter-header">
                 <text class="letter-title" :class="getFontClass(currentLetter)">{{ currentLetter.title }}</text>
                 <text v-if="currentLetter.sentAt && currentLetter.sentAt !== '--'" class="letter-date" :class="getFontClass(currentLetter)">发送时间：{{ currentLetter.sentAt }}</text>
+                <text v-if="currentLetter.deliveryDate && currentLetter.deliveryDate !== '--'" class="letter-date" :class="getFontClass(currentLetter)">送达时间：{{ currentLetter.deliveryDate }}</text>
               </view>
               
               <view class="letter-body">
@@ -229,7 +230,7 @@ export default {
         this.letters = backendLetters
           .filter(letter => letter.status !== 'SENT') // 过滤掉已发送的
           .map(letter => {
-            const deliveryDateRaw = letter.scheduledDate || letter.deliveryDate;
+            const deliveryDateRaw = letter.scheduledTime || letter.scheduledDate || letter.deliveryDate;
             const createTimeRaw = letter.createdAt || letter.createTime;
             
             return {
@@ -270,7 +271,7 @@ export default {
         const sentResponse = await getSentLetters();
         const backendSentLetters = this.extractLetterArray(sentResponse);
         this.sentLetters = backendSentLetters.map(letter => {
-          const deliveryDateRaw = letter.scheduledDate || letter.deliveryDate;
+          const deliveryDateRaw = letter.scheduledTime || letter.scheduledDate || letter.deliveryDate;
           const createTimeRaw = letter.createdAt || letter.createTime;
           const sentAtRaw = letter.sentAt;
           
@@ -401,7 +402,7 @@ export default {
         // 处理响应数据
         if (response && response.data) {
           const detailData = response.data;
-          const detailDeliveryDate = detailData.scheduledDate || detailData.deliveryDate || letter.deliveryDate;
+          const detailDeliveryDate = detailData.scheduledTime || detailData.scheduledDate || detailData.deliveryDate || letter.deliveryDate;
           const detailCreateTime = detailData.createdAt || detailData.createTime || letter.createTime;
           const detailSentAt = detailData.sentAt || letter.sentAt;
           // 合并详情数据到当前信件对象
