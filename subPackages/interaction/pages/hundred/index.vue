@@ -50,20 +50,32 @@
     <!-- 事件网格 -->
     <view class="event-grid">
       <view v-for="(item, i) in displayItems" :key="item.id" class="event-card">
-        <!-- 收藏标记 -->
-        <view class="favorite-icon" @click.stop="toggleFavorite(item)">
-          <text :class="{ 'favorite-active': item.favorite }">{{ item.favorite ? '★' : '☆' }}</text>
+        <!-- 操作按钮组 -->
+        <view class="action-buttons">
+          <!-- 删除按钮 -->
+          <view class="delete-icon" @click.stop="deleteEvent(item)">
+            <text>🗑️</text>
+          </view>
+          <!-- 收藏标记 -->
+          <view class="favorite-icon" @click.stop="toggleFavorite(item)">
+            <text :class="{ 'favorite-active': item.favorite }">{{ item.favorite ? '★' : '☆' }}</text>
+          </view>
         </view>
         
         <!-- 图片区域 -->
-        <view class="event-image" @click="uploadImage(item)">
-          <image v-if="item.image" :src="item.image" mode="aspectFill"></image>
+        <view class="event-image" @click="handleEventClick(item)">
+          <image v-if="item.image" :src="item.image" mode="aspectFill" @error="onImageError"
+			@load="onImageLoad" ></image>
           <view v-else class="placeholder-icon">📸+</view>
         </view>
         
         <!-- 标题区域 -->
-        <view class="event-title-wrapper" @click="toggleDone(item)" @longpress="openEdit(item)">
+        <view class="event-title-wrapper" @click="handleEventClick(item)" @longpress="openEdit(item)">
           <text class="event-title" :class="{ done: item.done }">{{ item.text }}</text>
+          <!-- 完成记录指示器 -->
+          <view v-if="item.done && item.hasRecord" class="record-indicator" @click.stop="openRecordDetail(item)">
+            <text class="record-icon">📝</text>
+          </view>
         </view>
       </view>
     </view>
@@ -101,6 +113,117 @@
         </view>
       </view>
     </view>
+
+    <!-- 完成记录弹窗 -->
+    <view v-if="showRecordModal" class="modal-mask" @click="closeRecordModal">
+      <view class="record-modal" @click.stop>
+        <text class="modal-title">{{ recordModal.mode === 'add' ? '记录完成时刻' : '查看记录' }}</text>
+        
+        <scroll-view class="record-form" scroll-y="true">
+          <!-- 照片区域 -->
+          <view class="record-section">
+            <text class="section-title">照片记录</text>
+            <view class="photo-section" @click="uploadRecordImage">
+              <image v-if="recordModal.photoUrl" :src="recordModal.photoUrl" mode="aspectFill" class="record-photo" />
+              <view v-else class="photo-placeholder">
+                <text class="placeholder-icon">📸</text>
+                <text class="placeholder-text">点击上传照片</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 时间地点 -->
+          <view class="record-section">
+            <text class="section-title">时间地点</text>
+            <view class="form-row">
+              <view class="form-item half">
+                <text class="form-label">完成日期</text>
+                <picker mode="date" :value="recordModal.completedDate" @change="onRecordDateChange">
+                  <view class="form-input">{{ recordModal.completedDate || '选择日期' }}</view>
+                </picker>
+              </view>
+              <view class="form-item half">
+                <text class="form-label">完成时间</text>
+                <picker mode="time" :value="recordModal.completedTime" @change="onRecordTimeChange">
+                  <view class="form-input">{{ recordModal.completedTime || '选择时间' }}</view>
+                </picker>
+              </view>
+            </view>
+            <view class="form-item">
+              <text class="form-label">完成地点</text>
+              <input class="form-input" v-model="recordModal.location" placeholder="记录美好的发生地" />
+            </view>
+            <view class="form-item">
+              <text class="form-label">天气状况</text>
+              <picker :range="weatherOptions" @change="onWeatherChange">
+                <view class="form-input">{{ recordModal.weather || '选择天气' }}</view>
+              </picker>
+            </view>
+          </view>
+
+          <!-- 感受评分 -->
+          <view class="record-section">
+            <text class="section-title">感受评价</text>
+            <view class="form-item">
+              <text class="form-label">心情感受</text>
+              <textarea class="form-textarea" v-model="recordModal.feeling" 
+                placeholder="记录当时的心情和感受..." 
+                maxlength="200" />
+              <text class="char-count">{{ (recordModal.feeling || '').length }}/200</text>
+            </view>
+          </view>
+        </scroll-view>
+
+        <view class="modal-actions">
+          <button class="btn secondary" @click="closeRecordModal">取消</button>
+          <button v-if="recordModal.mode === 'add'" class="btn primary" @click="saveRecord">保存记录</button>
+          <button v-else class="btn primary" @click="editRecord">编辑记录</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 记录详情弹窗 -->
+    <view v-if="showDetailModal" class="modal-mask" @click="closeDetailModal">
+      <view class="detail-modal" @click.stop>
+        <text class="modal-title">完成记录详情</text>
+        
+        <scroll-view class="detail-content" scroll-y="true">
+          <!-- 照片展示 -->
+          <view v-if="detailModal.photoUrl" class="detail-section">
+            <image :src="detailModal.photoUrl" mode="aspectFill" class="detail-photo" @click="previewImage(detailModal.photoUrl)" />
+          </view>
+
+          <!-- 基本信息 -->
+          <view class="detail-section">
+            <view class="detail-info">
+              <text class="info-label">完成时间：</text>
+              <text class="info-value">{{ detailModal.completedDate }} {{ detailModal.completedTime }}</text>
+            </view>
+            <view v-if="detailModal.location" class="detail-info">
+              <text class="info-label">地点：</text>
+              <text class="info-value">{{ detailModal.location }}</text>
+            </view>
+            <view v-if="detailModal.weather" class="detail-info">
+              <text class="info-label">天气：</text>
+              <text class="info-value">{{ detailModal.weather }}</text>
+            </view>
+          </view>
+
+          <!-- 感受描述 -->
+          <view v-if="detailModal.feeling" class="detail-section">
+            <view class="detail-info">
+              <text class="info-label">感受：</text>
+              <text class="info-value">{{ detailModal.feeling }}</text>
+            </view>
+          </view>
+        </scroll-view>
+
+        <view class="modal-actions">
+          <button class="btn secondary" @click="editExistingRecord">编辑记录</button>
+          <button class="btn primary" @click="closeDetailModal">关闭</button>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -127,7 +250,24 @@ export default {
         { label: '待完成', value: 'todo' },
         { label: '已完成', value: 'done' },
         { label: '已收藏', value: 'favorite' }
-      ]
+      ],
+      // 记录弹窗相关
+      showRecordModal: false,
+      recordModal: {
+        mode: 'add', // 'add' | 'edit'
+        taskId: null,
+        photoUrl: '',
+        completedDate: '',
+        completedTime: '',
+        location: '',
+        weather: '',
+        feeling: ''
+      },
+      // 详情弹窗相关
+      showDetailModal: false,
+      detailModal: {},
+      // 预设选项
+      weatherOptions: ['晴天', '多云', '阴天', '小雨', '中雨', '大雨', '雪天', '雾天', '大风', '其他']
     };
   },
   computed: {
@@ -155,7 +295,10 @@ export default {
       if (this.filterMode === 'todo') return '待完成';
       if (this.filterMode === 'favorite') return '已收藏';
       return '全部';
-    }
+    },
+	onImageError(e) {
+	    console.log('------图片加载失败:', e)
+	  },
   },
   mounted() {
     this.getSystemInfo();
@@ -316,7 +459,9 @@ export default {
         this.loading = false;
       }
     },
-    
+     onImageLoad(e) {
+        console.log('✅ 图片加载成功:', e.detail)
+      },
     /**
      * 数据格式转换：后端格式 -> 前端格式
      * 后端: { id, taskName, status, photoUrl, isFavorited, ... }
@@ -347,6 +492,13 @@ export default {
         ? status.toLowerCase() === 'completed' || status.toLowerCase() === 'done'
         : Boolean(status);
 
+      // 检查是否有详细的完成记录
+      const hasDetailedRecord = record && (
+        record.location || record.completedDate || record.completedTime || 
+        record.feeling || record.weather || record.rating || 
+        (record.tags && record.tags.length > 0)
+      );
+
       return {
         id: task.id,
         text: task.taskName || task.taskDescription || '',
@@ -355,7 +507,16 @@ export default {
         favorite: record?.isFavorited ?? record?.favorited ?? task.isFavorited ?? false,
         category: task.category || 'preset',
         note: record?.note || task.note || '',
-        completedAt: record?.completedAt || task.completedAt || null
+        completedAt: record?.completedAt || task.completedAt || null,
+        hasRecord: hasDetailedRecord || Boolean(record?.note), // 是否有详细记录
+        // 详细记录字段
+        location: record?.location || '',
+        completedDate: record?.completedDate || '',
+        completedTime: record?.completedTime || '',
+        feeling: record?.feeling || '',
+        weather: record?.weather || '',
+        tags: record?.tags || [],
+        rating: record?.rating || 0
       };
     },
     
@@ -616,6 +777,70 @@ export default {
         });
       }
     },
+
+    /**
+     * 删除事件
+     */
+    async deleteEvent(item) {
+      console.log('🗑️ [一百件事] ========== 删除事件 ==========');
+      console.log('📋 [任务] ID:', item.id, '名称:', item.text);
+      
+      // 确认删除
+      const confirmResult = await new Promise((resolve) => {
+        uni.showModal({
+          title: '确认删除',
+          content: `确定要删除"${item.text}"吗？\n\n删除后将无法恢复，包括相关的照片和记录。`,
+          confirmText: '确定删除',
+          cancelText: '取消',
+          success: (res) => {
+            resolve(res.confirm);
+          }
+        });
+      });
+      
+      if (!confirmResult) {
+        console.log('❌ [用户] 取消删除');
+        return;
+      }
+      
+      try {
+        // 显示加载状态
+        uni.showLoading({
+          title: '删除中...',
+          mask: true
+        });
+        
+        console.log('📡 [前端] 调用 deleteTask() API');
+        await deleteTask(item.id);
+        
+        // 从本地数组中移除
+        const index = this.items.findIndex(i => i.id === item.id);
+        if (index > -1) {
+          this.items.splice(index, 1);
+        }
+        
+        // 保存到本地存储
+        this.saveItemsToLocal();
+        
+        uni.hideLoading();
+        console.log('✅ [后端] 删除事件成功');
+        uni.showToast({
+          title: '删除成功',
+          icon: 'success',
+          duration: 1500
+        });
+        
+      } catch (error) {
+        uni.hideLoading();
+        console.error('❌ [后端] 删除事件失败:', error);
+        uni.showToast({
+          title: '删除失败，请重试',
+          icon: 'none',
+          duration: 2000
+        });
+      }
+    },
+
     openEdit(item) {
       this.editForm = { ...item };
       this.showEdit = true;
@@ -719,35 +944,64 @@ export default {
       }
     },
     /**
+     * 处理事件点击 - 统一的点击处理方法
+     * 点击事件任何地方都会触发时间记录弹窗
+     */
+    handleEventClick(item) {
+      console.log('🖱️ [事件点击] 点击了事件:', item.text, '状态:', item.done ? '已完成' : '未完成');
+      
+      if (item.done) {
+        // 已完成的任务，查看记录详情
+        if (item.hasRecord) {
+          this.openRecordDetail(item);
+        } else {
+          // 已完成但没有详细记录，打开记录弹窗补充信息
+          this.openRecordModal(item);
+        }
+      } else {
+        // 未完成的任务，打开记录弹窗
+        this.openRecordModal(item);
+      }
+    },
+
+    /**
      * 切换完成状态
-     * 同步到后端
+     * 如果标记为完成，打开记录弹窗；如果取消完成，直接更新状态
      */
     async toggleDone(item) {
       const newDoneState = !item.done;
-      const action = newDoneState ? '标记完成' : '取消完成';
       
-      console.log(`✅ [一百件事] ========== ${action}任务 ==========`);
-      console.log('📋 [任务] ID:', item.id, '名称:', item.text);
-      console.log('🔄 [状态] 当前:', item.done ? '已完成' : '未完成', '→ 新状态:', newDoneState ? '已完成' : '未完成');
-      
-      // 先更新本地状态（乐观更新）
-      item.done = newDoneState;
-      this.saveItemsToLocal();
-      
-      try {
-        await this.syncTaskComplete(item, newDoneState, item.image);
-        console.log(`✅ [后端] ${action}任务成功`);
-      } catch (error) {
-        console.error(`❌ [后端] ${action}任务失败:`, error);
-        // 回滚状态
-        item.done = !newDoneState;
+      if (newDoneState) {
+        // 标记为完成，打开记录弹窗
+        this.openRecordModal(item);
+      } else {
+        // 取消完成状态，直接更新
+        const action = '取消完成';
+        
+        console.log(`✅ [一百件事] ========== ${action}任务 ==========`);
+        console.log('📋 [任务] ID:', item.id, '名称:', item.text);
+        
+        // 先更新本地状态（乐观更新）
+        item.done = false;
+        item.hasRecord = false; // 清除记录标记
         this.saveItemsToLocal();
         
-        uni.showToast({
-          title: `${action}失败，请重试`,
-          icon: 'none',
-          duration: 2000
-        });
+        try {
+          await this.syncTaskComplete(item, false, item.image);
+          console.log(`✅ [后端] ${action}任务成功`);
+          uni.showToast({ title: '已取消完成', icon: 'success' });
+        } catch (error) {
+          console.error(`❌ [后端] ${action}任务失败:`, error);
+          // 回滚状态
+          item.done = true;
+          this.saveItemsToLocal();
+          
+          uni.showToast({
+            title: `${action}失败，请重试`,
+            icon: 'none',
+            duration: 2000
+          });
+        }
       }
     },
     
@@ -826,6 +1080,281 @@ export default {
           duration: 2000
         });
       }
+    },
+
+    // ===== 记录弹窗相关方法 =====
+    
+    /**
+     * 打开记录弹窗（添加模式）
+     */
+    openRecordModal(item) {
+      console.log('📝 [记录] 打开完成记录弹窗:', item.text);
+      
+      // 设置默认时间
+      const now = new Date();
+      const date = now.toISOString().split('T')[0];
+      const time = now.toTimeString().slice(0, 5);
+      
+      this.recordModal = {
+        mode: 'add',
+        taskId: item.id,
+        photoUrl: item.image || '',
+        completedDate: item.completedDate || date,
+        completedTime: item.completedTime || time,
+        location: item.location || '',
+        weather: item.weather || '',
+        feeling: item.feeling || ''
+      };
+      
+      this.showRecordModal = true;
+    },
+    
+    /**
+     * 关闭记录弹窗
+     */
+    closeRecordModal() {
+      this.showRecordModal = false;
+      this.recordModal = {
+        mode: 'add',
+        taskId: null,
+        photoUrl: '',
+        completedDate: '',
+        completedTime: '',
+        location: '',
+        weather: '',
+        feeling: '',
+        note: '',
+        tags: [],
+        rating: 0
+      };
+    },
+    
+    /**
+     * 打开记录详情
+     */
+    openRecordDetail(item) {
+      console.log('📖 [记录] 查看记录详情:', item.text);
+      
+      this.detailModal = {
+        taskId: item.id,
+        taskName: item.text,
+        photoUrl: item.image || '',
+        completedDate: item.completedDate || '',
+        completedTime: item.completedTime || '',
+        location: item.location || '',
+        weather: item.weather || '',
+        feeling: item.feeling || ''
+      };
+      
+      this.showDetailModal = true;
+    },
+    
+    /**
+     * 关闭详情弹窗
+     */
+    closeDetailModal() {
+      this.showDetailModal = false;
+      this.detailModal = {};
+    },
+    
+    /**
+     * 上传记录图片
+     */
+    uploadRecordImage() {
+      uni.chooseImage({
+        count: 1,
+        sizeType: ['compressed'],
+        sourceType: ['album', 'camera'],
+        success: async (res) => {
+          const tempFilePath = res.tempFilePaths[0];
+          console.log('📸 [记录] 选择图片:', tempFilePath);
+          
+          // 先显示临时图片
+          this.recordModal.photoUrl = tempFilePath;
+          
+          try {
+            uni.showLoading({
+              title: '上传中...',
+              mask: true
+            });
+            
+            const uploadResult = await uploadChallengePhoto(tempFilePath);
+            this.recordModal.photoUrl = uploadResult.photoUrl;
+            
+            uni.hideLoading();
+            uni.showToast({ title: '图片上传成功', icon: 'success' });
+          } catch (error) {
+            uni.hideLoading();
+            this.recordModal.photoUrl = '';
+            uni.showToast({ title: '图片上传失败', icon: 'none' });
+            console.error('图片上传失败:', error);
+          }
+        },
+        fail: (err) => {
+          if (err && err.errMsg && err.errMsg.includes('cancel')) {
+            console.log('用户取消选择图片');
+            return;
+          }
+          console.error('选择图片失败:', err);
+          uni.showToast({ title: '选择图片失败', icon: 'none' });
+        }
+      });
+    },
+    
+    /**
+     * 记录日期变化
+     */
+    onRecordDateChange(e) {
+      this.recordModal.completedDate = e.detail.value;
+    },
+    
+    /**
+     * 记录时间变化
+     */
+    onRecordTimeChange(e) {
+      this.recordModal.completedTime = e.detail.value;
+    },
+    
+    /**
+     * 天气选择变化
+     */
+    onWeatherChange(e) {
+      this.recordModal.weather = this.weatherOptions[e.detail.value];
+    },
+    
+
+    
+    /**
+     * 保存记录
+     */
+    async saveRecord() {
+      console.log('💾 [记录] 保存完成记录');
+      
+      // 基本验证
+      if (!this.recordModal.completedDate) {
+        uni.showToast({ title: '请选择完成日期', icon: 'none' });
+        return;
+      }
+      
+      try {
+        uni.showLoading({
+          title: '保存中...',
+          mask: true
+        });
+        
+        // 更新本地数据
+        const item = this.items.find(i => i.id === this.recordModal.taskId);
+        if (item) {
+          item.done = true;
+          item.hasRecord = true;
+          item.image = this.recordModal.photoUrl;
+          item.completedDate = this.recordModal.completedDate;
+          item.completedTime = this.recordModal.completedTime;
+          item.location = this.recordModal.location;
+          item.weather = this.recordModal.weather;
+          item.feeling = this.recordModal.feeling;
+          item.completedAt = new Date().toISOString();
+        }
+        
+        // 同步到后端
+        await this.syncTaskCompleteWithDetails(item);
+        
+        this.saveItemsToLocal();
+        this.closeRecordModal();
+        
+        uni.hideLoading();
+        uni.showToast({ title: '记录保存成功', icon: 'success' });
+        
+      } catch (error) {
+        uni.hideLoading();
+        console.error('保存记录失败:', error);
+        uni.showToast({ title: '保存失败，请重试', icon: 'none' });
+      }
+    },
+    
+    /**
+     * 编辑现有记录
+     */
+    editExistingRecord() {
+      const item = this.items.find(i => i.id === this.detailModal.taskId);
+      if (item) {
+        this.openRecordModal(item);
+        this.recordModal.mode = 'edit';
+        this.closeDetailModal();
+      }
+    },
+    
+    /**
+     * 编辑记录
+     */
+    async editRecord() {
+      console.log('✏️ [记录] 编辑记录');
+      
+      try {
+        uni.showLoading({
+          title: '更新中...',
+          mask: true
+        });
+        
+        // 更新本地数据
+        const item = this.items.find(i => i.id === this.recordModal.taskId);
+        if (item) {
+          item.image = this.recordModal.photoUrl;
+          item.completedDate = this.recordModal.completedDate;
+          item.completedTime = this.recordModal.completedTime;
+          item.location = this.recordModal.location;
+          item.weather = this.recordModal.weather;
+          item.feeling = this.recordModal.feeling;
+          item.note = this.recordModal.note;
+          item.tags = [...this.recordModal.tags];
+          item.rating = this.recordModal.rating;
+        }
+        
+        // 同步到后端
+        await this.syncTaskCompleteWithDetails(item);
+        
+        this.saveItemsToLocal();
+        this.closeRecordModal();
+        
+        uni.hideLoading();
+        uni.showToast({ title: '记录更新成功', icon: 'success' });
+        
+      } catch (error) {
+        uni.hideLoading();
+        console.error('编辑记录失败:', error);
+        uni.showToast({ title: '更新失败，请重试', icon: 'none' });
+      }
+    },
+    
+    /**
+     * 预览图片
+     */
+    previewImage(url) {
+      uni.previewImage({
+        urls: [url],
+        current: url
+      });
+    },
+    
+    /**
+     * 同步任务完成详情到后端
+     */
+    async syncTaskCompleteWithDetails(item) {
+      console.log('🔄 [同步] 发送详细记录到后端');
+      
+      await completeTask({
+        taskId: item.id,
+        completed: item.done,
+        photoUrl: this.stripBaseFromPhotoUrl(item.image) || null,
+        note: item.note || null,
+        location: item.location || null,
+        completedDate: item.completedDate || null,
+        completedTime: item.completedTime || null,
+        feeling: item.feeling || null,
+        weather: item.weather || null,
+        tags: item.tags && item.tags.length > 0 ? item.tags : null,
+        rating: item.rating || null
+      });
     }
   }
 };
@@ -1063,14 +1592,45 @@ export default {
   position: relative;
 }
 
-/* 收藏图标 */
-.favorite-icon {
+/* 操作按钮组 */
+.action-buttons {
   position: absolute;
   top: 8rpx;
   right: 8rpx;
-  font-size: 32rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
   z-index: 5;
+}
+
+/* 删除图标 */
+.delete-icon {
+  font-size: 28rpx;
   cursor: pointer;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2rpx 4rpx rgba(0,0,0,0.1));
+}
+
+.delete-icon:active {
+  transform: scale(0.9);
+}
+
+.delete-icon text {
+  color: #ff4757;
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.delete-icon:hover text {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* 收藏图标 */
+.favorite-icon {
+  font-size: 32rpx;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .favorite-icon text {
@@ -1188,32 +1748,366 @@ export default {
 }
 
 .modal-actions { 
-  margin-top: 24rpx; 
+  margin-top: 32rpx; 
   display: flex; 
-  justify-content: flex-end; 
-  gap: 12rpx; 
+  justify-content: center; 
+  gap: 20rpx; 
+  padding: 0 32rpx;
+  position: relative;
+  z-index: 1;
 }
 
 .btn { 
-  padding: 14rpx 24rpx; 
-  border-radius: 12rpx; 
-  font-size: 26rpx; 
+  padding: 18rpx 36rpx; 
+  border-radius: 24rpx; 
+  font-size: 28rpx; 
   border: none;
+  font-weight: 600;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 160rpx;
+  text-align: center;
 }
 
 .btn.primary { 
-  background: #FFCC66;
+  background: linear-gradient(135deg, #FFCC66 0%, #FFD699 100%);
   color: #8B6914; 
+  box-shadow: 0 8rpx 24rpx rgba(255, 204, 102, 0.3);
+  border: 1.5rpx solid rgba(255, 204, 102, 0.2);
+}
+
+.btn.primary:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 4rpx 12rpx rgba(255, 204, 102, 0.4);
 }
 
 .btn.secondary { 
-  background: #FFF4E0; 
+  background: rgba(255, 255, 255, 0.8);
   color: #8B6914; 
+  border: 1.5rpx solid rgba(139, 105, 20, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.btn.secondary:active {
+  background: rgba(255, 244, 224, 0.8);
+  transform: translateY(2rpx);
 }
 
 .btn.danger {
-  background: #ff6b6b;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
   color: #fff;
+  box-shadow: 0 8rpx 24rpx rgba(255, 107, 107, 0.3);
 }
+
+.btn.danger:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 4rpx 12rpx rgba(255, 107, 107, 0.4);
+}
+
+/* 记录指示器 */
+.record-indicator {
+  position: absolute;
+  top: 4rpx;
+  right: 4rpx;
+  background: #FFCC66;
+  border-radius: 50%;
+  width: 32rpx;
+  height: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2rpx 8rpx rgba(255, 204, 102, 0.3);
+  z-index: 10;
+}
+
+.record-icon {
+  font-size: 20rpx;
+  line-height: 1;
+}
+
+/* 记录弹窗样式 */
+.record-modal {
+  width: 90%;
+  max-width: 680rpx;
+  max-height: 85vh;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFFEF9 100%);
+  border-radius: 32rpx;
+  padding: 32rpx 0;
+  position: relative;
+  box-shadow: 0 20rpx 60rpx rgba(255, 204, 102, 0.15);
+  border: 1.5rpx solid rgba(255, 204, 102, 0.1);
+  overflow: hidden;
+}
+
+.record-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120rpx;
+  background: linear-gradient(135deg, rgba(255, 224, 179, 0.1) 0%, rgba(255, 204, 102, 0.05) 100%);
+  border-radius: 32rpx 32rpx 0 0;
+  z-index: 0;
+}
+
+.record-form {
+  max-height: 60vh;
+  padding: 0 32rpx;
+  position: relative;
+  z-index: 1;
+}
+
+.record-section {
+  margin-bottom: 36rpx;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 20rpx;
+  padding: 24rpx;
+  backdrop-filter: blur(10px);
+  border: 1rpx solid rgba(255, 224, 179, 0.2);
+  transition: all 0.3s ease;
+}
+
+.record-section:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 224, 179, 0.3);
+  transform: translateY(-2rpx);
+  box-shadow: 0 8rpx 24rpx rgba(255, 204, 102, 0.08);
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #8B6914;
+  margin-bottom: 20rpx;
+  display: flex;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.section-title::before {
+  content: '';
+  width: 6rpx;
+  height: 24rpx;
+  background: linear-gradient(135deg, #FFCC66 0%, #FFD699 100%);
+  border-radius: 3rpx;
+  margin-right: 12rpx;
+}
+
+/* 照片区域 */
+.photo-section {
+  width: 240rpx;
+  height: 240rpx;
+  border-radius: 20rpx;
+  border: 3rpx dashed rgba(255, 204, 102, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.4s ease;
+  margin: 0 auto;
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 248, 240, 0.8) 0%, rgba(255, 238, 212, 0.6) 100%);
+  backdrop-filter: blur(5px);
+}
+
+.photo-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 224, 179, 0.1) 0%, transparent 70%);
+  border-radius: 17rpx;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.photo-section:hover::before {
+  opacity: 1;
+}
+
+.photo-section:active {
+  border-color: #FFCC66;
+  background: linear-gradient(135deg, #FFFEF9 0%, #FFF9F0 100%);
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 16rpx rgba(255, 204, 102, 0.2);
+}
+
+.record-photo {
+  width: 100%;
+  height: 100%;
+}
+
+.photo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.placeholder-icon {
+  font-size: 56rpx;
+  color: #FFCC66;
+  filter: drop-shadow(0 4rpx 8rpx rgba(255, 204, 102, 0.3));
+  animation: float 3s ease-in-out infinite;
+}
+
+.placeholder-text {
+  font-size: 24rpx;
+  color: #8B6914;
+  font-weight: 500;
+  margin-top: 8rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6rpx);
+  }
+}
+
+
+
+/* 表单样式 */
+.form-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.form-item {
+  margin-bottom: 28rpx;
+}
+
+.form-item.half {
+  flex: 1;
+}
+
+.form-label {
+  font-size: 26rpx;
+  color: #8B6914;
+  margin-bottom: 14rpx;
+  display: block;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.form-input {
+  width: 100%;
+  height: 80rpx;
+  border: 2rpx solid rgba(255, 224, 179, 0.3);
+  border-radius: 16rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  background: rgba(255, 255, 255, 0.9);
+  color: #4A4A4A;
+  line-height: 80rpx;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+}
+
+.form-input:focus {
+  border-color: #FFCC66;
+  background: #ffffff;
+  box-shadow: 0 0 0 6rpx rgba(255, 204, 102, 0.1);
+  transform: translateY(-2rpx);
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 140rpx;
+  border: 2rpx solid rgba(255, 224, 179, 0.3);
+  border-radius: 16rpx;
+  padding: 20rpx 24rpx;
+  font-size: 28rpx;
+  background: rgba(255, 255, 255, 0.9);
+  color: #4A4A4A;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  line-height: 1.6;
+}
+
+.form-textarea:focus {
+  border-color: #FFCC66;
+  background: #ffffff;
+  box-shadow: 0 0 0 6rpx rgba(255, 204, 102, 0.1);
+  transform: translateY(-2rpx);
+}
+
+.char-count {
+  font-size: 22rpx;
+  color: #FFCC66;
+  text-align: right;
+  margin-top: 8rpx;
+  display: block;
+  font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+/* 评分容器 */
+.rating-container {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 12rpx;
+}
+
+
+
+
+
+/* 详情弹窗 */
+.detail-modal {
+  width: 86%;
+  max-width: 600rpx;
+  max-height: 80vh;
+  background: #ffffff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+}
+
+.detail-content {
+  max-height: 60vh;
+  margin-top: 20rpx;
+}
+
+.detail-section {
+  margin-bottom: 24rpx;
+}
+
+.detail-photo {
+  width: 100%;
+  height: 300rpx;
+  border-radius: 16rpx;
+  cursor: pointer;
+}
+
+.detail-info {
+  margin-bottom: 16rpx;
+}
+
+.info-label {
+  font-size: 24rpx;
+  color: #666;
+  font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.info-value {
+  font-size: 26rpx;
+  color: #333;
+  margin-left: 8rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+
 </style>

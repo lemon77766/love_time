@@ -288,7 +288,10 @@ export default {
         
         // 处理不同的响应格式
         let dataList = [];
-        if (response && response.data && response.data.anniversaryList) {
+        if (response && response.anniversaryList) {
+          // 后端实际返回格式: { msg: "...", code: 200, anniversaryList: [...] }
+          dataList = response.anniversaryList;
+        } else if (response && response.data && response.data.anniversaryList) {
           // 标准格式 { data: { anniversaryList: [...] } }
           dataList = response.data.anniversaryList;
         } else if (response && response.data && Array.isArray(response.data)) {

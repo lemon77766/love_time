@@ -112,6 +112,50 @@ function handleRequestError(error, options = {}) {
 
 // 处理未授权情况
 function handleUnauthorized(customMessage) {
+  // 检查是否是mock token
+  const loginInfo = uni.getStorageSync('login_info');
+  const currentToken = resolveTokenFromLoginInfo(loginInfo);
+  const isMockToken = currentToken && currentToken.startsWith('mock_token_');
+  
+  if (isMockToken) {
+    console.log('🔄 检测到mock token失效，自动切换到游客模式');
+    
+    // 静默切换到游客模式
+    const guestUserInfo = {
+      nickName: '游客用户',
+      avatarUrl: '/static/zhuye/smile.png',
+      displayName: '游客用户',
+      isGuest: true
+    };
+    
+    const guestLoginInfo = {
+      isLoggedIn: false,
+      userInfo: guestUserInfo,
+      token: '',
+      loginTime: new Date().toISOString(),
+      isGuest: true
+    };
+    
+    uni.setStorageSync('login_info', guestLoginInfo);
+    
+    // 提示用户
+    uni.showToast({
+      title: '后端连接失败，已切换到游客模式',
+      icon: 'none',
+      duration: 2000
+    });
+    
+    // 刷新当前页面
+    setTimeout(() => {
+      const pages = getCurrentPages();
+      const currentPage = pages[pages.length - 1];
+      if (currentPage && currentPage.onLoad) {
+        currentPage.onLoad();
+      }
+    }, 1000);
+    return;
+  }
+  
   if (isLoggedIn()) {
     const message = customMessage || '登录已过期，请重新登录';
     uni.showToast({

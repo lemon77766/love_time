@@ -61,16 +61,16 @@ const _sfc_main = {
       return totalHeightRpx + 20 + "rpx";
     }
   },
-  onLoad() {
+  async onLoad() {
     this.getSystemInfo();
     this.loadUserInfo();
-    this.loadCoupleInfo();
+    await this.loadCoupleInfo();
     this.loadLoveDays();
     this.checkUnreadLetters();
   },
-  onShow() {
+  async onShow() {
     this.loadUserInfo();
-    this.loadCoupleInfo();
+    await this.loadCoupleInfo();
     this.loadLoveDays();
   },
   methods: {
@@ -184,14 +184,14 @@ const _sfc_main = {
           }
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:387", "加载用户信息失败", error);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:389", "加载用户信息失败", error);
       }
     },
     // 加载情侣信息
     async loadCoupleInfo() {
       var _a, _b;
       if (utils_auth.isGuestUser()) {
-        common_vendor.index.__f__("log", "at pages/index/index.vue:394", "游客用户，跳过加载情侣信息");
+        common_vendor.index.__f__("log", "at pages/index/index.vue:396", "游客用户，跳过加载情侣信息");
         this.isBound = false;
         this.partnerInfo = null;
         this.bindTime = "";
@@ -218,7 +218,7 @@ const _sfc_main = {
                 this.partnerInfo = response.data.partnerInfo || {};
                 this.bindTime = response.data.bindTime || "";
               } else {
-                common_vendor.index.__f__("log", "at pages/index/index.vue:427", "⚠️ 服务器返回未绑定，清除本地状态");
+                common_vendor.index.__f__("log", "at pages/index/index.vue:429", "⚠️ 服务器返回未绑定，清除本地状态");
                 utils_couple.clearCoupleInfo();
                 this.isBound = false;
                 this.partnerInfo = null;
@@ -226,7 +226,7 @@ const _sfc_main = {
               }
             }
           } catch (e) {
-            common_vendor.index.__f__("error", "at pages/index/index.vue:435", "同步绑定状态失败", e);
+            common_vendor.index.__f__("error", "at pages/index/index.vue:437", "同步绑定状态失败", e);
           }
           return;
         }
@@ -255,7 +255,7 @@ const _sfc_main = {
             }
           }
         } catch (e) {
-          common_vendor.index.__f__("error", "at pages/index/index.vue:470", "查询绑定状态失败", e);
+          common_vendor.index.__f__("error", "at pages/index/index.vue:472", "查询绑定状态失败", e);
           this.isBound = utils_couple.isBound();
           if (this.isBound) {
             this.partnerInfo = utils_couple.getPartnerInfo();
@@ -264,7 +264,7 @@ const _sfc_main = {
           }
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:480", "加载情侣信息失败", e);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:482", "加载情侣信息失败", e);
         this.isBound = utils_couple.isBound();
         if (this.isBound) {
           this.partnerInfo = utils_couple.getPartnerInfo();
@@ -274,7 +274,7 @@ const _sfc_main = {
     // 加载相爱天数
     async loadLoveDays() {
       if (utils_auth.isGuestUser()) {
-        common_vendor.index.__f__("log", "at pages/index/index.vue:491", "游客用户，跳过加载相爱天数");
+        common_vendor.index.__f__("log", "at pages/index/index.vue:493", "游客用户，跳过加载相爱天数");
         this.loveDays = 0;
         this.anniversaryDate = "";
         this.relationshipName = "";
@@ -293,16 +293,16 @@ const _sfc_main = {
           this.loveDays = this.toNumberOrZero(loveDaysPayload.loveDays);
           this.anniversaryDate = loveDaysPayload.anniversaryDate || "";
           this.relationshipName = loveDaysPayload.relationshipName || "";
-          common_vendor.index.__f__("log", "at pages/index/index.vue:514", "✅ 成功加载相爱天数:", {
+          common_vendor.index.__f__("log", "at pages/index/index.vue:516", "✅ 成功加载相爱天数:", {
             loveDays: this.loveDays,
             anniversaryDate: this.anniversaryDate,
             relationshipName: this.relationshipName
           });
         } else {
-          common_vendor.index.__f__("warn", "at pages/index/index.vue:520", "⚠️ 获取相爱天数失败，无法识别有效数据结构:", response);
+          common_vendor.index.__f__("warn", "at pages/index/index.vue:522", "⚠️ 获取相爱天数失败，无法识别有效数据结构:", response);
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:523", "❌ 获取相爱天数失败:", error);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:525", "❌ 获取相爱天数失败:", error);
       }
     },
     normalizeLoveDaysResponse(response) {
@@ -385,7 +385,7 @@ const _sfc_main = {
           this.showLetterModal(letter);
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/index/index.vue:632", "检查未读情书失败:", error);
+        common_vendor.index.__f__("error", "at pages/index/index.vue:634", "检查未读情书失败:", error);
       }
     },
     // 显示情书模态框

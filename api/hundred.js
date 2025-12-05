@@ -244,6 +244,13 @@ export function deleteTask(taskId) {
  * @param {boolean} completeData.completed - 是否完成（必填）
  * @param {string} [completeData.photoUrl] - 完成时上传的照片URL（可选）
  * @param {string} [completeData.note] - 完成时的备注说明（可选）
+ * @param {string} [completeData.location] - 完成地点（可选）
+ * @param {string} [completeData.completedDate] - 完成日期，格式 YYYY-MM-DD（可选）
+ * @param {string} [completeData.completedTime] - 完成时间，格式 HH:MM（可选）
+ * @param {string} [completeData.feeling] - 完成时的感受（可选）
+ * @param {string} [completeData.weather] - 完成时的天气（可选）
+ * @param {Array<string>} [completeData.tags] - 标签列表（可选）
+ * @param {number} [completeData.rating] - 评分，1-5星（可选）
  * @returns {Promise<Object>} 返回操作结果
  * 
  * 后端接口要求：
@@ -255,7 +262,14 @@ export function deleteTask(taskId) {
  *     taskId: number,
  *     completed: boolean,
  *     photoUrl?: string,
- *     note?: string
+ *     note?: string,
+ *     location?: string,
+ *     completedDate?: string,
+ *     completedTime?: string,
+ *     feeling?: string,
+ *     weather?: string,
+ *     tags?: string[],
+ *     rating?: number
  *   }
  */
 export function completeTask(completeData) {
@@ -273,7 +287,14 @@ export function completeTask(completeData) {
     taskId: completeData.taskId,
     completed: completeData.completed,
     photoUrl: completeData.photoUrl || null,
-    note: completeData.note || null
+    note: completeData.note || null,
+    location: completeData.location || null,
+    completedDate: completeData.completedDate || null,
+    completedTime: completeData.completedTime || null,
+    feeling: completeData.feeling || null,
+    weather: completeData.weather || null,
+    tags: completeData.tags || null,
+    rating: completeData.rating || null
   }).then(response => {
     console.log(`✅ [一百件事API] ${action}任务成功`);
     console.log('📦 响应数据:', response);

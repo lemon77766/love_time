@@ -1,6 +1,6 @@
 // 开发环境配置
 const devConfig = {
-  baseURL: 'https://smallpeppers.cn',
+  baseURL: 'http://192.168.94.229:8886',
   timeout: 10000,  // 普通请求超时时间
   uploadTimeout: 120000,  // 上传请求超时时间（2分钟）
   API: {
@@ -89,7 +89,7 @@ const devConfig = {
 
 // 生产环境配置
 const prodConfig = {
-  baseURL: 'https://api.love_time.com',
+  baseURL: 'https://smallpeppers.cn',
   timeout: 10000,  // 普通请求超时时间
   uploadTimeout: 120000,  // 上传请求超时时间（2分钟）
   API: devConfig.API  // 使用相同的API路径配置

@@ -393,17 +393,39 @@ export default {
         // 2. 获取微信登录code
         const code = await this.getWxLoginCode();
 
-        // 3. 尝试调用后端登录API，如果失败则使用模拟登录
+        // 3. 尝试调用后端登录API，如果超时则重试
         let loginResult;
-        try {
-          loginResult = await http.post(config.API.LOGIN.WECHAT, {
-            code: code,
-            userInfo: userProfile.userInfo
-          });
-        } catch (apiError) {
-          console.error('调用登录API失败', apiError);
-          // API调用失败，使用模拟登录
-          loginResult = this.createMockLoginResult(code, userProfile.userInfo);
+        let retryCount = 0;
+        const maxRetries = 3;
+        
+        while (retryCount < maxRetries) {
+          try {
+            loginResult = await http.post(config.API.LOGIN.WECHAT, {
+              code: code,
+              userInfo: userProfile.userInfo
+            });
+            // 成功则跳出循环
+            break;
+          } catch (apiError) {
+            console.error(`登录API调用失败 (第${retryCount + 1}次)`, apiError);
+            retryCount++;
+            
+            if (retryCount >= maxRetries) {
+              // 最后一次重试失败，使用模拟登录
+              console.warn('所有重试都失败，使用模拟登录');
+              loginResult = this.createMockLoginResult(code, userProfile.userInfo);
+              
+              // 提示用户后端连接问题
+              uni.showToast({
+                title: '后端服务连接失败，使用离线模式',
+                icon: 'none',
+                duration: 3000
+              });
+            } else {
+              // 等待1秒后重试
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
         }
 
         // 4. 处理登录结果
@@ -500,9 +522,19 @@ export default {
     
     // 进入应用（跳转到首页）
     enterApp() {
-      uni.reLaunch({
-        url: '/pages/index/index'
-      });
+      // 再次确认token已保存
+      const savedInfo = uni.getStorageSync('login_info');
+      if (savedInfo && savedInfo.token) {
+        uni.reLaunch({
+          url: '/pages/index/index'
+        });
+      } else {
+        console.error('Token保存失败，请重试');
+        uni.showToast({
+          title: '登录失败，请重试',
+          icon: 'error'
+        });
+      }
     }
   }
 };

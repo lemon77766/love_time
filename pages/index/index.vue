@@ -214,22 +214,24 @@ export default {
       return totalHeightRpx + 20 + 'rpx';
     }
   },
-  onLoad() {
+  async onLoad() {
     this.getSystemInfo();
     this.loadUserInfo();
-    this.loadCoupleInfo();
+    
+    // 先加载情侣信息，再根据绑定状态加载相爱天数
+    await this.loadCoupleInfo();
     this.loadLoveDays();
     
     // 登录成功后检查未读情书
     this.checkUnreadLetters();
   },
   
-  onShow() {
+  async onShow() {
     // 每次页面显示时重新加载用户信息和情侣信息
     this.loadUserInfo();
-    this.loadCoupleInfo();
     
-    // 重新加载相爱天数
+    // 先加载情侣信息，再根据绑定状态加载相爱天数
+    await this.loadCoupleInfo();
     this.loadLoveDays();
   },
   

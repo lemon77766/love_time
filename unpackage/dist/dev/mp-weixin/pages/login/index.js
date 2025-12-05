@@ -239,14 +239,30 @@ const _sfc_main = {
         });
         const code = await this.getWxLoginCode();
         let loginResult;
-        try {
-          loginResult = await utils_http.http.post(utils_config.config.API.LOGIN.WECHAT, {
-            code,
-            userInfo: userProfile.userInfo
-          });
-        } catch (apiError) {
-          common_vendor.index.__f__("error", "at pages/login/index.vue:404", "调用登录API失败", apiError);
-          loginResult = this.createMockLoginResult(code, userProfile.userInfo);
+        let retryCount = 0;
+        const maxRetries = 3;
+        while (retryCount < maxRetries) {
+          try {
+            loginResult = await utils_http.http.post(utils_config.config.API.LOGIN.WECHAT, {
+              code,
+              userInfo: userProfile.userInfo
+            });
+            break;
+          } catch (apiError) {
+            common_vendor.index.__f__("error", "at pages/login/index.vue:410", `登录API调用失败 (第${retryCount + 1}次)`, apiError);
+            retryCount++;
+            if (retryCount >= maxRetries) {
+              common_vendor.index.__f__("warn", "at pages/login/index.vue:415", "所有重试都失败，使用模拟登录");
+              loginResult = this.createMockLoginResult(code, userProfile.userInfo);
+              common_vendor.index.showToast({
+                title: "后端服务连接失败，使用离线模式",
+                icon: "none",
+                duration: 3e3
+              });
+            } else {
+              await new Promise((resolve) => setTimeout(resolve, 1e3));
+            }
+          }
         }
         if (loginResult && (loginResult.code === 200 || loginResult.success)) {
           const userData = loginResult.data || loginResult.result || {};
@@ -274,7 +290,7 @@ const _sfc_main = {
             this.enterApp();
           }, 1500);
         } else {
-          common_vendor.index.__f__("error", "at pages/login/index.vue:447", "登录失败", loginResult);
+          common_vendor.index.__f__("error", "at pages/login/index.vue:469", "登录失败", loginResult);
           common_vendor.index.showToast({
             title: (loginResult == null ? void 0 : loginResult.message) || "登录失败，请重试",
             icon: "none",
@@ -282,7 +298,7 @@ const _sfc_main = {
           });
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:455", "微信登录失败", error);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:477", "微信登录失败", error);
         common_vendor.index.showToast({
           title: "登录异常，请重试",
           icon: "none",
@@ -327,9 +343,18 @@ const _sfc_main = {
     },
     // 进入应用（跳转到首页）
     enterApp() {
-      common_vendor.index.reLaunch({
-        url: "/pages/index/index"
-      });
+      const savedInfo = common_vendor.index.getStorageSync("login_info");
+      if (savedInfo && savedInfo.token) {
+        common_vendor.index.reLaunch({
+          url: "/pages/index/index"
+        });
+      } else {
+        common_vendor.index.__f__("error", "at pages/login/index.vue:532", "Token保存失败，请重试");
+        common_vendor.index.showToast({
+          title: "登录失败，请重试",
+          icon: "error"
+        });
+      }
     }
   }
 };
