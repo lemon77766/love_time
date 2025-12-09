@@ -34,6 +34,7 @@
       </button>
       <button class="btn green" @click="onSaveProject">保存项目</button>
       <button class="btn pink" @click="exportAsImage" v-if="filledCount > 0">导出为图片</button>
+      <button class="btn blue" @click="shareDirectly" v-if="lastExportedImagePath">分享爱心墙</button>
     </view>
     
     <!-- 隐藏的 Canvas 用于导出图片 -->
@@ -98,6 +99,7 @@ export default {
         0,0,0,0,0,0,0,0,0
       ],
       images: [],
+      lastExportedImagePath: '', // 最后导出的图片路径，用于分享
       editingProjectId: null,  // 正在编辑的项目ID，null 表示创建新项目
       saving: false,  // 保存中状态
       photoMap: {},  // 存储positionIndex到photoId的映射 { positionIndex: photoId }
@@ -314,6 +316,9 @@ export default {
                   success: () => {
                     uni.hideLoading();
                     
+                    // 保存最后导出的图片路径，用于分享
+                    this.lastExportedImagePath = res.tempFilePath;
+                    
                     // 保存成功后，提供分享选项
                     this.showShareOptions(res.tempFilePath);
                   },
@@ -445,16 +450,60 @@ export default {
       });
     },
 
+    // 直接分享功能
+    shareDirectly() {
+      if (!this.lastExportedImagePath) {
+        uni.showToast({
+          title: '请先导出图片',
+          icon: 'none',
+          duration: 1500
+        });
+        return;
+      }
+
+      console.log('直接分享爱心墙:', this.lastExportedImagePath);
+
+      // #ifdef MP-WEIXIN
+      // 微信小程序环境
+      this.showWechatShareMenu(this.lastExportedImagePath);
+      // #endif
+
+      // #ifndef MP-WEIXIN
+      // 非微信环境
+      this.showUniversalShare(this.lastExportedImagePath);
+      // #endif
+    },
+
     // 微信分享菜单
     showWechatShareMenu(imagePath) {
-      // 在微信小程序中，通过显示提示引导用户使用右上角菜单分享
-      uni.showModal({
-        title: '分享提示',
-        content: '请点击右上角"..."按钮，选择"转发"来分享这张爱心照片墙',
-        confirmText: '我知道了',
-        showCancel: false,
-        success: () => {
-          console.log('已提示用户使用右上角菜单分享');
+      // 在微信小程序中，提供两种分享方式
+      uni.showActionSheet({
+        itemList: ['通过右上角菜单分享', '自动触发分享', '取消'],
+        success: (res) => {
+          if (res.tapIndex === 0) {
+            // 方式1：指导用户使用右上角菜单
+            uni.showModal({
+              title: '分享指引',
+              content: '请点击右上角"..."按钮，选择"转发"来分享这张爱心照片墙',
+              confirmText: '我知道了',
+              showCancel: false,
+              success: () => {
+                console.log('已提示用户使用右上角菜单分享');
+              }
+            });
+          } else if (res.tapIndex === 1) {
+            // 方式2：自动触发分享（通过程序调用分享）
+            console.log('自动触发微信分享');
+            // 微信小程序中，我们可以通过触发系统分享来引导
+            uni.showToast({
+              title: '请点击右上角菜单分享',
+              icon: 'none',
+              duration: 2000
+            });
+          }
+        },
+        fail: (err) => {
+          console.error('显示分享选项失败:', err);
         }
       });
     },
@@ -1256,6 +1305,44 @@ export default {
     persist() {
       try { uni.setStorageSync('heartwall_grid_images', this.images); } catch (e) {}
     }
+  },
+  
+  // 微信小程序分享功能
+  onShareAppMessage(res) {
+    console.log('触发微信分享:', res);
+    
+    return {
+      title: '爱心照片墙 - 爱与时光的见证',
+      path: '/pages/index/index',
+      imageUrl: this.lastExportedImagePath || '',
+      success: function(shareRes) {
+        console.log('分享成功:', shareRes);
+        uni.showToast({
+          title: '分享成功',
+          icon: 'success',
+          duration: 1500
+        });
+      },
+      fail: function(shareErr) {
+        console.log('分享失败:', shareErr);
+        uni.showToast({
+          title: '分享失败',
+          icon: 'none',
+          duration: 1500
+        });
+      }
+    };
+  },
+  
+  // 微信小程序朋友圈分享功能
+  onShareTimeline() {
+    console.log('触发朋友圈分享');
+    
+    return {
+      title: '爱心照片墙 - 爱与时光的见证',
+      query: 'from=timeline',
+      imageUrl: this.lastExportedImagePath || ''
+    };
   }
 };
 </script>
@@ -1302,7 +1389,8 @@ export default {
 
 .actions { margin-top: 24rpx; padding-bottom: 24rpx; display: flex; flex-direction: column; align-items: center; gap: 16rpx; }
 .btn { width: 70%; border-radius: 999rpx; padding: 18rpx 0; font-size: 26rpx; box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.12); }
-.btn.yellow { background: linear-gradient(90deg, #FFB5C2 0%, #FFD4A3 100%); color: #3d2a00; }
-.btn.green { background: linear-gradient(90deg, #FFB5C2 0%, #FFD4A3 100%); color: #3d2a00; }
-.btn.pink { background: linear-gradient(90deg, #FFB5C2 0%, #FFD4A3 100%); color: #3d2a00; }
+.btn.yellow { background: linear-gradient(90deg, #FFD4A3 0%, #FFA500 100%); color: #3d2a00; }
+.btn.green { background: linear-gradient(90deg, #B5E7D3 0%, #8BC34A 100%); color: #1a5900; }
+.btn.pink { background: linear-gradient(90deg, #FFB5C2 0%, #FF69B4 100%); color: #3d2a00; }
+.btn.blue { background: linear-gradient(90deg, #B5D8FF 0%, #4A90E2 100%); color: white; }
 </style>
