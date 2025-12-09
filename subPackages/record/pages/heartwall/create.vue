@@ -447,26 +447,17 @@ export default {
 
     // 微信分享菜单
     showWechatShareMenu(imagePath) {
-      // 使用 uni.share API 进行微信分享
-      uni.share({
-        provider: 'weixin',
-        scene: 'WXSceneSession',
-        type: 0, // 图文分享
-        imageUrl: imagePath,
+      // 在微信小程序中，通过显示提示引导用户使用右上角菜单分享
+      uni.showModal({
+        title: '分享提示',
+        content: '请点击右上角"..."按钮，选择"转发"来分享这张爱心照片墙',
+        confirmText: '我知道了',
+        showCancel: false,
         success: () => {
-          console.log('微信分享成功');
-          uni.showToast({
-            title: '分享成功',
-            icon: 'success',
-            duration: 1500
-          });
-        },
-        fail: (error) => {
-          console.error('微信分享失败:', error);
-          
-          // 如果分享失败，提示用户使用右上角菜单分享
-          uni.showModal({
-            title: '分享提示',
+          console.log('已提示用户使用右上角菜单分享');
+        }
+      });
+    },
             content: '可以直接点击右上角「...」按钮进行分享',
             showCancel: false,
             confirmText: '知道了'
@@ -477,23 +468,43 @@ export default {
 
     // 通用分享
     showUniversalShare(imagePath) {
-      uni.shareWithSystem({
-        type: 'image',
-        imageUrl: imagePath,
+      try {
+        // 检查是否支持系统分享
+        if (typeof uni.shareWithSystem === 'function') {
+          uni.shareWithSystem({
+            type: 'image',
+            imageUrl: imagePath,
+            success: () => {
+              uni.showToast({
+                title: '分享成功',
+                icon: 'success',
+                duration: 1500
+              });
+            },
+            fail: (error) => {
+              console.error('系统分享失败:', error);
+              this.showShareFallback(imagePath);
+            }
+          });
+        } else {
+          // 不支持系统分享，使用降级方案
+          this.showShareFallback(imagePath);
+        }
+      } catch (error) {
+        console.error('分享功能异常:', error);
+        this.showShareFallback(imagePath);
+      }
+    },
+
+    // 分享功能降级方案
+    showShareFallback(imagePath) {
+      uni.showModal({
+        title: '分享提示',
+        content: '图片已保存到相册，您可以打开相册进行分享',
+        confirmText: '知道了',
+        showCancel: false,
         success: () => {
-          uni.showToast({
-            title: '分享成功',
-            icon: 'success',
-            duration: 1500
-          });
-        },
-        fail: (error) => {
-          console.error('分享失败:', error);
-          uni.showToast({
-            title: '分享失败，请重试',
-            icon: 'none',
-            duration: 1500
-          });
+          console.log('已提示用户通过相册分享');
         }
       });
     },
