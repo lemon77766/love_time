@@ -54,9 +54,11 @@
 }
 .btn { width: 70%; border-radius: 999rpx; padding: 18rpx 0; font-size: 26rpx; box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.12);
 }
-.btn.yellow { background: linear-gradient(90deg, #FFB5C2 0%, #FFD4A3 100%); color: #3d2a00;
+.btn.yellow { background: linear-gradient(90deg, #FFD4A3 0%, #FFA500 100%); color: #3d2a00;
 }
-.btn.green { background: linear-gradient(90deg, #FFB5C2 0%, #FFD4A3 100%); color: #3d2a00;
+.btn.green { background: linear-gradient(90deg, #B5E7D3 0%, #8BC34A 100%); color: #1a5900;
 }
-.btn.pink { background: linear-gradient(90deg, #FFB5C2 0%, #FFD4A3 100%); color: #3d2a00;
+.btn.pink { background: linear-gradient(90deg, #FFB5C2 0%, #FF69B4 100%); color: #3d2a00;
+}
+.btn.blue { background: linear-gradient(90deg, #B5D8FF 0%, #4A90E2 100%); color: white;
 }

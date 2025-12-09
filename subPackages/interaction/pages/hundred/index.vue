@@ -526,7 +526,12 @@ export default {
      * 前端: { id, text, done, image, favorite, ... }
      */
     convertBackendToFrontend(task) {
-      const record = task.userRecord || task.user_record || task.record || task.taskRecord || task.task_record || null;
+      // 处理 records 数组，从中提取当前用户的记录
+      let record = null;
+      if (task.records && Array.isArray(task.records) && task.records.length > 0) {
+        // 优先查找当前用户的记录，如果没有则使用第一个记录
+        record = task.records.find(r => r.source === 'currentUser') || task.records[0];
+      }
 
       const rawPhoto =
         record?.photoUrl ||
@@ -566,7 +571,7 @@ export default {
         category: task.category || 'preset',
         note: record?.note || task.note || '',
         completedAt: record?.completedAt || task.completedAt || null,
-        hasRecord: hasDetailedRecord || Boolean(record?.note), // 是否有详细记录
+        hasRecord: Boolean(hasDetailedRecord || record?.note), // 是否有详细记录
         // 详细记录字段
         location: record?.location || '',
         completedDate: record?.completedDate || '',
@@ -575,9 +580,7 @@ export default {
         weather: record?.weather || '',
         tags: record?.tags || [],
         rating: record?.rating || 0
-      };
-    },
-    
+      };    },    
     /**
      * 数据格式转换：前端格式 -> 后端格式
      */

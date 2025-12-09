@@ -254,7 +254,10 @@ const _sfc_main = {
      * 前端: { id, text, done, image, favorite, ... }
      */
     convertBackendToFrontend(task) {
-      const record = task.userRecord || task.user_record || task.record || task.taskRecord || task.task_record || null;
+      let record = null;
+      if (task.records && Array.isArray(task.records) && task.records.length > 0) {
+        record = task.records.find((r) => r.source === "currentUser") || task.records[0];
+      }
       const rawPhoto = (record == null ? void 0 : record.photoUrl) || (record == null ? void 0 : record.photo_url) || (record == null ? void 0 : record.photo) || (record == null ? void 0 : record.photoPath) || (record == null ? void 0 : record.photo_path) || task.photoUrl || task.photo_url || task.photo || task.photoPath || task.photo_path || (typeof (record == null ? void 0 : record.photo) === "object" ? record.photo.url || record.photo.fullUrl || record.photo.path : typeof task.photo === "object" ? task.photo.url || task.photo.fullUrl || task.photo.path : null);
       const status = (record == null ? void 0 : record.status) || task.status || task.completedStatus || "";
       const completedFlag = typeof status === "string" ? status.toLowerCase() === "completed" || status.toLowerCase() === "done" : Boolean(status);
@@ -268,7 +271,7 @@ const _sfc_main = {
         category: task.category || "preset",
         note: (record == null ? void 0 : record.note) || task.note || "",
         completedAt: (record == null ? void 0 : record.completedAt) || task.completedAt || null,
-        hasRecord: hasDetailedRecord || Boolean(record == null ? void 0 : record.note),
+        hasRecord: Boolean(hasDetailedRecord || (record == null ? void 0 : record.note)),
         // 是否有详细记录
         // 详细记录字段
         location: (record == null ? void 0 : record.location) || "",
@@ -329,13 +332,13 @@ const _sfc_main = {
      * 从本地缓存加载（降级方案）
      */
     loadItemsFromLocal() {
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:639", "💾 [本地缓存] 从本地存储加载数据...");
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:642", "💾 [本地缓存] 从本地存储加载数据...");
       try {
         const data = common_vendor.index.getStorageSync("hundred_items");
         this.items = Array.isArray(data) ? data : [];
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:643", `✅ [本地缓存] 加载了 ${this.items.length} 个任务`);
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:646", `✅ [本地缓存] 加载了 ${this.items.length} 个任务`);
       } catch (e) {
-        common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:645", "❌ [本地缓存] 加载失败:", e);
+        common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:648", "❌ [本地缓存] 加载失败:", e);
         this.items = [];
       }
     },
@@ -345,9 +348,9 @@ const _sfc_main = {
     saveItemsToLocal() {
       try {
         common_vendor.index.setStorageSync("hundred_items", this.items);
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:656", "💾 [本地缓存] 已保存到本地存储");
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:659", "💾 [本地缓存] 已保存到本地存储");
       } catch (e) {
-        common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:658", "❌ [本地缓存] 保存失败:", e);
+        common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:661", "❌ [本地缓存] 保存失败:", e);
       }
     },
     toggleDropdown() {
@@ -376,8 +379,8 @@ const _sfc_main = {
       if (!this.checkLoginRequired()) {
         return;
       }
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:691", "📸 [一百件事] ========== 开始上传图片 ==========");
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:692", "📋 [任务] ID:", item.id, "名称:", item.text);
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:694", "📸 [一百件事] ========== 开始上传图片 ==========");
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:695", "📋 [任务] ID:", item.id, "名称:", item.text);
       common_vendor.index.chooseImage({
         count: 1,
         sizeType: ["compressed"],
@@ -385,7 +388,7 @@ const _sfc_main = {
         success: async (res) => {
           var _a, _b;
           const tempFilePath = res.tempFilePaths[0];
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:700", "✅ [图片选择] 成功，临时路径:", tempFilePath);
+          common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:703", "✅ [图片选择] 成功，临时路径:", tempFilePath);
           const previousImage = item.image;
           const previousDoneState = item.done;
           item.image = tempFilePath;
@@ -397,26 +400,26 @@ const _sfc_main = {
               mask: true
             });
             loadingShown = true;
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:717", "📡 [后端] 上传图片到服务器...");
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:718", "📤 [上传参数] 文件路径:", tempFilePath);
+            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:720", "📡 [后端] 上传图片到服务器...");
+            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:721", "📤 [上传参数] 文件路径:", tempFilePath);
             const uploadResult = await api_hundred.uploadChallengePhoto(tempFilePath);
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:722", "📥 [上传结果] 完整响应:", uploadResult);
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:723", "📥 [上传结果] 数据类型:", typeof uploadResult);
+            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:725", "📥 [上传结果] 完整响应:", uploadResult);
+            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:726", "📥 [上传结果] 数据类型:", typeof uploadResult);
             const uploadedPhotoUrl = uploadResult == null ? void 0 : uploadResult.photoUrl;
             const successMessage = (uploadResult == null ? void 0 : uploadResult.message) || "图片已上传";
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:728", "🖼️ [图片URL] 提取结果:", uploadedPhotoUrl);
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:729", "💬 [成功消息] 提取结果:", successMessage);
+            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:731", "🖼️ [图片URL] 提取结果:", uploadedPhotoUrl);
+            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:732", "💬 [成功消息] 提取结果:", successMessage);
             if (uploadedPhotoUrl) {
-              common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:732", "💾 [本地更新] 更新图片URL:", uploadedPhotoUrl);
+              common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:735", "💾 [本地更新] 更新图片URL:", uploadedPhotoUrl);
               item.image = uploadedPhotoUrl;
             } else {
-              common_vendor.index.__f__("warn", "at subPackages/interaction/pages/hundred/index.vue:735", "⚠️ [警告] 未获取到图片URL，使用临时路径");
+              common_vendor.index.__f__("warn", "at subPackages/interaction/pages/hundred/index.vue:738", "⚠️ [警告] 未获取到图片URL，使用临时路径");
             }
             item.done = true;
             this.saveItemsToLocal();
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:741", "🔄 [同步] 开始同步任务完成状态到后端");
+            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:744", "🔄 [同步] 开始同步任务完成状态到后端");
             await this.syncTaskComplete(item, true, uploadedPhotoUrl);
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:743", "✅ [后端] 图片同步成功");
+            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:746", "✅ [后端] 图片同步成功");
             if (loadingShown) {
               common_vendor.index.hideLoading();
               loadingShown = false;
@@ -424,7 +427,7 @@ const _sfc_main = {
             const toastTitle = successMessage && successMessage.length <= 7 ? successMessage : "图片已上传";
             common_vendor.index.showToast({ title: toastTitle, icon: "success" });
           } catch (error) {
-            common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:753", "❌ [后端] 图片上传或同步失败:", error);
+            common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:756", "❌ [后端] 图片上传或同步失败:", error);
             item.image = previousImage;
             item.done = previousDoneState;
             this.saveItemsToLocal();
@@ -454,10 +457,10 @@ const _sfc_main = {
         },
         fail: (err) => {
           if (err && err.errMsg && err.errMsg.includes("cancel")) {
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:792", "ℹ️ [图片选择] 用户取消操作");
+            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:795", "ℹ️ [图片选择] 用户取消操作");
             return;
           }
-          common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:796", "❌ [图片选择] 失败:", err);
+          common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:799", "❌ [图片选择] 失败:", err);
           common_vendor.index.showToast({ title: "上传失败", icon: "none" });
         }
       });
@@ -472,25 +475,25 @@ const _sfc_main = {
       }
       const newFavoriteState = !item.favorite;
       const action = newFavoriteState ? "收藏" : "取消收藏";
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:814", `⭐ [一百件事] ========== ${action}任务 ==========`);
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:815", "📋 [任务] ID:", item.id, "名称:", item.text);
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:816", "🔄 [状态] 当前:", item.favorite ? "已收藏" : "未收藏", "→ 新状态:", newFavoriteState ? "已收藏" : "未收藏");
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:817", `⭐ [一百件事] ========== ${action}任务 ==========`);
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:818", "📋 [任务] ID:", item.id, "名称:", item.text);
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:819", "🔄 [状态] 当前:", item.favorite ? "已收藏" : "未收藏", "→ 新状态:", newFavoriteState ? "已收藏" : "未收藏");
       item.favorite = newFavoriteState;
       this.saveItemsToLocal();
       try {
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:823", "📡 [前端] 调用 favoriteTask() API");
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:826", "📡 [前端] 调用 favoriteTask() API");
         await api_hundred.favoriteTask({
           taskId: item.id,
           favorited: newFavoriteState
         });
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:829", `✅ [后端] ${action}任务成功`);
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:832", `✅ [后端] ${action}任务成功`);
         common_vendor.index.showToast({
           title: newFavoriteState ? "已收藏" : "取消收藏",
           icon: "none",
           duration: 1500
         });
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:836", `❌ [后端] ${action}任务失败:`, error);
+        common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:839", `❌ [后端] ${action}任务失败:`, error);
         item.favorite = !newFavoriteState;
         this.saveItemsToLocal();
         common_vendor.index.showToast({
@@ -507,8 +510,8 @@ const _sfc_main = {
       if (!this.checkLoginRequired()) {
         return;
       }
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:858", "🗑️ [一百件事] ========== 删除事件 ==========");
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:859", "📋 [任务] ID:", item.id, "名称:", item.text);
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:861", "🗑️ [一百件事] ========== 删除事件 ==========");
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:862", "📋 [任务] ID:", item.id, "名称:", item.text);
       const confirmResult = await new Promise((resolve) => {
         common_vendor.index.showModal({
           title: "确认删除",
@@ -523,7 +526,7 @@ const _sfc_main = {
         });
       });
       if (!confirmResult) {
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:875", "❌ [用户] 取消删除");
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:878", "❌ [用户] 取消删除");
         return;
       }
       try {
@@ -531,7 +534,7 @@ const _sfc_main = {
           title: "删除中...",
           mask: true
         });
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:886", "📡 [前端] 调用 deleteTask() API");
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:889", "📡 [前端] 调用 deleteTask() API");
         await api_hundred.deleteTask(item.id);
         const index = this.items.findIndex((i) => i.id === item.id);
         if (index > -1) {
@@ -539,7 +542,7 @@ const _sfc_main = {
         }
         this.saveItemsToLocal();
         common_vendor.index.hideLoading();
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:899", "✅ [后端] 删除事件成功");
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:902", "✅ [后端] 删除事件成功");
         common_vendor.index.showToast({
           title: "删除成功",
           icon: "success",
@@ -547,7 +550,7 @@ const _sfc_main = {
         });
       } catch (error) {
         common_vendor.index.hideLoading();
-        common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:908", "❌ [后端] 删除事件失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:911", "❌ [后端] 删除事件失败:", error);
         common_vendor.index.showToast({
           title: "删除失败，请重试",
           icon: "none",
@@ -573,10 +576,10 @@ const _sfc_main = {
         common_vendor.index.showToast({ title: "请输入内容", icon: "none" });
         return;
       }
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:935", "✏️ [一百件事] ========== 保存编辑 ==========");
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:936", "📋 [任务] ID:", this.editForm.id);
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:937", "📝 [内容] 旧:", (_a = this.items.find((i) => i.id === this.editForm.id)) == null ? void 0 : _a.text);
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:938", "📝 [内容] 新:", this.editForm.text);
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:938", "✏️ [一百件事] ========== 保存编辑 ==========");
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:939", "📋 [任务] ID:", this.editForm.id);
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:940", "📝 [内容] 旧:", (_a = this.items.find((i) => i.id === this.editForm.id)) == null ? void 0 : _a.text);
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:941", "📝 [内容] 新:", this.editForm.text);
       const index = this.items.findIndex((item) => item.id === this.editForm.id);
       if (index !== -1) {
         const oldText = this.items[index].text;
@@ -586,17 +589,17 @@ const _sfc_main = {
         const item = this.items[index];
         if (item.category === "custom") {
           try {
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:953", "📡 [前端] 自定义任务，尝试同步到后端...");
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:956", "ℹ️ [提示] 当前后端可能不支持编辑接口，仅保存到本地");
+            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:956", "📡 [前端] 自定义任务，尝试同步到后端...");
+            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:959", "ℹ️ [提示] 当前后端可能不支持编辑接口，仅保存到本地");
             common_vendor.index.showToast({ title: "已保存（仅本地）", icon: "success" });
           } catch (error) {
-            common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:959", "❌ [后端] 同步失败:", error);
+            common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:962", "❌ [后端] 同步失败:", error);
             this.items[index].text = oldText;
             this.saveItemsToLocal();
             common_vendor.index.showToast({ title: "保存失败，请重试", icon: "none" });
           }
         } else {
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:966", "ℹ️ [提示] 预设任务仅保存到本地");
+          common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:969", "ℹ️ [提示] 预设任务仅保存到本地");
           common_vendor.index.showToast({ title: "已保存", icon: "success" });
         }
       }
@@ -618,19 +621,19 @@ const _sfc_main = {
      * 同步到后端（仅自定义任务可删除）
      */
     async deleteItem(item) {
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:985", "🗑️ [一百件事] ========== 删除任务 ==========");
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:986", "📋 [任务] ID:", item.id, "名称:", item.text);
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:987", "📂 [类型]", item.category || "未知");
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:988", "🗑️ [一百件事] ========== 删除任务 ==========");
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:989", "📋 [任务] ID:", item.id, "名称:", item.text);
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:990", "📂 [类型]", item.category || "未知");
       if (item.category === "custom") {
         try {
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:992", "📡 [前端] 调用 deleteTask() API");
+          common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:995", "📡 [前端] 调用 deleteTask() API");
           await api_hundred.deleteTask(item.id);
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:995", "✅ [后端] 删除任务成功");
+          common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:998", "✅ [后端] 删除任务成功");
           this.items = this.items.filter((it) => it.id !== item.id);
           this.saveItemsToLocal();
           common_vendor.index.showToast({ title: "已删除", icon: "success" });
         } catch (error) {
-          common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:1003", "❌ [后端] 删除任务失败:", error);
+          common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:1006", "❌ [后端] 删除任务失败:", error);
           common_vendor.index.showToast({
             title: "删除失败，请重试",
             icon: "none",
@@ -638,7 +641,7 @@ const _sfc_main = {
           });
         }
       } else {
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1011", "⚠️ [警告] 预设任务不能删除");
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1014", "⚠️ [警告] 预设任务不能删除");
         common_vendor.index.showToast({
           title: "预设任务不能删除",
           icon: "none",
@@ -651,7 +654,7 @@ const _sfc_main = {
      * 点击事件任何地方都会触发时间记录弹窗
      */
     handleEventClick(item) {
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1024", "🖱️ [事件点击] 点击了事件:", item.text, "状态:", item.done ? "已完成" : "未完成");
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1027", "🖱️ [事件点击] 点击了事件:", item.text, "状态:", item.done ? "已完成" : "未完成");
       if (item.done) {
         if (item.hasRecord) {
           this.openRecordDetail(item);
@@ -672,17 +675,17 @@ const _sfc_main = {
         this.openRecordModal(item);
       } else {
         const action = "取消完成";
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1054", `✅ [一百件事] ========== ${action}任务 ==========`);
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1055", "📋 [任务] ID:", item.id, "名称:", item.text);
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1057", `✅ [一百件事] ========== ${action}任务 ==========`);
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1058", "📋 [任务] ID:", item.id, "名称:", item.text);
         item.done = false;
         item.hasRecord = false;
         this.saveItemsToLocal();
         try {
           await this.syncTaskComplete(item, false, item.image);
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1064", `✅ [后端] ${action}任务成功`);
+          common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1067", `✅ [后端] ${action}任务成功`);
           common_vendor.index.showToast({ title: "已取消完成", icon: "success" });
         } catch (error) {
-          common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:1067", `❌ [后端] ${action}任务失败:`, error);
+          common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:1070", `❌ [后端] ${action}任务失败:`, error);
           item.done = true;
           this.saveItemsToLocal();
           common_vendor.index.showToast({
@@ -697,8 +700,8 @@ const _sfc_main = {
      * 同步任务完成状态到后端
      */
     async syncTaskComplete(item, completed, photoUrl = null) {
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1085", "📡 [前端] 调用 completeTask() API");
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1086", "📤 [参数] taskId:", item.id, "completed:", completed, "photoUrl:", photoUrl || "无");
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1088", "📡 [前端] 调用 completeTask() API");
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1089", "📤 [参数] taskId:", item.id, "completed:", completed, "photoUrl:", photoUrl || "无");
       await api_hundred.completeTask({
         taskId: item.id,
         completed,
@@ -734,23 +737,23 @@ const _sfc_main = {
       if (!this.checkLoginRequired()) {
         return;
       }
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1120", "➕ [一百件事] ========== 添加新任务 ==========");
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1121", "📝 [内容]", this.form.text);
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1123", "➕ [一百件事] ========== 添加新任务 ==========");
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1124", "📝 [内容]", this.form.text);
       const taskData = {
         taskName: this.form.text,
         taskDescription: ""
       };
       try {
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1129", "📡 [前端] 调用 addTask() API");
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1132", "📡 [前端] 调用 addTask() API");
         const response = await api_hundred.addTask(taskData);
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1132", "✅ [后端] 添加任务成功");
-        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1133", "📦 [响应]", response);
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1135", "✅ [后端] 添加任务成功");
+        common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1136", "📦 [响应]", response);
         if (response && response.task) {
           const newTask = this.convertBackendToFrontend(response.task);
           this.items.unshift(newTask);
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1139", "✅ [前端] 新任务已添加到列表，ID:", newTask.id);
+          common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1142", "✅ [前端] 新任务已添加到列表，ID:", newTask.id);
         } else {
-          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/hundred/index.vue:1142", "⚠️ [警告] 后端未返回完整任务对象，创建临时对象");
+          common_vendor.index.__f__("warn", "at subPackages/interaction/pages/hundred/index.vue:1145", "⚠️ [警告] 后端未返回完整任务对象，创建临时对象");
           const maxId = this.items.reduce((m, it) => Math.max(m, it.id || 0), 0);
           const tempTask = {
             id: maxId + 1,
@@ -766,7 +769,7 @@ const _sfc_main = {
         this.closeAdd();
         common_vendor.index.showToast({ title: "已添加", icon: "success" });
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:1160", "❌ [后端] 添加任务失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:1163", "❌ [后端] 添加任务失败:", error);
         common_vendor.index.showToast({
           title: "添加失败，请重试",
           icon: "none",
@@ -779,7 +782,7 @@ const _sfc_main = {
      * 打开记录弹窗（添加模式）
      */
     openRecordModal(item) {
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1175", "📝 [记录] 打开完成记录弹窗:", item.text);
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1178", "📝 [记录] 打开完成记录弹窗:", item.text);
       const now = /* @__PURE__ */ new Date();
       const date = now.toISOString().split("T")[0];
       const time = now.toTimeString().slice(0, 5);
@@ -818,7 +821,7 @@ const _sfc_main = {
      * 打开记录详情
      */
     openRecordDetail(item) {
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1220", "📖 [记录] 查看记录详情:", item.text);
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1223", "📖 [记录] 查看记录详情:", item.text);
       this.detailModal = {
         taskId: item.id,
         taskName: item.text,
@@ -848,7 +851,7 @@ const _sfc_main = {
         sourceType: ["album", "camera"],
         success: async (res) => {
           const tempFilePath = res.tempFilePaths[0];
-          common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1254", "📸 [记录] 选择图片:", tempFilePath);
+          common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1257", "📸 [记录] 选择图片:", tempFilePath);
           this.recordModal.photoUrl = tempFilePath;
           try {
             common_vendor.index.showLoading({
@@ -863,15 +866,15 @@ const _sfc_main = {
             common_vendor.index.hideLoading();
             this.recordModal.photoUrl = "";
             common_vendor.index.showToast({ title: "图片上传失败", icon: "none" });
-            common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:1274", "图片上传失败:", error);
+            common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:1277", "图片上传失败:", error);
           }
         },
         fail: (err) => {
           if (err && err.errMsg && err.errMsg.includes("cancel")) {
-            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1279", "用户取消选择图片");
+            common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1282", "用户取消选择图片");
             return;
           }
-          common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:1282", "选择图片失败:", err);
+          common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:1285", "选择图片失败:", err);
           common_vendor.index.showToast({ title: "选择图片失败", icon: "none" });
         }
       });
@@ -898,7 +901,7 @@ const _sfc_main = {
      * 保存记录
      */
     async saveRecord() {
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1315", "💾 [记录] 保存完成记录");
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1318", "💾 [记录] 保存完成记录");
       if (!this.recordModal.completedDate) {
         common_vendor.index.showToast({ title: "请选择完成日期", icon: "none" });
         return;
@@ -927,7 +930,7 @@ const _sfc_main = {
         common_vendor.index.showToast({ title: "记录保存成功", icon: "success" });
       } catch (error) {
         common_vendor.index.hideLoading();
-        common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:1354", "保存记录失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:1357", "保存记录失败:", error);
         common_vendor.index.showToast({ title: "保存失败，请重试", icon: "none" });
       }
     },
@@ -946,7 +949,7 @@ const _sfc_main = {
      * 编辑记录
      */
     async editRecord() {
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1375", "✏️ [记录] 编辑记录");
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1378", "✏️ [记录] 编辑记录");
       try {
         common_vendor.index.showLoading({
           title: "更新中...",
@@ -969,7 +972,7 @@ const _sfc_main = {
         common_vendor.index.showToast({ title: "记录更新成功", icon: "success" });
       } catch (error) {
         common_vendor.index.hideLoading();
-        common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:1406", "编辑记录失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/interaction/pages/hundred/index.vue:1409", "编辑记录失败:", error);
         common_vendor.index.showToast({ title: "更新失败，请重试", icon: "none" });
       }
     },
@@ -986,7 +989,7 @@ const _sfc_main = {
      * 同步任务完成详情到后端
      */
     async syncTaskCompleteWithDetails(item) {
-      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1425", "🔄 [同步] 发送详细记录到后端");
+      common_vendor.index.__f__("log", "at subPackages/interaction/pages/hundred/index.vue:1428", "🔄 [同步] 发送详细记录到后端");
       await api_hundred.completeTask({
         taskId: item.id,
         completed: item.done,
