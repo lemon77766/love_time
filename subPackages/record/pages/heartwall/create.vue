@@ -313,10 +313,9 @@ export default {
                   filePath: res.tempFilePath,
                   success: () => {
                     uni.hideLoading();
-                    uni.showToast({
-                      title: '精美图片已保存到相册',
-                      icon: 'success'
-                    });
+                    
+                    // 保存成功后，提供分享选项
+                    this.showShareOptions(res.tempFilePath);
                   },
                   fail: (err) => {
                     uni.hideLoading();
@@ -387,6 +386,116 @@ export default {
           icon: 'none'
         });
       }
+    },
+
+    // 显示分享选项
+    showShareOptions(imagePath) {
+      uni.showActionSheet({
+        itemList: ['预览并分享', '保存到相册', '取消'],
+        success: (res) => {
+          if (res.tapIndex === 0) {
+            // 预览并分享
+            this.previewAndShare(imagePath);
+          } else if (res.tapIndex === 1) {
+            // 仅保存到相册
+            uni.showToast({
+              title: '已保存到相册',
+              icon: 'success',
+              duration: 1500
+            });
+          }
+          // tapIndex === 2 是取消，不做任何操作
+        },
+        fail: (err) => {
+          console.error('显示分享选项失败:', err);
+        }
+      });
+    },
+
+    // 预览并分享
+    previewAndShare(imagePath) {
+      // 先预览图片
+      uni.previewImage({
+        current: imagePath,
+        urls: [imagePath],
+        success: () => {
+          console.log('图片预览成功');
+          
+          // 延迟显示分享菜单，让用户先看到预览效果
+          setTimeout(() => {
+            // #ifdef MP-WEIXIN
+            // 微信小程序环境下显示分享菜单
+            this.showWechatShareMenu(imagePath);
+            // #endif
+            
+            // #ifndef MP-WEIXIN
+            // 非微信环境使用通用分享
+            this.showUniversalShare(imagePath);
+            // #endif
+          }, 800);
+        },
+        fail: (error) => {
+          console.error('图片预览失败:', error);
+          uni.showToast({
+            title: '图片预览失败',
+            icon: 'none',
+            duration: 1500
+          });
+        }
+      });
+    },
+
+    // 微信分享菜单
+    showWechatShareMenu(imagePath) {
+      // 使用 uni.share API 进行微信分享
+      uni.share({
+        provider: 'weixin',
+        scene: 'WXSceneSession',
+        type: 0, // 图文分享
+        imageUrl: imagePath,
+        success: () => {
+          console.log('微信分享成功');
+          uni.showToast({
+            title: '分享成功',
+            icon: 'success',
+            duration: 1500
+          });
+        },
+        fail: (error) => {
+          console.error('微信分享失败:', error);
+          
+          // 如果分享失败，提示用户使用右上角菜单分享
+          uni.showModal({
+            title: '分享提示',
+            content: '可以直接点击右上角「...」按钮进行分享',
+            showCancel: false,
+            confirmText: '知道了'
+          });
+        }
+      });
+    },
+
+    // 通用分享
+    showUniversalShare(imagePath) {
+      uni.shareWithSystem({
+        type: 'image',
+        imageUrl: imagePath,
+        success: () => {
+          uni.showToast({
+            title: '分享成功',
+            icon: 'success',
+            duration: 1500
+          });
+        },
+        fail: (error) => {
+          console.error('分享失败:', error);
+          uni.showToast({
+            title: '分享失败，请重试',
+            icon: 'none',
+            duration: 1500
+          });
+        }
+      });
     },
     
     // 在Canvas上绘制图片的异步方法
