@@ -280,6 +280,13 @@ export default {
           day: 'numeric' 
         }), canvasWidth / 2, canvasHeight - 20);
         
+        // 分享提示
+        ctx.setFontSize(20);
+        ctx.setFillStyle('#D48806');
+        ctx.setTextAlign('center');
+        ctx.setTextBaseline('middle');
+        ctx.fillText('长按图片即可分享给TA', canvasWidth / 2, canvasHeight - 110);
+        
         // 绘制底部装饰心形
         ctx.setFontSize(20);
         ctx.setFillStyle('#FF69B4');
@@ -1335,7 +1342,14 @@ export default {
 .title-text { font-size: 36rpx; font-weight: 500; color: #4A4A4A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif; }
 .back-icon { font-size: 50rpx; font-weight: 600; color: #4A4A4A; line-height: 1; }
 
-.center { display: flex; align-items: flex-start; justify-content: center; padding: 80rpx 0 0 60rpx; }
+.center {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 80rpx 32rpx 0;
+  box-sizing: border-box;
+}
 .heart-grid { width: 640rpx; margin: 0 auto; display: grid; grid-template-columns: repeat(9, 1fr); grid-gap: 10rpx; }
 .cell { position: relative; width: 1fr; padding-bottom: 100%; background: rgba(255,255,255,0.7); border-radius: 12rpx; overflow: hidden; }
 .cell.hole { background: transparent; }
@@ -1364,8 +1378,11 @@ export default {
 
 .actions { margin-top: 24rpx; padding-bottom: 24rpx; display: flex; flex-direction: column; align-items: center; gap: 16rpx; }
 .btn { width: 70%; border-radius: 999rpx; padding: 18rpx 0; font-size: 26rpx; box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.12); }
-.btn.yellow { background: linear-gradient(90deg, #FFD4A3 0%, #FFA500 100%); color: #3d2a00; }
-.btn.green { background: linear-gradient(90deg, #B5E7D3 0%, #8BC34A 100%); color: #1a5900; }
-.btn.pink { background: linear-gradient(90deg, #FFB5C2 0%, #FF69B4 100%); color: #3d2a00; }
-.btn.blue { background: linear-gradient(90deg, #B5D8FF 0%, #4A90E2 100%); color: white; }
+.btn.yellow,
+.btn.green,
+.btn.pink,
+.btn.blue {
+  background: linear-gradient(90deg, #FFD4A3 0%, #FFA500 100%);
+  color: #3d2a00;
+}
 </style>

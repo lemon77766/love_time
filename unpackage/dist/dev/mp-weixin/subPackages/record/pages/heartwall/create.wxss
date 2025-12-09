@@ -19,7 +19,13 @@
 }
 .back-icon { font-size: 50rpx; font-weight: 600; color: #4A4A4A; line-height: 1;
 }
-.center { display: flex; align-items: flex-start; justify-content: center; padding: 80rpx 0 0 60rpx;
+.center {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 80rpx 32rpx 0;
+  box-sizing: border-box;
 }
 .heart-grid { width: 640rpx; margin: 0 auto; display: grid; grid-template-columns: repeat(9, 1fr); grid-gap: 10rpx;
 }
@@ -54,11 +60,10 @@
 }
 .btn { width: 70%; border-radius: 999rpx; padding: 18rpx 0; font-size: 26rpx; box-shadow: 0 8rpx 20rpx rgba(0,0,0,0.12);
 }
-.btn.yellow { background: linear-gradient(90deg, #FFD4A3 0%, #FFA500 100%); color: #3d2a00;
-}
-.btn.green { background: linear-gradient(90deg, #B5E7D3 0%, #8BC34A 100%); color: #1a5900;
-}
-.btn.pink { background: linear-gradient(90deg, #FFB5C2 0%, #FF69B4 100%); color: #3d2a00;
-}
-.btn.blue { background: linear-gradient(90deg, #B5D8FF 0%, #4A90E2 100%); color: white;
+.btn.yellow,
+.btn.green,
+.btn.pink,
+.btn.blue {
+  background: linear-gradient(90deg, #FFD4A3 0%, #FFA500 100%);
+  color: #3d2a00;
 }

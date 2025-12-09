@@ -1075,7 +1075,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   } : {}, {
     C: $data.showRecordModal
   }, $data.showRecordModal ? common_vendor.e({
-    D: common_vendor.t($data.recordModal.mode === "add" ? "记录完成时刻" : "查看记录"),
+    D: common_vendor.t($data.recordModal.mode === "add" ? "记录美好瞬间" : "查看记录"),
     E: $data.recordModal.photoUrl
   }, $data.recordModal.photoUrl ? {
     F: $data.recordModal.photoUrl

@@ -117,7 +117,7 @@
     <!-- 完成记录弹窗 -->
     <view v-if="showRecordModal" class="modal-mask" @click="closeRecordModal">
       <view class="record-modal" @click.stop>
-        <text class="modal-title">{{ recordModal.mode === 'add' ? '记录完成时刻' : '查看记录' }}</text>
+        <text class="modal-title">{{ recordModal.mode === 'add' ? '记录美好瞬间' : '查看记录' }}</text>
         
         <scroll-view class="record-form" scroll-y="true">
           <!-- 照片区域 -->
@@ -177,7 +177,7 @@
         <view class="modal-actions">
           <button class="btn secondary" @click="closeRecordModal">取消</button>
           <button v-if="recordModal.mode === 'add'" class="btn primary" @click="saveRecord">保存记录</button>
-          <button v-else class="btn primary" @click="editRecord">编辑记录</button>
+          <button v-else class="btn primary" @click="editRecord">保存更改</button>
         </view>
       </view>
     </view>
@@ -1814,6 +1814,8 @@ export default {
   font-weight: 500; 
   color: #4A4A4A; 
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  display: block;
+  text-align: center;
 }
 
 .form { 
