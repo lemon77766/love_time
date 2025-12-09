@@ -476,41 +476,16 @@ export default {
 
     // 微信分享菜单
     showWechatShareMenu(imagePath) {
-      // 在微信小程序中，提供两种分享方式
-      uni.showActionSheet({
-        itemList: ['通过右上角菜单分享', '自动触发分享', '取消'],
-        success: (res) => {
-          if (res.tapIndex === 0) {
-            // 方式1：指导用户使用右上角菜单
-            uni.showModal({
-              title: '分享指引',
-              content: '请点击右上角"..."按钮，选择"转发"来分享这张爱心照片墙',
-              confirmText: '我知道了',
-              showCancel: false,
-              success: () => {
-                console.log('已提示用户使用右上角菜单分享');
-              }
-            });
-          } else if (res.tapIndex === 1) {
-            // 方式2：自动触发分享（通过程序调用分享）
-            console.log('自动触发微信分享');
-            // 微信小程序中，我们可以通过触发系统分享来引导
-            uni.showToast({
-              title: '请点击右上角菜单分享',
-              icon: 'none',
-              duration: 2000
-            });
-          }
-        },
-        fail: (err) => {
-          console.error('显示分享选项失败:', err);
-        }
-      });
-    },
-            content: '可以直接点击右上角「...」按钮进行分享',
-            showCancel: false,
-            confirmText: '知道了'
-          });
+      console.log('微信分享菜单被调用， imagePath:', imagePath);
+      
+      // 在微信小程序中，只提供指引，不调用uni.share
+      uni.showModal({
+        title: '分享指引',
+        content: '请点击右上角"..."按钮，选择"转发"来分享这张爱心照片墙',
+        confirmText: '我知道了',
+        showCancel: false,
+        success: () => {
+          console.log('已提示用户使用右上角菜单分享');
         }
       });
     },
