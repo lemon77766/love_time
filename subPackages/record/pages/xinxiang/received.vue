@@ -142,12 +142,48 @@ export default {
   },
   onLoad() {
     this.getSystemInfo();
-    this.loadLetters();
+    
+    // 检查是否为游客用户
+    const loginInfo = uni.getStorageSync('login_info');
+    const isGuest = !loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn;
+    
+    if (isGuest) {
+      // 游客模式：使用默认数据，不调用API
+      console.log('👤 游客模式：显示示例收件');
+      this.useGuestMode();
+    } else {
+      // 登录用户：从后端加载数据
+      this.loadLetters();
+    }
   },
   onShow() {
-    this.loadLetters();
+    // 检查是否为游客用户
+    const loginInfo = uni.getStorageSync('login_info');
+    const isGuest = !loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn;
+    
+    if (!isGuest) {
+      this.loadLetters();
+    }
+    // 游客用户不重新加载数据，保持现有的示例数据
   },
   methods: {
+    // 游客模式：使用默认数据
+    useGuestMode() {
+      // 设置示例收件
+      this.letters = [
+        {
+          id: 'sample1',
+          title: '示例收件1',
+          deliveryDate: '2024-01-01',
+          content: '这是一封示例收件的内容...',
+          createTime: new Date().toLocaleDateString(),
+          status: 'RECEIVED'
+        }
+      ];
+      
+      console.log('✅ 游客模式初始化完成');
+    },
+
     goBack() {
       uni.navigateBack();
     },

@@ -201,21 +201,13 @@ export default {
   
   onLoad() {
     this.getSystemInfo();
-    // 检查是否为游客用户，如果是则跳转到登录页面
-    if (isGuestUser()) {
-      this.goToLogin();
-      return;
-    }
+    // 不再强制检查登录，允许用户先浏览页面
     this.loadUserInfo();
     this.loadCoupleInfo();
     this.loadLoveDays();
   },
   onShow() {
-    // 每次页面显示时检查是否为游客用户
-    if (isGuestUser()) {
-      this.goToLogin();
-      return;
-    }
+    // 不再强制检查登录，允许用户先浏览页面
     // 每次页面显示时重新加载用户信息和情侣信息
     this.loadUserInfo();
     this.loadCoupleInfo();
@@ -223,6 +215,29 @@ export default {
   },
   
   methods: {
+    // 检查是否需要登录
+    checkLoginRequired() {
+      const loginInfo = uni.getStorageSync('login_info');
+      // 如果是游客用户，提示需要登录
+      if (!loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn) {
+        uni.showModal({
+          title: '需要登录',
+          content: '该功能需要登录后才能使用，是否前往登录？\n\n您仍然可以继续浏览页面功能。',
+          confirmText: '去登录',
+          cancelText: '继续浏览',
+          success: (res) => {
+            if (res.confirm) {
+              uni.navigateTo({
+                url: '/pages/login/index'
+              });
+            }
+          }
+        });
+        return false;
+      }
+      return true;
+    },
+
     // 跳转到登录页面
     goToLogin() {
       uni.redirectTo({
@@ -232,6 +247,11 @@ export default {
 
     // 跳转到账号与安全页面
     goToProfileSettings() {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       uni.navigateTo({
         url: '/pages/profile/index'
       });
@@ -239,6 +259,11 @@ export default {
     
     // 跳转到编辑资料页面
     goToEdit() {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       console.log('跳转到编辑资料页面');
       uni.navigateTo({
         url: '/subPackages/record/pages/profile/edit',

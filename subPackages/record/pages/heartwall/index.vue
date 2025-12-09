@@ -91,25 +91,105 @@ export default {
       return totalHeightRpx + 20 + 'rpx';
     }
   },
+  // 在页面销毁时取消事件监听
+  beforeDestroy() {
+    uni.$off('heartwallPhotoUpdated', this.handlePhotoUpdated);
+  },
   onLoad() {
     this.getSystemInfo();
   },
   mounted() {
-    this.loadProjects();
+    this.getSystemInfo();
+    // 不再强制要求登录，允许用户先浏览页面
+    // 在用户尝试执行需要登录的操作时再检查登录状态
+    
+    // 检查是否为游客用户
+    const loginInfo = uni.getStorageSync('login_info');
+    const isGuest = !loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn;
+    
+    if (isGuest) {
+      // 游客模式：使用默认数据，不调用API
+      console.log('👤 游客模式：显示示例项目');
+      this.useGuestMode();
+    } else {
+      // 登录用户：从后端加载数据
+      try {
+        this.loadProjects();
+      } catch (error) {
+        console.error('加载服务器数据失败:', error);
+        // 如果加载失败，回退到游客模式
+        this.useGuestMode();
+      }
+    }
+    
+    // 监听照片更新事件，刷新封面图
+    uni.$on('heartwallPhotoUpdated', this.handlePhotoUpdated);
   },
   onShow() {
-    // 每次页面显示时重新加载项目数据（从后端获取）
-    // 清除可能的旧缓存，确保使用最新数据
-    try {
-      uni.removeStorageSync('heartwall_projects');
-    } catch (e) {
-      console.warn('⚠️ [爱心墙页面] 清除缓存失败:', e);
+    // 检查是否为游客用户
+    const loginInfo = uni.getStorageSync('login_info');
+    const isGuest = !loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn;
+    
+    if (!isGuest) {
+      // 只有登录用户才重新加载数据
+      try {
+        uni.removeStorageSync('heartwall_projects');
+      } catch (e) {
+        console.warn('⚠️ [爱心墙页面] 清除缓存失败:', e);
+      }
+      this.loadProjects();
     }
-    this.loadProjects();
+    // 游客用户不重新加载数据，保持现有的示例数据
   },
   methods: {
+    // 游客模式：使用默认数据
+    useGuestMode() {
+      // 设置示例项目
+      this.projects = [
+        {
+          id: 'sample1',
+          title: '示例心形墙1',
+          photos: [],
+          createTime: new Date().toLocaleDateString(),
+          filledCount: 0,
+          projectId: 'sample1'
+        },
+        {
+          id: 'sample2', 
+          title: '示例心形墙2',
+          photos: [],
+          createTime: new Date().toLocaleDateString(),
+          filledCount: 0,
+          projectId: 'sample2'
+        }
+      ];
+      
+      console.log('✅ 游客模式初始化完成');
+    },
+
     goBack() {
       uni.navigateBack();
+    },
+    // 处理照片更新事件
+    handlePhotoUpdated(data) {
+      console.log('📷 [爱心墙页面] 接收到照片更新事件:', data);
+      
+      // 查找对应的项目并更新封面图
+      const projectIndex = this.projects.findIndex(p => p.projectId == data.projectId);
+      if (projectIndex !== -1) {
+        // 如果该项目还没有封面图，或者更新的是第一张照片（positionIndex较小），则更新封面图
+        if (!this.projects[projectIndex].cover || data.positionIndex <= 5) {
+          this.$set(this.projects[projectIndex], 'cover', data.photoUrl);
+          console.log(`✅ [爱心墙页面] 项目 ${data.projectId} 封面图已更新`);
+          
+          // 更新本地缓存
+          try {
+            uni.setStorageSync('heartwall_projects', this.projects);
+          } catch (e) {
+            console.warn('⚠️ [爱心墙页面] 更新本地缓存失败:', e);
+          }
+        }
+      }
     },
     getSystemInfo() {
       const systemInfo = uni.getSystemInfoSync();
@@ -311,6 +391,25 @@ export default {
       }
     },
     startCreate() {
+      // 检查是否需要登录
+      const loginInfo = uni.getStorageSync('login_info');
+      if (!loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn) {
+        uni.showModal({
+          title: '需要登录',
+          content: '创建项目需要登录后才能使用，是否前往登录？\n\n您仍然可以继续浏览现有项目。',
+          confirmText: '去登录',
+          cancelText: '继续浏览',
+          success: (res) => {
+            if (res.confirm) {
+              uni.navigateTo({
+                url: '/pages/login/index'
+              });
+            }
+          }
+        });
+        return;
+      }
+      
       // 清除当前编辑索引，表示创建新项目
       uni.removeStorageSync('heartwall_editing_projectId');
       uni.removeStorageSync('heartwall_grid_images');
@@ -329,6 +428,25 @@ export default {
       uni.navigateTo({ url: '/subPackages/record/pages/heartwall/create' });
     },
     async deleteProject(index) {
+      // 检查是否需要登录
+      const loginInfo = uni.getStorageSync('login_info');
+      if (!loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn) {
+        uni.showModal({
+          title: '需要登录',
+          content: '删除项目需要登录后才能使用，是否前往登录？',
+          confirmText: '去登录',
+          cancelText: '继续浏览',
+          success: (res) => {
+            if (res.confirm) {
+              uni.navigateTo({
+                url: '/pages/login/index'
+              });
+            }
+          }
+        });
+        return;
+      }
+      
       const project = this.projects[index];
       const projectId = project?.projectId || project?.id;
       

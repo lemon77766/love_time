@@ -132,25 +132,28 @@ import {
 export default {
   async onLoad(options) {
     this.getSystemInfo();
-    // 检查登录状态和token
-    const loginInfo = uni.getStorageSync('login_info');
-    if (!loginInfo || !loginInfo.token) {
-      uni.showModal({
-        title: '需要登录',
-        content: '恋与问答功能需要登录后才能使用，请先登录',
-        showCancel: false,
-        success: () => {
-          uni.reLaunch({
-            url: '/pages/login/index'
-          });
-        }
-      });
-      return;
-    }
+    // 不再在页面加载时强制检查登录状态
+    // 而是在用户尝试执行需要登录的操作时再检查
     
-    // 从后端加载问题列表和历史记录
-    await this.loadQuestionsFromServer();
-    await this.loadHistoryFromServer();
+    // 检查是否为游客用户
+    const loginInfo = uni.getStorageSync('login_info');
+    const isGuest = !loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn;
+    
+    if (isGuest) {
+      // 游客模式：使用默认数据，不调用API
+      console.log('👤 游客模式：使用默认问题列表');
+      this.useGuestMode();
+    } else {
+      // 登录用户：从后端加载问题列表和历史记录
+      try {
+        await this.loadQuestionsFromServer();
+        await this.loadHistoryFromServer();
+      } catch (error) {
+        console.error('加载服务器数据失败:', error);
+        // 如果加载失败，回退到游客模式
+        this.useGuestMode();
+      }
+    }
     
     // 处理从历史记录跳转过来的问题ID
     const qid = options && options.qid ? Number(options.qid) : null;
@@ -392,6 +395,47 @@ export default {
     // onLoad 中已经加载，无需重复加载
   },
   methods: {
+    // 游客模式：使用默认数据
+    useGuestMode() {
+      // 设置默认问题列表
+      this.defaultQuestions = [
+        { id: 1, text: '第一次见面是什么时候？', isActive: true },
+        { id: 2, text: '最难忘的一次约会是哪里？', isActive: true },
+        { id: 3, text: '最喜欢对方的哪个特质？', isActive: true },
+        { id: 4, text: '理想中的约会是什么样的？', isActive: true },
+        { id: 5, text: '最想和对方一起去哪里旅行？', isActive: true }
+      ];
+      
+      // 清空自定义问题和历史记录
+      this.customQuestions = [];
+      this.history = [];
+      
+      console.log('✅ 游客模式初始化完成');
+    },
+
+    // 检查是否需要登录
+    checkLoginRequired() {
+      const loginInfo = uni.getStorageSync('login_info');
+      // 如果是游客用户，提示需要登录
+      if (!loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn) {
+        uni.showModal({
+          title: '需要登录',
+          content: '该功能需要登录后才能使用，是否前往登录？\n\n您仍然可以继续浏览问题。',
+          confirmText: '去登录',
+          cancelText: '继续浏览',
+          success: (res) => {
+            if (res.confirm) {
+              uni.navigateTo({
+                url: '/pages/login/index'
+              });
+            }
+          }
+        });
+        return false;
+      }
+      return true;
+    },
+    
     normalizeApiResponse(response, defaultMessage = '操作成功') {
       if (response == null) {
         return { success: false, message: '响应为空', data: null, raw: response };
@@ -560,6 +604,11 @@ export default {
     async submitAnswer() {
       if (!this.myAnswer) {
         uni.showToast({ title: '请填写你的答案', icon: 'none' });
+        return;
+      }
+      
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
         return;
       }
       if (this.currentQuestion.id === 0) {
@@ -912,6 +961,11 @@ export default {
       this.showHistory = false;
     },
     clearHistory() {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       this.history = [];
       this.saveHistory();
       uni.showToast({ title: '记录已清空', icon: 'none' });
@@ -1102,6 +1156,11 @@ export default {
         return;
       }
       
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       try {
         uni.showLoading({ title: '添加中...' });
         
@@ -1181,6 +1240,11 @@ export default {
     },
 
     async deleteCustomQuestion(index) {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       const question = this.customQuestions[index];
       
       uni.showModal({

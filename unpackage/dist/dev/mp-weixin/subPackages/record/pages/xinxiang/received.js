@@ -23,12 +23,37 @@ const _sfc_main = {
   },
   onLoad() {
     this.getSystemInfo();
-    this.loadLetters();
+    const loginInfo = common_vendor.index.getStorageSync("login_info");
+    const isGuest = !loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn;
+    if (isGuest) {
+      common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/received.vue:152", "👤 游客模式：显示示例收件");
+      this.useGuestMode();
+    } else {
+      this.loadLetters();
+    }
   },
   onShow() {
-    this.loadLetters();
+    const loginInfo = common_vendor.index.getStorageSync("login_info");
+    const isGuest = !loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn;
+    if (!isGuest) {
+      this.loadLetters();
+    }
   },
   methods: {
+    // 游客模式：使用默认数据
+    useGuestMode() {
+      this.letters = [
+        {
+          id: "sample1",
+          title: "示例收件1",
+          deliveryDate: "2024-01-01",
+          content: "这是一封示例收件的内容...",
+          createTime: (/* @__PURE__ */ new Date()).toLocaleDateString(),
+          status: "RECEIVED"
+        }
+      ];
+      common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/received.vue:184", "✅ 游客模式初始化完成");
+    },
     goBack() {
       common_vendor.index.navigateBack();
     },
@@ -65,7 +90,7 @@ const _sfc_main = {
           };
         });
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/received.vue:198", "加载收到的信件失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/received.vue:234", "加载收到的信件失败", error);
         this.letters = [];
         if (error.statusCode !== 401) {
           common_vendor.index.showToast({
@@ -172,7 +197,7 @@ const _sfc_main = {
         this.showDetailModal = true;
       } catch (error) {
         common_vendor.index.hideLoading();
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/received.vue:326", "获取信件详情失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/received.vue:362", "获取信件详情失败", error);
         this.currentLetter = letter;
         this.currentIndex = index;
         this.showDetailModal = true;

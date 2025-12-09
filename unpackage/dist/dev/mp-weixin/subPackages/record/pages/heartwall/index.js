@@ -34,23 +34,83 @@ const _sfc_main = {
       return totalHeightRpx + 20 + "rpx";
     }
   },
+  // 在页面销毁时取消事件监听
+  beforeDestroy() {
+    common_vendor.index.$off("heartwallPhotoUpdated", this.handlePhotoUpdated);
+  },
   onLoad() {
     this.getSystemInfo();
   },
   mounted() {
-    this.loadProjects();
+    this.getSystemInfo();
+    const loginInfo = common_vendor.index.getStorageSync("login_info");
+    const isGuest = !loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn;
+    if (isGuest) {
+      common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:112", "👤 游客模式：显示示例项目");
+      this.useGuestMode();
+    } else {
+      try {
+        this.loadProjects();
+      } catch (error) {
+        common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/index.vue:119", "加载服务器数据失败:", error);
+        this.useGuestMode();
+      }
+    }
+    common_vendor.index.$on("heartwallPhotoUpdated", this.handlePhotoUpdated);
   },
   onShow() {
-    try {
-      common_vendor.index.removeStorageSync("heartwall_projects");
-    } catch (e) {
-      common_vendor.index.__f__("warn", "at subPackages/record/pages/heartwall/index.vue:106", "⚠️ [爱心墙页面] 清除缓存失败:", e);
+    const loginInfo = common_vendor.index.getStorageSync("login_info");
+    const isGuest = !loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn;
+    if (!isGuest) {
+      try {
+        common_vendor.index.removeStorageSync("heartwall_projects");
+      } catch (e) {
+        common_vendor.index.__f__("warn", "at subPackages/record/pages/heartwall/index.vue:138", "⚠️ [爱心墙页面] 清除缓存失败:", e);
+      }
+      this.loadProjects();
     }
-    this.loadProjects();
   },
   methods: {
+    // 游客模式：使用默认数据
+    useGuestMode() {
+      this.projects = [
+        {
+          id: "sample1",
+          title: "示例心形墙1",
+          photos: [],
+          createTime: (/* @__PURE__ */ new Date()).toLocaleDateString(),
+          filledCount: 0,
+          projectId: "sample1"
+        },
+        {
+          id: "sample2",
+          title: "示例心形墙2",
+          photos: [],
+          createTime: (/* @__PURE__ */ new Date()).toLocaleDateString(),
+          filledCount: 0,
+          projectId: "sample2"
+        }
+      ];
+      common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:167", "✅ 游客模式初始化完成");
+    },
     goBack() {
       common_vendor.index.navigateBack();
+    },
+    // 处理照片更新事件
+    handlePhotoUpdated(data) {
+      common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:175", "📷 [爱心墙页面] 接收到照片更新事件:", data);
+      const projectIndex = this.projects.findIndex((p) => p.projectId == data.projectId);
+      if (projectIndex !== -1) {
+        if (!this.projects[projectIndex].cover || data.positionIndex <= 5) {
+          this.$set(this.projects[projectIndex], "cover", data.photoUrl);
+          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:183", `✅ [爱心墙页面] 项目 ${data.projectId} 封面图已更新`);
+          try {
+            common_vendor.index.setStorageSync("heartwall_projects", this.projects);
+          } catch (e) {
+            common_vendor.index.__f__("warn", "at subPackages/record/pages/heartwall/index.vue:189", "⚠️ [爱心墙页面] 更新本地缓存失败:", e);
+          }
+        }
+      }
     },
     getSystemInfo() {
       const systemInfo = common_vendor.index.getSystemInfoSync();
@@ -63,12 +123,12 @@ const _sfc_main = {
         return;
       this.loading = true;
       try {
-        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:130", "📡 [爱心墙页面] 开始从后端加载项目列表");
+        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:210", "📡 [爱心墙页面] 开始从后端加载项目列表");
         const response = await api_heartwall.getProjects();
-        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:135", "📡 [爱心墙页面] 后端返回数据:", response);
-        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:136", "📡 [爱心墙页面] response.data:", response.data);
-        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:137", "📡 [爱心墙页面] response.projects:", response.projects);
-        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:138", "📡 [爱心墙页面] response.data[0]:", response.data && response.data[0]);
+        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:215", "📡 [爱心墙页面] 后端返回数据:", response);
+        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:216", "📡 [爱心墙页面] response.data:", response.data);
+        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:217", "📡 [爱心墙页面] response.projects:", response.projects);
+        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:218", "📡 [爱心墙页面] response.data[0]:", response.data && response.data[0]);
         let projectsData = [];
         if (response && response.data) {
           projectsData = Array.isArray(response.data) ? response.data : response.data.projects || [];
@@ -77,17 +137,17 @@ const _sfc_main = {
         } else if (response && response.projects) {
           projectsData = response.projects;
         }
-        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:154", "🔍 [爱心墙页面] 原始项目数据:", projectsData);
-        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:155", "🔍 [爱心墙页面] 原始项目数据长度:", projectsData.length);
+        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:234", "🔍 [爱心墙页面] 原始项目数据:", projectsData);
+        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:235", "🔍 [爱心墙页面] 原始项目数据长度:", projectsData.length);
         if (projectsData.length > 0) {
-          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:157", "🔍 [爱心墙页面] 第一个项目的所有字段:", Object.keys(projectsData[0]));
-          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:158", "🔍 [爱心墙页面] 第一个项目的完整数据:", JSON.stringify(projectsData[0], null, 2));
+          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:237", "🔍 [爱心墙页面] 第一个项目的所有字段:", Object.keys(projectsData[0]));
+          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:238", "🔍 [爱心墙页面] 第一个项目的完整数据:", JSON.stringify(projectsData[0], null, 2));
         }
         this.projects = projectsData.map((project, index) => {
           const projectName = project.projectName !== void 0 && project.projectName !== null ? String(project.projectName).trim() : project.name || "未设置";
-          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:167", `🔍 [爱心墙页面] 项目 ${index} 原始数据:`, project);
-          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:168", `🔍 [爱心墙页面] 项目 ${index} projectName 原始值:`, project.projectName);
-          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:169", `🔍 [爱心墙页面] 项目 ${index} 提取的 projectName:`, projectName);
+          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:247", `🔍 [爱心墙页面] 项目 ${index} 原始数据:`, project);
+          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:248", `🔍 [爱心墙页面] 项目 ${index} projectName 原始值:`, project.projectName);
+          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:249", `🔍 [爱心墙页面] 项目 ${index} 提取的 projectName:`, projectName);
           const mappedProject = {
             projectId: project.projectId || project.id,
             cover: project.cover || project.coverImage || project.coverPhotoUrl || "",
@@ -98,23 +158,23 @@ const _sfc_main = {
             // 保留后端原始数据用于编辑时使用
             _original: project
           };
-          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:181", `🔍 [爱心墙页面] 项目 ${index} 映射后的数据:`, mappedProject);
+          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:261", `🔍 [爱心墙页面] 项目 ${index} 映射后的数据:`, mappedProject);
           return mappedProject;
         });
-        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:185", `✅ [爱心墙页面] 成功加载 ${this.projects.length} 个项目`);
-        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:186", "🔍 [爱心墙页面] 最终项目列表:", this.projects);
+        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:265", `✅ [爱心墙页面] 成功加载 ${this.projects.length} 个项目`);
+        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:266", "🔍 [爱心墙页面] 最终项目列表:", this.projects);
         await this.loadProjectCovers();
         try {
           common_vendor.index.setStorageSync("heartwall_projects", this.projects);
         } catch (e) {
-          common_vendor.index.__f__("warn", "at subPackages/record/pages/heartwall/index.vue:195", "⚠️ [爱心墙页面] 更新本地缓存失败:", e);
+          common_vendor.index.__f__("warn", "at subPackages/record/pages/heartwall/index.vue:275", "⚠️ [爱心墙页面] 更新本地缓存失败:", e);
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/index.vue:198", "❌ [爱心墙页面] 加载项目列表失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/index.vue:278", "❌ [爱心墙页面] 加载项目列表失败:", error);
         try {
           const cached = common_vendor.index.getStorageSync("heartwall_projects");
           if (Array.isArray(cached) && cached.length > 0) {
-            common_vendor.index.__f__("warn", "at subPackages/record/pages/heartwall/index.vue:204", "⚠️ [爱心墙页面] 使用本地缓存数据作为降级方案");
+            common_vendor.index.__f__("warn", "at subPackages/record/pages/heartwall/index.vue:284", "⚠️ [爱心墙页面] 使用本地缓存数据作为降级方案");
             this.projects = cached;
             common_vendor.index.showToast({
               title: "网络异常，已加载本地数据",
@@ -139,21 +199,21 @@ const _sfc_main = {
     // 为没有封面图的项目获取第一张照片作为封面图
     async loadProjectCovers() {
       try {
-        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:231", "🖼️ [爱心墙页面] 开始加载项目封面图");
+        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:311", "🖼️ [爱心墙页面] 开始加载项目封面图");
         const projectsWithoutCover = this.projects.map((project, index) => ({ project, index })).filter(({ project }) => !project.cover || project.cover === "");
-        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:238", `🖼️ [爱心墙页面] 需要加载封面图的项目数量: ${projectsWithoutCover.length}`);
+        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:318", `🖼️ [爱心墙页面] 需要加载封面图的项目数量: ${projectsWithoutCover.length}`);
         if (projectsWithoutCover.length === 0) {
-          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:241", "✅ [爱心墙页面] 所有项目都有封面图，无需加载");
+          common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:321", "✅ [爱心墙页面] 所有项目都有封面图，无需加载");
           return;
         }
         const coverPromises = projectsWithoutCover.map(async ({ project, index }) => {
           try {
             const projectId = project.projectId || project.id;
             if (!projectId) {
-              common_vendor.index.__f__("warn", "at subPackages/record/pages/heartwall/index.vue:250", `⚠️ [爱心墙页面] 项目 ${index} 没有 projectId，跳过加载封面图`);
+              common_vendor.index.__f__("warn", "at subPackages/record/pages/heartwall/index.vue:330", `⚠️ [爱心墙页面] 项目 ${index} 没有 projectId，跳过加载封面图`);
               return { index, cover: null };
             }
-            common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:254", `📷 [爱心墙页面] 获取项目 ${index} (ID: ${projectId}) 的第一张照片`);
+            common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:334", `📷 [爱心墙页面] 获取项目 ${index} (ID: ${projectId}) 的第一张照片`);
             const photosResponse = await api_heartwall.getProjectPhotos(projectId, { page: 1, pageSize: 1 });
             let photosData = [];
             if (photosResponse && photosResponse.data) {
@@ -168,13 +228,13 @@ const _sfc_main = {
               const firstPhoto = photosData[0];
               const rawUrl = firstPhoto.photoUrl || firstPhoto.photo_url || firstPhoto.thumbnailUrl || firstPhoto.thumbnail_url || "";
               coverUrl = processImageUrl(rawUrl);
-              common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:276", `✅ [爱心墙页面] 项目 ${index} 找到封面图 - 原始URL: ${rawUrl}, 处理后URL: ${coverUrl}`);
+              common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:356", `✅ [爱心墙页面] 项目 ${index} 找到封面图 - 原始URL: ${rawUrl}, 处理后URL: ${coverUrl}`);
             } else {
-              common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:278", `⚠️ [爱心墙页面] 项目 ${index} 没有照片，无法设置封面图`);
+              common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:358", `⚠️ [爱心墙页面] 项目 ${index} 没有照片，无法设置封面图`);
             }
             return { index, cover: coverUrl };
           } catch (error) {
-            common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/index.vue:283", `❌ [爱心墙页面] 获取项目 ${index} 封面图失败:`, error);
+            common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/index.vue:363", `❌ [爱心墙页面] 获取项目 ${index} 封面图失败:`, error);
             return { index, cover: null };
           }
         });
@@ -182,20 +242,37 @@ const _sfc_main = {
         coverResults.forEach(({ index, cover }) => {
           if (cover) {
             this.$set(this.projects[index], "cover", cover);
-            common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:296", `✅ [爱心墙页面] 项目 ${index} 封面图已更新:`, cover);
+            common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:376", `✅ [爱心墙页面] 项目 ${index} 封面图已更新:`, cover);
           }
         });
         try {
           common_vendor.index.setStorageSync("heartwall_projects", this.projects);
         } catch (e) {
-          common_vendor.index.__f__("warn", "at subPackages/record/pages/heartwall/index.vue:304", "⚠️ [爱心墙页面] 更新本地缓存失败:", e);
+          common_vendor.index.__f__("warn", "at subPackages/record/pages/heartwall/index.vue:384", "⚠️ [爱心墙页面] 更新本地缓存失败:", e);
         }
-        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:307", "✅ [爱心墙页面] 封面图加载完成");
+        common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:387", "✅ [爱心墙页面] 封面图加载完成");
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/index.vue:309", "❌ [爱心墙页面] 加载封面图失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/index.vue:389", "❌ [爱心墙页面] 加载封面图失败:", error);
       }
     },
     startCreate() {
+      const loginInfo = common_vendor.index.getStorageSync("login_info");
+      if (!loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn) {
+        common_vendor.index.showModal({
+          title: "需要登录",
+          content: "创建项目需要登录后才能使用，是否前往登录？\n\n您仍然可以继续浏览现有项目。",
+          confirmText: "去登录",
+          cancelText: "继续浏览",
+          success: (res) => {
+            if (res.confirm) {
+              common_vendor.index.navigateTo({
+                url: "/pages/login/index"
+              });
+            }
+          }
+        });
+        return;
+      }
       common_vendor.index.removeStorageSync("heartwall_editing_projectId");
       common_vendor.index.removeStorageSync("heartwall_grid_images");
       common_vendor.index.navigateTo({ url: "/subPackages/record/pages/heartwall/create" });
@@ -211,6 +288,23 @@ const _sfc_main = {
       common_vendor.index.navigateTo({ url: "/subPackages/record/pages/heartwall/create" });
     },
     async deleteProject(index) {
+      const loginInfo = common_vendor.index.getStorageSync("login_info");
+      if (!loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn) {
+        common_vendor.index.showModal({
+          title: "需要登录",
+          content: "删除项目需要登录后才能使用，是否前往登录？",
+          confirmText: "去登录",
+          cancelText: "继续浏览",
+          success: (res) => {
+            if (res.confirm) {
+              common_vendor.index.navigateTo({
+                url: "/pages/login/index"
+              });
+            }
+          }
+        });
+        return;
+      }
       const project = this.projects[index];
       const projectId = (project == null ? void 0 : project.projectId) || (project == null ? void 0 : project.id);
       common_vendor.index.showModal({
@@ -220,9 +314,9 @@ const _sfc_main = {
           if (res.confirm) {
             try {
               if (projectId) {
-                common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:343", `🗑️ [爱心墙页面] 开始删除项目 ID: ${projectId}`);
+                common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:461", `🗑️ [爱心墙页面] 开始删除项目 ID: ${projectId}`);
                 await api_heartwall.deleteProject(projectId);
-                common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:345", `✅ [爱心墙页面] 项目删除成功 ID: ${projectId}`);
+                common_vendor.index.__f__("log", "at subPackages/record/pages/heartwall/index.vue:463", `✅ [爱心墙页面] 项目删除成功 ID: ${projectId}`);
               }
               this.projects.splice(index, 1);
               try {
@@ -231,7 +325,7 @@ const _sfc_main = {
               }
               common_vendor.index.showToast({ title: "已删除", icon: "success" });
             } catch (error) {
-              common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/index.vue:358", "❌ [爱心墙页面] 删除项目失败:", error);
+              common_vendor.index.__f__("error", "at subPackages/record/pages/heartwall/index.vue:476", "❌ [爱心墙页面] 删除项目失败:", error);
               common_vendor.index.showToast({
                 title: error.message || "删除失败，请重试",
                 icon: "none"

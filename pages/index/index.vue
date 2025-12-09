@@ -242,7 +242,7 @@ export default {
       if (isGuestUser()) {
         uni.showModal({
           title: '需要登录',
-          content: '该功能需要登录后才能使用，是否前往登录？',
+          content: '该功能需要登录后才能使用，是否前往登录？\n\n您仍然可以继续浏览页面功能。',
           confirmText: '去登录',
           cancelText: '继续浏览',
           success: (res) => {
@@ -278,10 +278,8 @@ export default {
     
     // 跳转到第一个纪念日
     goToFirstAnniversary() {
-      // 检查是否需要登录
-      if (!this.checkLocalLoginRequired()) return;
-      
-      // 跳转到纪念日页面
+      // 不再检查是否需要登录，允许用户先进入页面浏览
+      // 用户可以在页面内执行操作时再选择登录
       uni.navigateTo({
         url: '/subPackages/record/pages/anniversary/index'
       });
@@ -327,37 +325,29 @@ export default {
       // #endif
     },
     goToSweetQA() {
-      // 检查是否需要登录
-      if (!this.checkLocalLoginRequired()) return;
-      
-      // 跳转到恋与问答页面
+      // 不再检查是否需要登录，允许用户先进入页面浏览
+      // 用户可以在页面内执行操作时再选择登录
       uni.navigateTo({
         url: '/subPackages/interaction/pages/qna/index'
       });
     },
     goToHundredThings() {
-      // 检查是否需要登录
-      if (!this.checkLocalLoginRequired()) return;
-      
-      // 跳转到一百件事页面
+      // 不再检查是否需要登录，允许用户先进入页面浏览
+      // 用户可以在页面内执行操作时再选择登录
       uni.navigateTo({
         url: '/subPackages/interaction/pages/hundred/index'
       });
     },
     goToHeartWall() {
-      // 检查是否需要登录
-      if (!this.checkLocalLoginRequired()) return;
-      
-      // 跳转到心形墙页面
+      // 不再检查是否需要登录，允许用户先进入页面浏览
+      // 用户可以在页面内执行操作时再选择登录
       uni.navigateTo({
         url: '/subPackages/record/pages/heartwall/index'
       });
     },
     goToFutureLetter() {
-      // 检查是否需要登录
-      if (!this.checkLocalLoginRequired()) return;
-      
-      // 跳转到未来情书页面
+      // 不再检查是否需要登录，允许用户先进入页面浏览
+      // 用户可以在页面内执行操作时再选择登录
       uni.navigateTo({
         url: '/subPackages/record/pages/xinxiang/index'
       });
@@ -593,23 +583,16 @@ export default {
     
     // 跳转到邀请页面
     goToInvite() {
-      // 检查是否需要登录
-      if (!this.checkLocalLoginRequired()) return;
-      
+      // 不再检查是否需要登录，允许用户先进入页面浏览
+      // 用户可以在页面内执行操作时再选择登录
       uni.navigateTo({
         url: '/pages/invite/index'
       });
     },
     // 跳转到个人中心
     goToProfile() {
-      // 检查是否为游客用户，如果是则跳转到登录页面
-      if (isGuestUser()) {
-        uni.navigateTo({
-          url: '/pages/login/index'
-        });
-        return;
-      }
-      
+      // 不再检查是否需要登录，允许用户先进入页面浏览
+      // 用户可以在页面内执行操作时再选择登录
       uni.navigateTo({
         url: '/pages/we/index'
       });
@@ -658,78 +641,8 @@ export default {
 };
 </script>
 
-<style>
-/* 自定义导航栏样式 */
-.custom-navbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 9999;
-  background-color: #FFFAF4;
-  overflow: hidden;
-}
-
-.navbar-gradient-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 200%;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-}
-
-.status-bar {
-  width: 100%;
-  background: transparent;
-  position: relative;
-  z-index: 1;
-}
-
-.navbar-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 30rpx;
-  box-sizing: border-box;
-  position: relative;
-  z-index: 1;
-}
-
-.navbar-title {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  text-align: left;
-}
-
-.title-text {
-  font-size: 36rpx;
-  font-weight: 500;
-  color: #4A4A4A;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  margin-left: 16rpx;
-}
-
-.navbar-heart-icon {
-  margin-right: 16rpx;
-}
-
-.navbar-right {
-  width: 80rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-
-.navbar-right:active {
-  opacity: 0.6;
-}
+<style lang="scss">
+@import '@/styles/common.scss';
 
 .container {
   background-color: #FFFAF4;
@@ -739,42 +652,6 @@ export default {
 
 .content-area {
   padding: 30rpx 24rpx;
-}
-
-/* 卡片通用样式 - glass-card风格 */
-.card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border-radius: 16rpx;
-  margin-bottom: 32rpx;
-  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
-  overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.story-card {
-  cursor: pointer;
-}
-
-.story-card:active {
-  transform: scale(0.98);
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
-}
-
-.card-header {
-  padding: 32rpx 30rpx 24rpx;
-}
-
-.card-title {
-  font-size: 32rpx;
-  font-weight: 500;
-  color: #4A4A4A;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-}
-
-.card-body {
-  padding: 0 30rpx 32rpx;
 }
 
 /* 心语心愿卡片 */

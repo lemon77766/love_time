@@ -43,12 +43,45 @@ const _sfc_main = {
   },
   onLoad() {
     this.getSystemInfo();
-    this.loadLetters();
+    const loginInfo = common_vendor.index.getStorageSync("login_info");
+    const isGuest = !loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn;
+    if (isGuest) {
+      common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/history.vue:206", "👤 游客模式：显示示例信件");
+      this.useGuestMode();
+    } else {
+      this.loadLetters();
+    }
   },
   onShow() {
-    this.loadLetters();
+    const loginInfo = common_vendor.index.getStorageSync("login_info");
+    const isGuest = !loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn;
+    if (!isGuest) {
+      this.loadLetters();
+    }
   },
   methods: {
+    // 游客模式：使用默认数据
+    useGuestMode() {
+      this.letters = [
+        {
+          id: "sample1",
+          title: "示例情书1",
+          deliveryDate: "2024-01-01",
+          content: "这是一封示例情书的内容...",
+          createTime: (/* @__PURE__ */ new Date()).toLocaleDateString(),
+          status: "DRAFT"
+        },
+        {
+          id: "sample2",
+          title: "示例情书2",
+          deliveryDate: "2024-02-14",
+          content: "这是另一封示例情书的内容...",
+          createTime: (/* @__PURE__ */ new Date()).toLocaleDateString(),
+          status: "SENT"
+        }
+      ];
+      common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/history.vue:246", "✅ 游客模式初始化完成");
+    },
     goBack() {
       common_vendor.index.navigateBack();
     },
@@ -87,16 +120,16 @@ const _sfc_main = {
           };
         });
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:252", "加载信件失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:296", "加载信件失败", error);
         try {
           const localLetters = common_vendor.index.getStorageSync("xinxiang_letters") || [];
           this.letters = localLetters.filter((letter) => letter.status !== "SENT");
         } catch (e) {
-          common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:258", "加载本地信件失败", e);
+          common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:302", "加载本地信件失败", e);
           this.letters = [];
         }
         if (error.statusCode !== 401) {
-          common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:265", "从后端加载信件失败，使用本地数据");
+          common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:309", "从后端加载信件失败，使用本地数据");
         }
       }
       try {
@@ -122,9 +155,9 @@ const _sfc_main = {
           };
         });
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:294", "加载已发送信件失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:338", "加载已发送信件失败", error);
         if (error.statusCode !== 401) {
-          common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:296", "从后端加载已发送信件失败");
+          common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:340", "从后端加载已发送信件失败");
         }
       }
     },
@@ -243,7 +276,7 @@ const _sfc_main = {
         this.showDetailModal = true;
       } catch (error) {
         common_vendor.index.hideLoading();
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:435", "获取信件详情失败", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:479", "获取信件详情失败", error);
         this.currentLetter = letter;
         this.currentIndex = index;
         this.showDetailModal = true;
@@ -300,12 +333,12 @@ const _sfc_main = {
               common_vendor.index.setStorageSync("xinxiang_letters", localLetters);
             }
           } catch (e) {
-            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:505", "更新本地存储失败", e);
+            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/history.vue:549", "更新本地存储失败", e);
           }
           common_vendor.index.showToast({ title: "已删除", icon: "success" });
         } catch (error) {
           common_vendor.index.hideLoading();
-          common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:511", "删除信件失败:", error);
+          common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/history.vue:555", "删除信件失败:", error);
           common_vendor.index.showToast({
             title: error.message || "删除失败，请重试",
             icon: "none"

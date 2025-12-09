@@ -239,10 +239,82 @@ export default {
     const day = String(today.getDate()).padStart(2, '0');
     this.newAnniversary.date = `${year}-${month}-${day}`;
     
-    // 加载纪念日数据（从后端获取）
-    this.loadAnniversaryData();
+    // 检查是否为游客用户
+    const loginInfo = uni.getStorageSync('login_info');
+    const isGuest = !loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn;
+    
+    if (isGuest) {
+      // 游客模式：使用默认数据，不调用API
+      console.log('👤 游客模式：显示示例纪念日');
+      this.useGuestMode();
+    } else {
+      // 登录用户：从后端加载数据
+      try {
+        this.loadAnniversaryData();
+      } catch (error) {
+        console.error('加载服务器数据失败:', error);
+        // 如果加载失败，回退到游客模式
+        this.useGuestMode();
+      }
+    }
   },
   methods: {
+    // 游客模式：使用默认数据
+    useGuestMode() {
+      // 设置示例纪念日
+      this.anniversaryList = [
+        {
+          id: 'sample1',
+          title: '第一次见面',
+          date: '2023-01-01',
+          icon: 'mdi:calendar-heart',
+          color: '#FF91A4',
+          remind: false
+        },
+        {
+          id: 'sample2',
+          title: '第一次约会',
+          date: '2023-02-14',
+          icon: 'mdi:heart',
+          color: '#FF6B6B',
+          remind: true
+        },
+        {
+          id: 'sample3',
+          title: '确定关系',
+          date: '2023-03-15',
+          icon: 'mdi:star',
+          color: '#FFD93D',
+          remind: true
+        }
+      ];
+      
+      console.log('✅ 游客模式初始化完成');
+    },
+
+    // 检查是否需要登录
+    checkLoginRequired() {
+      const loginInfo = uni.getStorageSync('login_info');
+      // 如果是游客用户，提示需要登录
+      if (!loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn) {
+        uni.showModal({
+          title: '需要登录',
+          content: '该功能需要登录后才能使用，是否前往登录？\\n\\n您仍然可以继续浏览纪念日。',
+          confirmText: '去登录',
+          cancelText: '继续浏览',
+          success: (res) => {
+            if (res.confirm) {
+              uni.navigateTo({
+                url: '/pages/login/index'
+              });
+            }
+          }
+        });
+        return false;
+      }
+      return true;
+    },
+
     goBack() {
       uni.navigateBack();
     },
@@ -339,6 +411,11 @@ export default {
     },
     // 切换提醒状态
     async toggleRemind(index) {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       try {
         const item = this.anniversaryList[index];
         const newRemindState = !item.remind;
@@ -390,6 +467,11 @@ export default {
     },
     // 添加纪念日
     async addAnniversary() {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       if (!this.newAnniversary.title) {
         uni.showToast({
           title: '请输入纪念日标题',
@@ -481,6 +563,11 @@ export default {
     },
     // 删除纪念日
     async deleteAnniversary(index) {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       // 确保index有效
       if (index < 0 || index >= this.anniversaryList.length) {
         console.error('无效的索引:', index);
@@ -523,6 +610,11 @@ export default {
     },
     // 编辑纪念日
     editAnniversary(index) {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       const item = { ...this.anniversaryList[index] };
       this.editingAnniversary = {
         id: item.id,
@@ -536,6 +628,11 @@ export default {
     },
     // 保存编辑的纪念日
     async saveEditedAnniversary() {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       if (!this.editingAnniversary.title) {
         uni.showToast({
           title: '请输入纪念日标题',

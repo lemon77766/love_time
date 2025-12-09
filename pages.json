@@ -89,12 +89,6 @@
       "name": "record",
       "pages": [
         {
-          "path": "pages/jiyi/index",
-          "style": {
-            "navigationBarTitleText": "记忆"
-          }
-        },
-        {
           "path": "pages/heartwall/index",
           "style": {
             "navigationBarTitleText": "爱心照片墙",

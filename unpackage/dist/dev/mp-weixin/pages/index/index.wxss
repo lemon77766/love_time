@@ -1,4 +1,59 @@
-
+/**
+ * 这里是uni-app内置的常用样式变量
+ *
+ * uni-app 官方扩展插件及插件市场（https://ext.dcloud.net.cn）上很多三方插件均使用了这些样式变量
+ * 如果你是插件开发者，建议你使用scss预处理，并在插件代码中直接使用这些变量（无需 import 这个文件），方便用户通过搭积木的方式开发整体风格一致的App
+ *
+ */
+/**
+ * 如果你是App开发者（插件使用者），你可以通过修改这些变量来定制自己的插件主题，实现自定义主题功能
+ *
+ * 如果你的项目同样使用了scss预处理，你也可以直接在你的 scss 代码中使用如下变量，同时无需 import 这个文件
+ */
+/* 颜色变量 */
+/* 行为相关颜色 */
+/* 文字基本颜色 */
+/* 背景颜色 */
+/* 边框颜色 */
+/* 尺寸变量 */
+/* 文字尺寸 */
+/* 图片尺寸 */
+/* Border Radius */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+/* 公共样式文件 */
+/* 卡片通用样式 - glass-card风格 */
+.card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: 16rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.story-card {
+  cursor: pointer;
+}
+.story-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+.card-header {
+  padding: 32rpx 30rpx 24rpx;
+}
+.card-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #4A4A4A;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+.card-body {
+  padding: 0 30rpx 32rpx;
+}
 /* 自定义导航栏样式 */
 .custom-navbar {
   position: fixed;
@@ -45,7 +100,7 @@
   font-size: 36rpx;
   font-weight: 500;
   color: #4A4A4A;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   margin-left: 16rpx;
 }
 .navbar-heart-icon {
@@ -69,38 +124,6 @@
 .content-area {
   padding: 30rpx 24rpx;
 }
-
-/* 卡片通用样式 - glass-card风格 */
-.card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border-radius: 16rpx;
-  margin-bottom: 32rpx;
-  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
-  overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.story-card {
-  cursor: pointer;
-}
-.story-card:active {
-  transform: scale(0.98);
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
-}
-.card-header {
-  padding: 32rpx 30rpx 24rpx;
-}
-.card-title {
-  font-size: 32rpx;
-  font-weight: 500;
-  color: #4A4A4A;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-}
-.card-body {
-  padding: 0 30rpx 32rpx;
-}
-
 /* 心语心愿卡片 */
 .wish-body {
   padding-top: 8rpx;
@@ -110,9 +133,8 @@
   color: #666;
   line-height: 1.9;
   font-weight: 400;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
-
 /* 功能卡片网格 */
 .grid-body {
   padding: 20rpx 30rpx 32rpx;
@@ -132,7 +154,7 @@
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   border-radius: 16rpx;
-  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255,255,255,0.5);
+  box-shadow: 0 8rpx 12rpx rgba(0, 0, 0, 0.04), inset 0 0 0 2rpx rgba(255, 255, 255, 0.5);
   transition: all 0.2s ease;
   cursor: pointer;
 }
@@ -152,9 +174,8 @@
   font-weight: 500;
   text-align: center;
   margin-top: 16rpx;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
-
 /* 情侣状态卡片 */
 .couple-status-card {
   padding: 32rpx 30rpx;
@@ -202,9 +223,11 @@
   transform: scale(1.1);
 }
 @keyframes heartbeat {
-0%, 100% { transform: scale(1);
+0%, 100% {
+    transform: scale(1);
 }
-50% { transform: scale(1.1);
+50% {
+    transform: scale(1.1);
 }
 }
 .couple-status-info {
@@ -215,7 +238,7 @@
   font-size: 36rpx;
   font-weight: 700;
   color: #4A4A4A;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 .couple-stats {
   display: flex;
@@ -237,7 +260,7 @@
 .stat-text {
   font-size: 24rpx;
   color: #666;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   margin-top: 8rpx;
 }
 .invite-hint {
@@ -256,7 +279,6 @@
   font-size: 26rpx;
   font-weight: 500;
 }
-
 /* 近期动态 */
 .recent-activities-card {
   padding-bottom: 0;
@@ -283,5 +305,5 @@
   flex: 1;
   font-size: 26rpx;
   color: #666;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }

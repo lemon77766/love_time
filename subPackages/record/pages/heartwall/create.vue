@@ -166,6 +166,11 @@ export default {
         return;
       }
       
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       uni.showLoading({ title: '正在生成精美图片...', mask: true });
       
       try {
@@ -523,6 +528,11 @@ export default {
       // #endif
     },
     async onBatchUpload() {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       // 计算空位数量
       const emptySlots = this.getEmptySlots();
       if (emptySlots.length === 0) {
@@ -686,6 +696,11 @@ export default {
     async onPickSingle(idx) {
       if (!this.heartMask[idx]) return;
       
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       try {
         // 选择新图片
         const res = await uni.chooseImage({ 
@@ -701,6 +716,8 @@ export default {
         const newImagePath = res.tempFilePaths[0];
         const isExistingPhoto = this.images[idx] && this.editingProjectId;
         const photoId = this.photoMap[idx];
+        
+        console.log(`🔄 [爱心墙创建页] 检查替换条件: isExistingPhoto=${isExistingPhoto}, photoId=${photoId}, images[idx]=${!!this.images[idx]}, editingProjectId=${this.editingProjectId}`);
         
         // 如果已有项目且有photoId，说明是替换已有照片
         if (isExistingPhoto && photoId) {
@@ -722,14 +739,23 @@ export default {
             };
             
             console.log('📝 [爱心墙创建页] 更新后端照片信息...');
-            await updatePhoto(photoId, updateData);
-            console.log('✅ [爱心墙创建页] 后端照片更新成功');
+            console.log(`📝 [爱心墙创建页] 更新参数: photoId=${photoId}, updateData=`, updateData);
+            const updateResult = await updatePhoto(photoId, updateData);
+            console.log('✅ [爱心墙创建页] 后端照片更新成功', updateResult);
             
             // 3. 更新前端显示
             this.$set(this.images, idx, photoUrl);
             this.persist();
             
             uni.hideLoading();
+            
+            // 通知项目列表页面需要刷新封面图
+            uni.$emit('heartwallPhotoUpdated', {
+              projectId: this.editingProjectId,
+              positionIndex: idx,
+              photoUrl: photoUrl
+            });
+            
             uni.showToast({ 
               title: '替换成功', 
               icon: 'success',
@@ -738,10 +764,19 @@ export default {
           } catch (error) {
             console.error('❌ [爱心墙创建页] 替换照片失败:', error);
             uni.hideLoading();
+            
+            // 提供更详细的错误信息
+            let errorMsg = error.message || '替换失败，请重试';
+            if (error.message && error.message.includes('照片不存在')) {
+              errorMsg = '照片不存在，请刷新页面后重试';
+            } else if (error.statusCode === 500) {
+              errorMsg = '服务器错误，请稍后重试';
+            }
+            
             uni.showToast({ 
-              title: error.message || '替换失败，请重试', 
+              title: errorMsg,
               icon: 'none',
-              duration: 2000
+              duration: 3000
             });
           }
         } else {
@@ -796,7 +831,8 @@ export default {
         this.photoMap = {};
         photosData.forEach(photo => {
           const positionIndex = photo.positionIndex || photo.position_index || 0;
-          const photoId = photo.photoId || photo.photo_id || photo.id;
+          // 更完善的photoId提取逻辑
+          const photoId = photo.id || photo.photoId || photo.photo_id;
           if (positionIndex >= 0 && positionIndex < this.heartMask.length) {
             // 优先使用photoUrl，如果没有则使用thumbnailUrl
             const rawUrl = photo.photoUrl || photo.photo_url || photo.thumbnailUrl || photo.thumbnail_url || '';
@@ -807,6 +843,9 @@ export default {
             // 保存photoId映射
             if (photoId) {
               this.$set(this.photoMap, positionIndex, photoId);
+              console.log(`📷 [爱心墙创建页] 保存照片映射: positionIndex=${positionIndex}, photoId=${photoId}`);
+            } else {
+              console.warn(`⚠️ [爱心墙创建页] 位置 ${positionIndex} 的照片缺少ID字段`);
             }
           }
         });
@@ -842,10 +881,38 @@ export default {
       });
     },
     
+    // 检查是否需要登录
+    checkLoginRequired() {
+      const loginInfo = uni.getStorageSync('login_info');
+      // 如果是游客用户，提示需要登录
+      if (!loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn) {
+        uni.showModal({
+          title: '需要登录',
+          content: '保存项目需要登录后才能使用，是否前往登录？\n\n您仍然可以继续浏览页面功能。',
+          confirmText: '去登录',
+          cancelText: '继续浏览',
+          success: (res) => {
+            if (res.confirm) {
+              uni.navigateTo({
+                url: '/pages/login/index'
+              });
+            }
+          }
+        });
+        return false;
+      }
+      return true;
+    },
+    
     // 保存项目到列表页
     onSaveProject() {
       if (this.filledCount === 0) {
         uni.showToast({ title: '请至少添加一张照片', icon: 'none' });
+        return;
+      }
+      
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
         return;
       }
 

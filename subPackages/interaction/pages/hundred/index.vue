@@ -302,9 +302,67 @@ export default {
   },
   mounted() {
     this.getSystemInfo();
-    this.loadItemsFromBackend();
+    // 不再强制要求登录，允许用户先浏览页面
+    // 在用户尝试执行需要登录的操作时再检查登录状态
+    
+    // 检查是否为游客用户
+    const loginInfo = uni.getStorageSync('login_info');
+    const isGuest = !loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn;
+    
+    if (isGuest) {
+      // 游客模式：使用默认数据，不调用API
+      console.log('👤 游客模式：使用默认事件列表');
+      this.useGuestMode();
+    } else {
+      // 登录用户：从后端加载数据
+      try {
+        this.loadItemsFromBackend();
+      } catch (error) {
+        console.error('加载服务器数据失败:', error);
+        // 如果加载失败，回退到游客模式
+        this.useGuestMode();
+      }
+    }
   },
   methods: {
+    // 游客模式：使用默认数据
+    useGuestMode() {
+      // 设置默认事件列表
+      this.items = [
+        { id: 1, text: '一起看日出', completed: false, image: '', favorite: false },
+        { id: 2, text: '一起做一顿饭', completed: false, image: '', favorite: false },
+        { id: 3, text: '一起看电影', completed: false, image: '', favorite: false },
+        { id: 4, text: '一起逛公园', completed: false, image: '', favorite: false },
+        { id: 5, text: '一起旅行', completed: false, image: '', favorite: false },
+        { id: 6, text: '一起拍合照', completed: false, image: '', favorite: false }
+      ];
+      
+      console.log('✅ 游客模式初始化完成');
+    },
+
+    // 检查是否需要登录
+    checkLoginRequired() {
+      const loginInfo = uni.getStorageSync('login_info');
+      // 如果是游客用户，提示需要登录
+      if (!loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn) {
+        uni.showModal({
+          title: '需要登录',
+          content: '该功能需要登录后才能使用，是否前往登录？\n\n您仍然可以继续浏览页面功能。',
+          confirmText: '去登录',
+          cancelText: '继续浏览',
+          success: (res) => {
+            if (res.confirm) {
+              uni.navigateTo({
+                url: '/pages/login/index'
+              });
+            }
+          }
+        });
+        return false;
+      }
+      return true;
+    },
+    
     goBack() {
       uni.navigateBack();
     },
@@ -625,6 +683,11 @@ export default {
      * 选择图片后，更新任务完成状态并同步到后端
      */
     uploadImage(item) {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       console.log('📸 [一百件事] ========== 开始上传图片 ==========');
       console.log('📋 [任务] ID:', item.id, '名称:', item.text);
       
@@ -740,6 +803,11 @@ export default {
      * 同步到后端
      */
     async toggleFavorite(item) {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       const newFavoriteState = !item.favorite;
       const action = newFavoriteState ? '收藏' : '取消收藏';
       
@@ -782,6 +850,11 @@ export default {
      * 删除事件
      */
     async deleteEvent(item) {
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      
       console.log('🗑️ [一百件事] ========== 删除事件 ==========');
       console.log('📋 [任务] ID:', item.id, '名称:', item.text);
       
@@ -1021,7 +1094,13 @@ export default {
     },
     openCatalog() { this.showCatalog = true; },
     closeCatalog() { this.showCatalog = false; },
-    openAdd() { this.showAdd = true; },
+    openAdd() { 
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      this.showAdd = true; 
+    },
     closeAdd() { this.showAdd = false; this.form.text = ''; },
     /**
      * 保存新任务
@@ -1030,6 +1109,11 @@ export default {
     async saveItem() {
       if (!this.form.text) {
         uni.showToast({ title: '请输入内容', icon: 'none' });
+        return;
+      }
+      
+      // 检查是否需要登录
+      if (!this.checkLoginRequired()) {
         return;
       }
       
@@ -1306,8 +1390,6 @@ export default {
           item.weather = this.recordModal.weather;
           item.feeling = this.recordModal.feeling;
           item.note = this.recordModal.note;
-          item.tags = [...this.recordModal.tags];
-          item.rating = this.recordModal.rating;
         }
         
         // 同步到后端
@@ -1351,9 +1433,7 @@ export default {
         completedDate: item.completedDate || null,
         completedTime: item.completedTime || null,
         feeling: item.feeling || null,
-        weather: item.weather || null,
-        tags: item.tags && item.tags.length > 0 ? item.tags : null,
-        rating: item.rating || null
+        weather: item.weather || null
       });
     }
   }

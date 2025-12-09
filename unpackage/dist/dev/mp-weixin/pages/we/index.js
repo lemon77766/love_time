@@ -61,24 +61,37 @@ const _sfc_main = {
   },
   onLoad() {
     this.getSystemInfo();
-    if (utils_auth.isGuestUser()) {
-      this.goToLogin();
-      return;
-    }
     this.loadUserInfo();
     this.loadCoupleInfo();
     this.loadLoveDays();
   },
   onShow() {
-    if (utils_auth.isGuestUser()) {
-      this.goToLogin();
-      return;
-    }
     this.loadUserInfo();
     this.loadCoupleInfo();
     this.loadLoveDays();
   },
   methods: {
+    // 检查是否需要登录
+    checkLoginRequired() {
+      const loginInfo = common_vendor.index.getStorageSync("login_info");
+      if (!loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn) {
+        common_vendor.index.showModal({
+          title: "需要登录",
+          content: "该功能需要登录后才能使用，是否前往登录？\n\n您仍然可以继续浏览页面功能。",
+          confirmText: "去登录",
+          cancelText: "继续浏览",
+          success: (res) => {
+            if (res.confirm) {
+              common_vendor.index.navigateTo({
+                url: "/pages/login/index"
+              });
+            }
+          }
+        });
+        return false;
+      }
+      return true;
+    },
     // 跳转到登录页面
     goToLogin() {
       common_vendor.index.redirectTo({
@@ -87,20 +100,26 @@ const _sfc_main = {
     },
     // 跳转到账号与安全页面
     goToProfileSettings() {
+      if (!this.checkLoginRequired()) {
+        return;
+      }
       common_vendor.index.navigateTo({
         url: "/pages/profile/index"
       });
     },
     // 跳转到编辑资料页面
     goToEdit() {
-      common_vendor.index.__f__("log", "at pages/we/index.vue:242", "跳转到编辑资料页面");
+      if (!this.checkLoginRequired()) {
+        return;
+      }
+      common_vendor.index.__f__("log", "at pages/we/index.vue:267", "跳转到编辑资料页面");
       common_vendor.index.navigateTo({
         url: "/subPackages/record/pages/profile/edit",
         success: () => {
-          common_vendor.index.__f__("log", "at pages/we/index.vue:246", "成功跳转到编辑资料页面");
+          common_vendor.index.__f__("log", "at pages/we/index.vue:271", "成功跳转到编辑资料页面");
         },
         fail: (err) => {
-          common_vendor.index.__f__("error", "at pages/we/index.vue:249", "跳转到编辑资料页面失败", err);
+          common_vendor.index.__f__("error", "at pages/we/index.vue:274", "跳转到编辑资料页面失败", err);
           common_vendor.index.showToast({
             title: "跳转失败，请重试",
             icon: "none"
@@ -138,13 +157,13 @@ const _sfc_main = {
           this.customNickname = this.useWechatNickname ? "" : this.userInfo.displayName;
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/we/index.vue:308", "加载用户信息失败", error);
+        common_vendor.index.__f__("error", "at pages/we/index.vue:333", "加载用户信息失败", error);
       }
     },
     // 加载相爱天数
     async loadLoveDays() {
       if (utils_auth.isGuestUser()) {
-        common_vendor.index.__f__("log", "at pages/we/index.vue:317", "游客用户，跳过加载相爱天数");
+        common_vendor.index.__f__("log", "at pages/we/index.vue:342", "游客用户，跳过加载相爱天数");
         this.loveDays = 0;
         return;
       }
@@ -156,19 +175,19 @@ const _sfc_main = {
         const response = await api_couple.getLoveDays();
         if (response && response.data) {
           this.loveDays = response.data.loveDays || 0;
-          common_vendor.index.__f__("log", "at pages/we/index.vue:333", "✅ 成功加载相爱天数:", this.loveDays);
+          common_vendor.index.__f__("log", "at pages/we/index.vue:358", "✅ 成功加载相爱天数:", this.loveDays);
         } else {
-          common_vendor.index.__f__("warn", "at pages/we/index.vue:335", "⚠️ 获取相爱天数失败，无法识别有效数据结构:", response);
+          common_vendor.index.__f__("warn", "at pages/we/index.vue:360", "⚠️ 获取相爱天数失败，无法识别有效数据结构:", response);
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/we/index.vue:338", "❌ 获取相爱天数失败:", error);
+        common_vendor.index.__f__("error", "at pages/we/index.vue:363", "❌ 获取相爱天数失败:", error);
       }
     },
     // 加载情侣信息
     async loadCoupleInfo() {
       var _a, _b;
       if (utils_auth.isGuestUser()) {
-        common_vendor.index.__f__("log", "at pages/we/index.vue:347", "游客用户，跳过加载情侣信息");
+        common_vendor.index.__f__("log", "at pages/we/index.vue:372", "游客用户，跳过加载情侣信息");
         this.isBound = false;
         this.partnerInfo = null;
         this.bindTime = "";
@@ -199,7 +218,7 @@ const _sfc_main = {
               this.bindTime = "";
             }
           } catch (e) {
-            common_vendor.index.__f__("error", "at pages/we/index.vue:384", "同步绑定状态失败", e);
+            common_vendor.index.__f__("error", "at pages/we/index.vue:409", "同步绑定状态失败", e);
           }
           return;
         }
@@ -226,7 +245,7 @@ const _sfc_main = {
             utils_couple.clearCoupleInfo();
           }
         } catch (e) {
-          common_vendor.index.__f__("error", "at pages/we/index.vue:417", "查询情侣状态失败", e);
+          common_vendor.index.__f__("error", "at pages/we/index.vue:442", "查询情侣状态失败", e);
           this.isBound = utils_couple.isBound();
           if (this.isBound) {
             this.partnerInfo = utils_couple.getPartnerInfo();
@@ -235,7 +254,7 @@ const _sfc_main = {
           }
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/we/index.vue:427", "加载情侣信息失败", e);
+        common_vendor.index.__f__("error", "at pages/we/index.vue:452", "加载情侣信息失败", e);
         this.isBound = utils_couple.isBound();
         if (this.isBound) {
           this.partnerInfo = utils_couple.getPartnerInfo();
@@ -261,7 +280,7 @@ const _sfc_main = {
           });
           break;
         default:
-          common_vendor.index.__f__("warn", "at pages/we/index.vue:462", "未知设置项:", type);
+          common_vendor.index.__f__("warn", "at pages/we/index.vue:487", "未知设置项:", type);
       }
     },
     // 解除关系
@@ -289,14 +308,14 @@ const _sfc_main = {
                   });
                 }, 1500);
               } else {
-                common_vendor.index.__f__("error", "at pages/we/index.vue:497", "解除关系失败", response);
+                common_vendor.index.__f__("error", "at pages/we/index.vue:522", "解除关系失败", response);
                 common_vendor.index.showToast({
                   title: (response == null ? void 0 : response.message) || "解除失败",
                   icon: "none"
                 });
               }
             } catch (error) {
-              common_vendor.index.__f__("error", "at pages/we/index.vue:504", "解除关系异常", error);
+              common_vendor.index.__f__("error", "at pages/we/index.vue:529", "解除关系异常", error);
               common_vendor.index.showToast({
                 title: "操作异常，请重试",
                 icon: "none"

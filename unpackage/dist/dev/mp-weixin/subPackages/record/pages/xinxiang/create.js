@@ -99,14 +99,14 @@ const _sfc_main = {
         if (normalized.length > 0) {
           this.fontOptions = normalized;
         } else {
-          common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:345", "字体列表为空，使用默认字体配置");
+          common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:347", "字体列表为空，使用默认字体配置");
           this.fontOptions = [...FALLBACK_FONT_OPTIONS];
         }
         if (!this.fontOptions.some((font) => font.value === this.selectedFontStyle) && this.fontOptions.length > 0) {
           this.form.fontStyle = this.fontOptions[0].value;
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/create.vue:352", "获取字体列表失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/create.vue:354", "获取字体列表失败:", error);
         this.fontRequestError = "字体加载失败，已使用默认字体";
         this.fontOptions = [...FALLBACK_FONT_OPTIONS];
         common_vendor.index.showToast({ title: "字体加载失败，使用默认字体", icon: "none" });
@@ -119,7 +119,7 @@ const _sfc_main = {
         return;
       }
       if (typeof common_vendor.index === "undefined" || typeof common_vendor.index.loadFontFace !== "function") {
-        common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:365", "当前平台不支持自定义字体加载");
+        common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:367", "当前平台不支持自定义字体加载");
         return;
       }
       try {
@@ -131,9 +131,9 @@ const _sfc_main = {
           this.ensureZcoolWenYiFont()
         ]);
         this.customFontLoaded = true;
-        common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:378", "所有手写字体加载完成");
+        common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:380", "所有手写字体加载完成");
       } catch (error) {
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/create.vue:380", "加载字体失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/create.vue:382", "加载字体失败:", error);
       }
     },
     ensureMaShanZhengFont() {
@@ -152,11 +152,11 @@ const _sfc_main = {
             weight: "400"
           },
           success: (res) => {
-            common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:408", "MaShanZheng 字体加载成功", res);
+            common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:410", "MaShanZheng 字体加载成功", res);
             resolve(res);
           },
           fail: (error) => {
-            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:412", "MaShanZheng 字体加载失败:", error);
+            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:414", "MaShanZheng 字体加载失败:", error);
             maShanZhengFontPromise = null;
             resolve(null);
             maShanZhengFontPromise = null;
@@ -182,11 +182,11 @@ const _sfc_main = {
             weight: "400"
           },
           success: (res) => {
-            common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:475", "ZCOOLKuaiLe 字体加载成功", res);
+            common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:477", "ZCOOLKuaiLe 字体加载成功", res);
             resolve(res);
           },
           fail: (error) => {
-            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:479", "ZCOOLKuaiLe 字体加载失败:", error);
+            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:481", "ZCOOLKuaiLe 字体加载失败:", error);
             zcoolKuaiLeFontPromise = null;
             resolve(null);
             zcoolKuaiLeFontPromise = null;
@@ -212,11 +212,11 @@ const _sfc_main = {
             weight: "400"
           },
           success: (res) => {
-            common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:542", "QingSong 字体加载成功", res);
+            common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:544", "QingSong 字体加载成功", res);
             resolve(res);
           },
           fail: (error) => {
-            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:546", "QingSong 字体加载失败:", error);
+            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:548", "QingSong 字体加载失败:", error);
             qingSongFontPromise = null;
             resolve(null);
             qingSongFontPromise = null;
@@ -242,11 +242,11 @@ const _sfc_main = {
             weight: "400"
           },
           success: (res) => {
-            common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:609", "ZCOOLXiaoWei 字体加载成功", res);
+            common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:611", "ZCOOLXiaoWei 字体加载成功", res);
             resolve(res);
           },
           fail: (error) => {
-            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:613", "ZCOOLXiaoWei 字体加载失败:", error);
+            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:615", "ZCOOLXiaoWei 字体加载失败:", error);
             zcoolXiaoWeiFontPromise = null;
             resolve(null);
             zcoolXiaoWeiFontPromise = null;
@@ -272,11 +272,11 @@ const _sfc_main = {
             weight: "400"
           },
           success: (res) => {
-            common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:676", "ZCOOLWenYi 字体加载成功", res);
+            common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:678", "ZCOOLWenYi 字体加载成功", res);
             resolve(res);
           },
           fail: (error) => {
-            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:680", "ZCOOLWenYi 字体加载失败:", error);
+            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:682", "ZCOOLWenYi 字体加载失败:", error);
             zcoolWenYiFontPromise = null;
             resolve(null);
             zcoolWenYiFontPromise = null;
@@ -392,9 +392,33 @@ const _sfc_main = {
     prevStep() {
       this.currentStep = 1;
     },
+    // 检查是否需要登录
+    checkLoginRequired() {
+      const loginInfo = common_vendor.index.getStorageSync("login_info");
+      if (!loginInfo || loginInfo.isGuest || !loginInfo.isLoggedIn) {
+        common_vendor.index.showModal({
+          title: "需要登录",
+          content: "该功能需要登录后才能使用，是否前往登录？\\n\\n您仍然可以继续浏览页面功能。",
+          confirmText: "去登录",
+          cancelText: "继续浏览",
+          success: (res) => {
+            if (res.confirm) {
+              common_vendor.index.navigateTo({
+                url: "/pages/login/index"
+              });
+            }
+          }
+        });
+        return false;
+      }
+      return true;
+    },
     // 提交信件
     async submitLetter() {
       var _a;
+      if (!this.checkLoginRequired()) {
+        return;
+      }
       if (!this.form.title) {
         common_vendor.index.showToast({ title: "请填写信件主题", icon: "none" });
         return;
@@ -413,22 +437,22 @@ const _sfc_main = {
         if (utils_couple.isBound()) {
           try {
             const coupleInfo = common_vendor.index.getStorageSync("couple_info");
-            common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:854", "👫 [情侣信息]", coupleInfo);
+            common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:884", "👫 [情侣信息]", coupleInfo);
             if (coupleInfo && coupleInfo.partnerId) {
               receiverId = coupleInfo.partnerId;
-              common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:859", "✅ [获取对方ID] 从 partnerId 获取:", receiverId);
+              common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:889", "✅ [获取对方ID] 从 partnerId 获取:", receiverId);
             } else {
               const partnerInfo = utils_couple.getPartnerInfo();
               if (partnerInfo && partnerInfo.userId) {
                 receiverId = partnerInfo.userId;
-                common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:865", "✅ [获取对方ID] 从 partnerInfo.userId 获取:", receiverId);
+                common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:895", "✅ [获取对方ID] 从 partnerInfo.userId 获取:", receiverId);
               }
             }
           } catch (e) {
-            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:869", "⚠️ 获取对方ID失败:", e);
+            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:899", "⚠️ 获取对方ID失败:", e);
           }
         } else {
-          common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:872", "⚠️ 未绑定情侣关系，跳过 receiverId");
+          common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:902", "⚠️ 未绑定情侣关系，跳过 receiverId");
         }
         let backgroundImage = null;
         if (this.isCustomStyle && this.customImage) {
@@ -461,14 +485,14 @@ const _sfc_main = {
         if (receiverId) {
           letterData.receiverId = Number(receiverId);
           if (isNaN(letterData.receiverId)) {
-            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:915", "receiverId 不是有效数字:", receiverId);
+            common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:945", "receiverId 不是有效数字:", receiverId);
             delete letterData.receiverId;
           }
         }
         if (backgroundImage && backgroundImage.trim()) {
           letterData.backgroundImage = backgroundImage.trim();
         }
-        common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:925", "📤 [创建情书] 最终请求参数:", JSON.stringify(letterData, null, 2));
+        common_vendor.index.__f__("log", "at subPackages/record/pages/xinxiang/create.vue:955", "📤 [创建情书] 最终请求参数:", JSON.stringify(letterData, null, 2));
         const response = await api_futureLetter.createFutureLetter(letterData);
         if (response && response.success !== false && ((_a = response.data) == null ? void 0 : _a.id)) {
           const letterId = response.data.id;
@@ -494,7 +518,7 @@ const _sfc_main = {
                 letters.unshift(localData);
                 common_vendor.index.setStorageSync("xinxiang_letters", letters);
               } catch (e) {
-                common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:962", "保存本地预览数据失败", e);
+                common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:992", "保存本地预览数据失败", e);
               }
               common_vendor.index.showToast({ title: "提交成功", icon: "success" });
               this.showPreviewModal = true;
@@ -508,7 +532,7 @@ const _sfc_main = {
             }
           } catch (sendError) {
             common_vendor.index.hideLoading();
-            common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/create.vue:982", "发送未来情书失败:", sendError);
+            common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/create.vue:1012", "发送未来情书失败:", sendError);
             const localData = {
               id: letterId,
               style: this.isCustomStyle ? "custom" : this.selectedStyle,
@@ -526,7 +550,7 @@ const _sfc_main = {
               letters.unshift(localData);
               common_vendor.index.setStorageSync("xinxiang_letters", letters);
             } catch (e) {
-              common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:1003", "保存本地预览数据失败", e);
+              common_vendor.index.__f__("warn", "at subPackages/record/pages/xinxiang/create.vue:1033", "保存本地预览数据失败", e);
             }
             common_vendor.index.showToast({
               title: sendError.message || "创建成功，但发送失败，请稍后重试",
@@ -543,7 +567,7 @@ const _sfc_main = {
         }
       } catch (error) {
         common_vendor.index.hideLoading();
-        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/create.vue:1023", "创建未来情书失败:", error);
+        common_vendor.index.__f__("error", "at subPackages/record/pages/xinxiang/create.vue:1053", "创建未来情书失败:", error);
         common_vendor.index.showToast({
           title: error.message || "创建失败，请重试",
           icon: "none",
