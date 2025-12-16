@@ -55,11 +55,6 @@
           </view>
         </button>
 
-        <!-- 浏览功能提示 -->
-        <view class="browse-tip" @click="browseFeatures">
-          <text class="tip-icon">👀</text>
-          <text class="tip-text">先浏览功能</text>
-        </view>
 
         <!-- 隐私协议复选框 -->
         <view class="privacy-section">
@@ -260,14 +255,6 @@ export default {
     // 关闭隐私政策弹窗
     closePrivacyPolicyModal() {
       this.showPrivacyPolicyModal = false;
-    },
-    
-    // 浏览功能
-    browseFeatures() {
-      // 直接跳转到首页，允许用户先浏览功能
-      uni.reLaunch({
-        url: '/pages/index/index'
-      });
     },
     
     // 检查登录状态
@@ -522,14 +509,14 @@ export default {
     
     // 进入应用（跳转到首页）
     enterApp() {
-      // 再次确认token已保存
+      // 检查登录信息是否已保存
       const savedInfo = uni.getStorageSync('login_info');
-      if (savedInfo && savedInfo.token) {
+      if (savedInfo && savedInfo.isLoggedIn) {
         uni.reLaunch({
           url: '/pages/index/index'
         });
       } else {
-        console.error('Token保存失败，请重试');
+        console.error('登录信息保存失败，请重试');
         uni.showToast({
           title: '登录失败，请重试',
           icon: 'error'

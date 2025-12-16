@@ -74,8 +74,8 @@
         <view class="couple-status-info">
           <text class="days-together">等待另一半</text>
         </view>
-        <view class="invite-hint" @click="goToInvite">
-          <text class="hint-text">点击邀请另一半</text>
+        <view class="invite-hint" @click="goToBindOrLogin">
+          <text class="hint-text">{{ isLoggedIn ? '点击绑定关系' : '点击登录' }}</text>
       </view>
     </view>
 
@@ -172,6 +172,8 @@ export default {
         avatarUrl: '',
         nickName: ''
       },
+      // 登录状态
+      isLoggedIn: false,
       // 情侣关系相关
       isBound: false,
       partnerInfo: null,
@@ -355,6 +357,10 @@ export default {
     // 加载用户信息
     loadUserInfo() {
       try {
+        // 检查登录状态
+        const loginInfo = uni.getStorageSync('login_info');
+        this.isLoggedIn = loginInfo && loginInfo.isLoggedIn === true && loginInfo.isGuest !== true;
+        
         const userInfoData = getUserInfo();
         if (userInfoData) {
           this.userInfo = { ...userInfoData };
@@ -370,7 +376,6 @@ export default {
           }
       } else {
           // 从登录信息中获取
-          const loginInfo = uni.getStorageSync('login_info');
           if (loginInfo && loginInfo.userInfo) {
             this.userInfo = { ...loginInfo.userInfo };
           }
@@ -589,6 +594,12 @@ export default {
         url: '/pages/invite/index'
       });
     },
+    // 跳转到登录页面
+    goToLogin() {
+      uni.navigateTo({
+        url: '/pages/login/index'
+      });
+    },
     // 跳转到个人中心
     goToProfile() {
       // 不再检查是否需要登录，允许用户先进入页面浏览
@@ -636,6 +647,21 @@ export default {
           }
         }
       });
+    },
+    
+    // 跳转到登录或绑定页面
+    goToBindOrLogin() {
+      if (this.isLoggedIn) {
+        // 已登录，跳转到邀请页面进行绑定
+        uni.navigateTo({
+          url: '/pages/invite/index'
+        });
+      } else {
+        // 未登录，跳转到登录页面
+        uni.navigateTo({
+          url: '/pages/login/index'
+        });
+      }
     },
   }
 };

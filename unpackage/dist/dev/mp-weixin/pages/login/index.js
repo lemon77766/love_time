@@ -114,7 +114,7 @@ const _sfc_main = {
           this.userInfo = { ...loginInfo.userInfo };
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:236", "加载用户信息失败", e);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:231", "加载用户信息失败", e);
       }
     },
     // 切换隐私协议同意状态
@@ -137,12 +137,6 @@ const _sfc_main = {
     closePrivacyPolicyModal() {
       this.showPrivacyPolicyModal = false;
     },
-    // 浏览功能
-    browseFeatures() {
-      common_vendor.index.reLaunch({
-        url: "/pages/index/index"
-      });
-    },
     // 检查登录状态
     checkLoginStatus() {
       var _a;
@@ -150,8 +144,8 @@ const _sfc_main = {
         const loginInfo = common_vendor.index.getStorageSync("login_info");
         const hasToken = loginInfo && (loginInfo.token && loginInfo.token.trim() || ((_a = loginInfo.data) == null ? void 0 : _a.token) && loginInfo.data.token.trim() || loginInfo.accessToken && loginInfo.accessToken.trim());
         if (loginInfo && loginInfo.isLoggedIn && hasToken && !loginInfo.isGuest) {
-          common_vendor.index.__f__("log", "at pages/login/index.vue:287", "检测到本地登录信息，自动跳转到首页");
-          common_vendor.index.__f__("log", "at pages/login/index.vue:288", "⚠️ 提示：如果token已过期，将在后续请求时自动处理");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:274", "检测到本地登录信息，自动跳转到首页");
+          common_vendor.index.__f__("log", "at pages/login/index.vue:275", "⚠️ 提示：如果token已过期，将在后续请求时自动处理");
           this.isLoggedIn = true;
           this.userInfo = loginInfo.userInfo || {};
           setTimeout(() => {
@@ -160,14 +154,14 @@ const _sfc_main = {
             });
           }, 300);
         } else if (loginInfo && loginInfo.isLoggedIn && !hasToken) {
-          common_vendor.index.__f__("warn", "at pages/login/index.vue:300", "⚠️ 检测到无效的登录信息（缺少token），正在清除...");
+          common_vendor.index.__f__("warn", "at pages/login/index.vue:287", "⚠️ 检测到无效的登录信息（缺少token），正在清除...");
           common_vendor.index.removeStorageSync("login_info");
           this.isLoggedIn = false;
           this.userInfo = {};
-          common_vendor.index.__f__("warn", "at pages/login/index.vue:304", "✅ 已清除无效的登录信息，请重新登录");
+          common_vendor.index.__f__("warn", "at pages/login/index.vue:291", "✅ 已清除无效的登录信息，请重新登录");
         }
       } catch (e) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:307", "检查登录状态失败", e);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:294", "检查登录状态失败", e);
       }
     },
     /**
@@ -207,7 +201,7 @@ const _sfc_main = {
           this.enterApp();
         }, 1500);
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:358", "游客登录失败", error);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:345", "游客登录失败", error);
         common_vendor.index.showToast({
           title: "登录失败，请重试",
           icon: "none"
@@ -249,10 +243,10 @@ const _sfc_main = {
             });
             break;
           } catch (apiError) {
-            common_vendor.index.__f__("error", "at pages/login/index.vue:410", `登录API调用失败 (第${retryCount + 1}次)`, apiError);
+            common_vendor.index.__f__("error", "at pages/login/index.vue:397", `登录API调用失败 (第${retryCount + 1}次)`, apiError);
             retryCount++;
             if (retryCount >= maxRetries) {
-              common_vendor.index.__f__("warn", "at pages/login/index.vue:415", "所有重试都失败，使用模拟登录");
+              common_vendor.index.__f__("warn", "at pages/login/index.vue:402", "所有重试都失败，使用模拟登录");
               loginResult = this.createMockLoginResult(code, userProfile.userInfo);
               common_vendor.index.showToast({
                 title: "后端服务连接失败，使用离线模式",
@@ -290,7 +284,7 @@ const _sfc_main = {
             this.enterApp();
           }, 1500);
         } else {
-          common_vendor.index.__f__("error", "at pages/login/index.vue:469", "登录失败", loginResult);
+          common_vendor.index.__f__("error", "at pages/login/index.vue:456", "登录失败", loginResult);
           common_vendor.index.showToast({
             title: (loginResult == null ? void 0 : loginResult.message) || "登录失败，请重试",
             icon: "none",
@@ -298,7 +292,7 @@ const _sfc_main = {
           });
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:477", "微信登录失败", error);
+        common_vendor.index.__f__("error", "at pages/login/index.vue:464", "微信登录失败", error);
         common_vendor.index.showToast({
           title: "登录异常，请重试",
           icon: "none",
@@ -344,12 +338,12 @@ const _sfc_main = {
     // 进入应用（跳转到首页）
     enterApp() {
       const savedInfo = common_vendor.index.getStorageSync("login_info");
-      if (savedInfo && savedInfo.token) {
+      if (savedInfo && savedInfo.isLoggedIn) {
         common_vendor.index.reLaunch({
           url: "/pages/index/index"
         });
       } else {
-        common_vendor.index.__f__("error", "at pages/login/index.vue:532", "Token保存失败，请重试");
+        common_vendor.index.__f__("error", "at pages/login/index.vue:519", "登录信息保存失败，请重试");
         common_vendor.index.showToast({
           title: "登录失败，请重试",
           icon: "error"
@@ -378,24 +372,23 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     k: common_vendor.o((...args) => $options.handleGuestLogin && $options.handleGuestLogin(...args)),
     l: !$data.agreedToPrivacy ? 1 : ""
   } : {}, {
-    m: common_vendor.o((...args) => $options.browseFeatures && $options.browseFeatures(...args)),
-    n: $data.agreedToPrivacy
+    m: $data.agreedToPrivacy
   }, $data.agreedToPrivacy ? {} : {}, {
-    o: $data.agreedToPrivacy ? 1 : "",
-    p: common_vendor.o((...args) => $options.togglePrivacyAgreement && $options.togglePrivacyAgreement(...args)),
-    q: common_vendor.o((...args) => $options.showUserAgreement && $options.showUserAgreement(...args)),
-    r: common_vendor.o((...args) => $options.showPrivacyPolicy && $options.showPrivacyPolicy(...args)),
-    s: $data.showUserAgreementModal
+    n: $data.agreedToPrivacy ? 1 : "",
+    o: common_vendor.o((...args) => $options.togglePrivacyAgreement && $options.togglePrivacyAgreement(...args)),
+    p: common_vendor.o((...args) => $options.showUserAgreement && $options.showUserAgreement(...args)),
+    q: common_vendor.o((...args) => $options.showPrivacyPolicy && $options.showPrivacyPolicy(...args)),
+    r: $data.showUserAgreementModal
   }, $data.showUserAgreementModal ? {
-    t: common_vendor.o((...args) => $options.closeUserAgreementModal && $options.closeUserAgreementModal(...args)),
-    v: $data.userAgreementContent,
-    w: common_vendor.o((...args) => $options.closeUserAgreementModal && $options.closeUserAgreementModal(...args))
+    s: common_vendor.o((...args) => $options.closeUserAgreementModal && $options.closeUserAgreementModal(...args)),
+    t: $data.userAgreementContent,
+    v: common_vendor.o((...args) => $options.closeUserAgreementModal && $options.closeUserAgreementModal(...args))
   } : {}, {
-    x: $data.showPrivacyPolicyModal
+    w: $data.showPrivacyPolicyModal
   }, $data.showPrivacyPolicyModal ? {
-    y: common_vendor.o((...args) => $options.closePrivacyPolicyModal && $options.closePrivacyPolicyModal(...args)),
-    z: $data.privacyPolicyContent,
-    A: common_vendor.o((...args) => $options.closePrivacyPolicyModal && $options.closePrivacyPolicyModal(...args))
+    x: common_vendor.o((...args) => $options.closePrivacyPolicyModal && $options.closePrivacyPolicyModal(...args)),
+    y: $data.privacyPolicyContent,
+    z: common_vendor.o((...args) => $options.closePrivacyPolicyModal && $options.closePrivacyPolicyModal(...args))
   } : {});
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-d08ef7d4"]]);
