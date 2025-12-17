@@ -259,9 +259,23 @@ export default {
           await this.getCurrentLocation();
           // 加载双方位置
           await this.loadCurrentLocations();
+        } else {
+          // 没有权限时显示提示
+          this.locationError = '未获得定位权限，无法获取位置信息';
+          uni.showToast({
+            title: '未获得定位权限',
+            icon: 'none',
+            duration: 2000
+          });
         }
       } catch (error) {
         console.error('初始化定位失败:', error);
+        this.locationError = '初始化定位失败: ' + (error.message || error.errMsg || '未知错误');
+        uni.showToast({
+          title: '初始化定位失败',
+          icon: 'none',
+          duration: 2000
+        });
       }
     },
     
@@ -292,6 +306,9 @@ export default {
                         } else {
                           resolve(false);
                         }
+                      },
+                      fail: () => {
+                        resolve(false);
                       }
                     });
                   } else {
@@ -306,19 +323,50 @@ export default {
                 success: () => {
                   resolve(true);
                 },
-                fail: () => {
-                  uni.showToast({
-                    title: '需要定位权限才能使用此功能',
-                    icon: 'none',
-                    duration: 2000
+                fail: (authorizeError) => {
+                  console.error('授权失败:', authorizeError);
+                  // 授权失败时也弹出设置提示
+                  uni.showModal({
+                    title: '需要定位权限',
+                    content: '为了展示双方位置，需要获取您的位置信息。请在设置中开启定位权限。',
+                    showCancel: true,
+                    confirmText: '去设置',
+                    cancelText: '取消',
+                    success: (modalRes) => {
+                      if (modalRes.confirm) {
+                        uni.openSetting({
+                          success: (settingRes) => {
+                            if (settingRes.authSetting['scope.userLocation']) {
+                              resolve(true);
+                            } else {
+                              resolve(false);
+                            }
+                          },
+                          fail: () => {
+                            resolve(false);
+                          }
+                        });
+                      } else {
+                        resolve(false);
+                      }
+                    }
                   });
-                  resolve(false);
                 }
               });
             }
           },
-          fail: () => {
-            resolve(false);
+          fail: (error) => {
+            console.error('获取设置失败:', error);
+            // 获取设置失败时尝试直接请求授权
+            uni.authorize({
+              scope: 'scope.userLocation',
+              success: () => {
+                resolve(true);
+              },
+              fail: () => {
+                resolve(false);
+              }
+            });
           }
         });
       });
@@ -386,11 +434,41 @@ export default {
         
       } catch (error) {
         console.error('获取位置失败:', error); 
-        this.locationError = error.errMsg || '获取位置失败';
+        this.locationError = error.errMsg || error.message || '获取位置失败';
         
-        if (error.errMsg && error.errMsg.includes('auth deny')) {
+        // 处理不同的错误情况
+        if (error.errMsg) {
+          if (error.errMsg.includes('auth deny')) {
+            uni.showToast({
+              title: '定位权限被拒绝',
+              icon: 'none',
+              duration: 2000
+            });
+          } else if (error.errMsg.includes('appid privacy api banned')) {
+            uni.showModal({
+              title: '需要定位权限',
+              content: '为了展示双方位置，需要获取您的位置信息。请在设置中开启定位权限。',
+              showCancel: true,
+              confirmText: '去设置',
+              cancelText: '取消',
+              success: (modalRes) => {
+                if (modalRes.confirm) {
+                  // 打开设置页面
+                  uni.openSetting({
+                    success: (settingRes) => {
+                      if (settingRes.authSetting['scope.userLocation']) {
+                        // 用户开启了权限，重新获取位置
+                        this.getCurrentLocation();
+                      }
+                    }
+                  });
+                }
+              }
+            });
+          }
+        } else {
           uni.showToast({
-            title: '定位权限被拒绝',
+            title: '获取位置失败',
             icon: 'none',
             duration: 2000
           });
@@ -508,9 +586,14 @@ export default {
       // 检查权限
       this.checkLocationPermission().then((hasPermission) => {
         if (!hasPermission) {
-        return;
-      }
-      
+          uni.showToast({
+            title: '未获得定位权限',
+            icon: 'none',
+            duration: 2000
+          });
+          return;
+        }
+        
         this.isLocationTracking = true;
         
         // 立即获取一次位置

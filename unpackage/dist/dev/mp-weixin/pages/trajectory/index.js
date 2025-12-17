@@ -108,9 +108,22 @@ const _sfc_main = {
         if (setting) {
           await this.getCurrentLocation();
           await this.loadCurrentLocations();
+        } else {
+          this.locationError = "未获得定位权限，无法获取位置信息";
+          common_vendor.index.showToast({
+            title: "未获得定位权限",
+            icon: "none",
+            duration: 2e3
+          });
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:264", "初始化定位失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:272", "初始化定位失败:", error);
+        this.locationError = "初始化定位失败: " + (error.message || error.errMsg || "未知错误");
+        common_vendor.index.showToast({
+          title: "初始化定位失败",
+          icon: "none",
+          duration: 2e3
+        });
       }
     },
     /**
@@ -138,6 +151,9 @@ const _sfc_main = {
                         } else {
                           resolve(false);
                         }
+                      },
+                      fail: () => {
+                        resolve(false);
                       }
                     });
                   } else {
@@ -151,19 +167,48 @@ const _sfc_main = {
                 success: () => {
                   resolve(true);
                 },
-                fail: () => {
-                  common_vendor.index.showToast({
-                    title: "需要定位权限才能使用此功能",
-                    icon: "none",
-                    duration: 2e3
+                fail: (authorizeError) => {
+                  common_vendor.index.__f__("error", "at pages/trajectory/index.vue:327", "授权失败:", authorizeError);
+                  common_vendor.index.showModal({
+                    title: "需要定位权限",
+                    content: "为了展示双方位置，需要获取您的位置信息。请在设置中开启定位权限。",
+                    showCancel: true,
+                    confirmText: "去设置",
+                    cancelText: "取消",
+                    success: (modalRes) => {
+                      if (modalRes.confirm) {
+                        common_vendor.index.openSetting({
+                          success: (settingRes) => {
+                            if (settingRes.authSetting["scope.userLocation"]) {
+                              resolve(true);
+                            } else {
+                              resolve(false);
+                            }
+                          },
+                          fail: () => {
+                            resolve(false);
+                          }
+                        });
+                      } else {
+                        resolve(false);
+                      }
+                    }
                   });
-                  resolve(false);
                 }
               });
             }
           },
-          fail: () => {
-            resolve(false);
+          fail: (error) => {
+            common_vendor.index.__f__("error", "at pages/trajectory/index.vue:359", "获取设置失败:", error);
+            common_vendor.index.authorize({
+              scope: "scope.userLocation",
+              success: () => {
+                resolve(true);
+              },
+              fail: () => {
+                resolve(false);
+              }
+            });
           }
         });
       });
@@ -198,26 +243,53 @@ const _sfc_main = {
             latitude,
             longitude
           });
-          common_vendor.index.__f__("log", "at pages/trajectory/index.vue:365", "位置上传成功");
+          common_vendor.index.__f__("log", "at pages/trajectory/index.vue:413", "位置上传成功");
         } catch (error) {
-          common_vendor.index.__f__("error", "at pages/trajectory/index.vue:367", "位置上传失败:", error);
+          common_vendor.index.__f__("error", "at pages/trajectory/index.vue:415", "位置上传失败:", error);
           if (error.message && error.message.includes("用户不存在")) {
-            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:370", "⚠️ 位置上传失败：用户信息已失效，请重新登录");
+            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:418", "⚠️ 位置上传失败：用户信息已失效，请重新登录");
           }
         }
         try {
           await this.loadCurrentLocations();
         } catch (error) {
           if (error.message && error.message.includes("用户不存在")) {
-            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:383", "⚠️ 加载双方位置失败：用户信息已失效");
+            common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:431", "⚠️ 加载双方位置失败：用户信息已失效");
           }
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:388", "获取位置失败:", error);
-        this.locationError = error.errMsg || "获取位置失败";
-        if (error.errMsg && error.errMsg.includes("auth deny")) {
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:436", "获取位置失败:", error);
+        this.locationError = error.errMsg || error.message || "获取位置失败";
+        if (error.errMsg) {
+          if (error.errMsg.includes("auth deny")) {
+            common_vendor.index.showToast({
+              title: "定位权限被拒绝",
+              icon: "none",
+              duration: 2e3
+            });
+          } else if (error.errMsg.includes("appid privacy api banned")) {
+            common_vendor.index.showModal({
+              title: "需要定位权限",
+              content: "为了展示双方位置，需要获取您的位置信息。请在设置中开启定位权限。",
+              showCancel: true,
+              confirmText: "去设置",
+              cancelText: "取消",
+              success: (modalRes) => {
+                if (modalRes.confirm) {
+                  common_vendor.index.openSetting({
+                    success: (settingRes) => {
+                      if (settingRes.authSetting["scope.userLocation"]) {
+                        this.getCurrentLocation();
+                      }
+                    }
+                  });
+                }
+              }
+            });
+          }
+        } else {
           common_vendor.index.showToast({
-            title: "定位权限被拒绝",
+            title: "获取位置失败",
             icon: "none",
             duration: 2e3
           });
@@ -235,7 +307,7 @@ const _sfc_main = {
         const isSuccess = (res == null ? void 0 : res.success) === true || (res == null ? void 0 : res.code) === 200 || (res == null ? void 0 : res.status) === 0;
         const responseData = (res == null ? void 0 : res.data) || (res == null ? void 0 : res.result) || null;
         if (!isSuccess || !responseData) {
-          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:413", "⚠️ 双方位置接口返回数据格式不符合预期", res);
+          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:491", "⚠️ 双方位置接口返回数据格式不符合预期", res);
           return;
         }
         const normalizeLocation = (locationData = {}) => {
@@ -287,7 +359,7 @@ const _sfc_main = {
             this.partnerLocation.longitude
           );
         }
-        common_vendor.index.__f__("log", "at pages/trajectory/index.vue:475", "双方位置加载成功", {
+        common_vendor.index.__f__("log", "at pages/trajectory/index.vue:553", "双方位置加载成功", {
           myLocation: this.myLocation,
           partnerLocation: this.partnerLocation,
           distance: distanceText || this.formatDistance(this.distance),
@@ -295,13 +367,13 @@ const _sfc_main = {
         });
         this.updateMap();
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:485", "加载双方位置失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:563", "加载双方位置失败:", error);
         if (error.message && error.message.includes("用户不存在")) {
-          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:488", "⚠️ 加载双方位置失败：用户信息已失效");
+          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:566", "⚠️ 加载双方位置失败：用户信息已失效");
           return;
         }
         {
-          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:495", "⚠️ 后端接口可能未实现，跳过加载双方位置");
+          common_vendor.index.__f__("warn", "at pages/trajectory/index.vue:573", "⚠️ 后端接口可能未实现，跳过加载双方位置");
         }
       }
     },
@@ -314,6 +386,11 @@ const _sfc_main = {
       }
       this.checkLocationPermission().then((hasPermission) => {
         if (!hasPermission) {
+          common_vendor.index.showToast({
+            title: "未获得定位权限",
+            icon: "none",
+            duration: 2e3
+          });
           return;
         }
         this.isLocationTracking = true;
@@ -435,7 +512,7 @@ const _sfc_main = {
           this.partnerLocation.location_name = this.partnerLocation.location_name || location.location_name;
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:661", "地址反解析失败:", error);
+        common_vendor.index.__f__("error", "at pages/trajectory/index.vue:744", "地址反解析失败:", error);
       }
     },
     /**
@@ -550,13 +627,13 @@ const _sfc_main = {
      * 地图点击事件
      */
     onMapTap(e) {
-      common_vendor.index.__f__("log", "at pages/trajectory/index.vue:798", "地图点击:", e);
+      common_vendor.index.__f__("log", "at pages/trajectory/index.vue:881", "地图点击:", e);
     },
     /**
      * 地图标记点点击事件
      */
     onMarkerTap(e) {
-      common_vendor.index.__f__("log", "at pages/trajectory/index.vue:805", "标记点点击:", e);
+      common_vendor.index.__f__("log", "at pages/trajectory/index.vue:888", "标记点点击:", e);
     },
     /**
      * 格式化轨迹点日期

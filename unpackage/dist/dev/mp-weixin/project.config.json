@@ -7,7 +7,7 @@
     "urlCheck": false,
     "es6": true,
     "postcss": false,
-    "minified": false,
+    "minified": true,
     "newFeature": true,
     "bigPackageSizeSupport": true
   },
@@ -15,6 +15,14 @@
   "libVersion": "",
   "appid": "wx99ff5431b615a046",
   "projectname": "love_time",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于显示双方实时位置"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
   "condition": {
     "search": {
       "current": -1,
