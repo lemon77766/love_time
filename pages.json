@@ -85,6 +85,19 @@
   },
   "subPackages": [
     {
+      "root": "subPackages/virtual",
+      "name": "virtual",
+      "pages": [
+        {
+          "path": "pages/virtual/index",
+          "style": {
+            "navigationBarTitleText": "虚拟助手",
+            "navigationStyle": "custom"
+          }
+        }
+      ]
+    },
+    {
       "root": "subPackages/record",
       "name": "record",
       "pages": [
@@ -202,7 +215,7 @@
   "preloadRule": {
     "pages/index/index": {
       "network": "all",
-      "packages": ["record", "interaction"]
+      "packages": ["record", "interaction", "virtual"]
     }
   }
 }

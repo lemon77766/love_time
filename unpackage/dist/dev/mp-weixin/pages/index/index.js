@@ -96,12 +96,10 @@ const _sfc_main = {
       }
       return true;
     },
-    // 显示虚拟人功能待开发提示
-    showVirtualPersonTip() {
-      common_vendor.index.showToast({
-        title: "该功能待开发",
-        icon: "none",
-        duration: 2e3
+    // 跳转到虚拟助手页面
+    goToVirtualAssistant() {
+      common_vendor.index.navigateTo({
+        url: "/subPackages/virtual/pages/virtual/index"
       });
     },
     // 显示吵架功能待开发提示
@@ -449,7 +447,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: 32,
       color: "#4A90E2"
     }),
-    l: common_vendor.o((...args) => $options.showVirtualPersonTip && $options.showVirtualPersonTip(...args)),
+    l: common_vendor.o((...args) => $options.goToVirtualAssistant && $options.goToVirtualAssistant(...args)),
     m: common_vendor.p({
       icon: "mdi:emoticon-angry",
       size: 32,

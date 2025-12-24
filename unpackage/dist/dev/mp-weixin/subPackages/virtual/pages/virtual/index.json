@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "虚拟助手",
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "iconify-icon": "../../../../components/iconify-icon/iconify-icon"
+  }
+}

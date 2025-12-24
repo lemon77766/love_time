@@ -8,6 +8,7 @@ if (!Math) {
   "./pages/profile/index.js";
   "./pages/trajectory/index.js";
   "./pages/invite/index.js";
+  "./subPackages/virtual/pages/virtual/index.js";
   "./subPackages/record/pages/heartwall/index.js";
   "./subPackages/record/pages/heartwall/create.js";
   "./subPackages/record/pages/xinxiang/index.js";

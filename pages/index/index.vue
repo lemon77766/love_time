@@ -41,7 +41,7 @@
           <text class="days-together">相爱第 {{ daysTogether }} 天</text>
         </view>
         <view class="couple-stats">
-          <view class="stat-item" @click="showVirtualPersonTip">
+          <view class="stat-item" @click="goToVirtualAssistant">
             <iconify-icon icon="mdi:robot" :size="32" color="#4A90E2" />
             <text class="stat-text">虚拟人</text>
           </view>
@@ -260,12 +260,12 @@ export default {
       return true;
     },
     
-    // 显示虚拟人功能待开发提示
-    showVirtualPersonTip() {
-      uni.showToast({
-        title: '该功能待开发',
-        icon: 'none',
-        duration: 2000
+    // 跳转到虚拟助手页面
+    goToVirtualAssistant() {
+      // 不再检查是否需要登录，允许用户先进入页面浏览
+      // 用户可以在页面内执行操作时再选择登录
+      uni.navigateTo({
+        url: '/subPackages/virtual/pages/virtual/index'
       });
     },
     

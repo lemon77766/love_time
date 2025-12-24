@@ -9,6 +9,13 @@
   ],
   "subPackages": [
     {
+      "root": "subPackages/virtual",
+      "pages": [
+        "pages/virtual/index"
+      ],
+      "name": "virtual"
+    },
+    {
       "root": "subPackages/record",
       "pages": [
         "pages/heartwall/index",
@@ -72,7 +79,8 @@
       "network": "all",
       "packages": [
         "record",
-        "interaction"
+        "interaction",
+        "virtual"
       ]
     }
   },

@@ -449,7 +449,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     a: $data.statusBarHeight + "px",
     b: common_vendor.o((...args) => $options.goBack && $options.goBack(...args)),
     c: $data.navBarHeight + "px",
-    d: common_assets._imports_0$3,
+    d: common_assets._imports_0$4,
     e: common_vendor.f($data.anniversaryList, (item, index, i0) => {
       return common_vendor.e({
         a: "693c5a64-0-" + i0,
